@@ -66,11 +66,20 @@ export interface Favorite {
 export interface FilterState {
   category: Category
   query: string
+  city: string
   metro: string
   priceMin: string
   priceMax: string
   sort: SortOption
 }
+
+export const CITIES = [
+  { id: 'Москва',          flag: '🏙️' },
+  { id: 'Санкт-Петербург', flag: '🌉' },
+  { id: 'Германия',        flag: '🇩🇪' },
+  { id: 'США',             flag: '🇺🇸' },
+  { id: 'Польша',          flag: '🇵🇱' },
+]
 
 export const CATEGORIES: { id: Category; label: string; icon: string; color: string }[] = [
   { id: 'housing',     label: 'Сдаю жильё',    icon: '🏠', color: 'blue'   },

@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore } from '@/store'
-import { CATEGORIES, METRO_STATIONS } from '@/types'
+import { CATEGORIES, METRO_STATIONS, CITIES } from '@/types'
 
 function Counter({ target, suffix = '' }: { target: number; suffix?: string }) {
   const [count, setCount] = useState(0)
@@ -31,9 +31,11 @@ export default function Hero() {
   const { filters, setFilter } = useStore()
   const [metroOpen, setMetroOpen] = useState(false)
   const [catOpen, setCatOpen] = useState(false)
+  const [cityOpen, setCityOpen] = useState(false)
   const [metroSearch, setMetroSearch] = useState('')
   const metroRef = useRef<HTMLDivElement>(null)
   const catRef = useRef<HTMLDivElement>(null)
+  const cityRef = useRef<HTMLDivElement>(null)
 
   const filteredMetro = METRO_STATIONS.filter(s =>
     s.toLowerCase().includes(metroSearch.toLowerCase())
@@ -43,6 +45,7 @@ export default function Hero() {
     const handleClick = (e: MouseEvent) => {
       if (metroRef.current && !metroRef.current.contains(e.target as Node)) setMetroOpen(false)
       if (catRef.current && !catRef.current.contains(e.target as Node)) setCatOpen(false)
+      if (cityRef.current && !cityRef.current.contains(e.target as Node)) setCityOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -80,6 +83,29 @@ export default function Hero() {
 
         {/* Search box */}
         <div style={{ maxWidth: 780, margin: '0 auto 32px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', borderRadius: 20, padding: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* City picker */}
+          <div style={{ position: 'relative' }} ref={cityRef}>
+            <button
+              onClick={() => setCityOpen(!cityOpen)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }}
+            >
+              {CITIES.find(c => c.id === filters.city)?.flag || '🏙️'} {filters.city || 'Город'} ▾
+            </button>
+            {cityOpen && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', minWidth: 200, zIndex: 9999, padding: 6 }}>
+                {CITIES.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => { setFilter('city', c.id); setCityOpen(false) }}
+                    style={{ width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, fontSize: 13, color: '#334155', background: filters.city === c.id ? '#eff6ff' : 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+                  >
+                    <span style={{ fontSize: 18 }}>{c.flag}</span> {c.id}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Category picker */}
           <div style={{ position: 'relative' }} ref={catRef}>
             <button

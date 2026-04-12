@@ -28,6 +28,7 @@ interface AppState {
 const defaultFilters: FilterState = {
   category: 'all',
   query: '',
+  city: 'Москва',
   metro: '',
   priceMin: '',
   priceMax: '',
