@@ -18,12 +18,22 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://zherdesh.ru' },
 }
 
+const IS_SUPABASE_CONFIGURED = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+)
+
 export default async function HomePage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; cat?: string; metro?: string }>
 }) {
   const { q, cat, metro } = await searchParams
+
+  if (!IS_SUPABASE_CONFIGURED) {
+    return <HomeClient listings={[]} totalCount={0} />
+  }
+
   const supabase = await createClient()
 
   let query = supabase
