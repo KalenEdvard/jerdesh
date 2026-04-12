@@ -11,8 +11,13 @@ export default function Header() {
   const { user, setUser, filters, setFilter, setAuthOpen, showToast } = useStore()
   const [scrolled, setScrolled] = useState(false)
   const [metroOpen, setMetroOpen] = useState(false)
+  const [metroSearch, setMetroSearch] = useState('')
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const metroRef = useRef<HTMLDivElement>(null)
+
+  const filteredMetro = METRO_STATIONS.filter(s =>
+    s.toLowerCase().includes(metroSearch.toLowerCase())
+  )
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -67,25 +72,39 @@ export default function Header() {
           {/* Metro dropdown */}
           <div ref={metroRef} style={{ position: 'relative' }}>
             <button
-              onClick={() => setMetroOpen(!metroOpen)}
+              onClick={() => { setMetroOpen(!metroOpen); setMetroSearch('') }}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#f8fafc', fontSize: 13, color: '#334155', whiteSpace: 'nowrap' }}
             >
               🚇 {filters.metro || 'Метро'} <span style={{ color: '#94a3b8' }}>▾</span>
             </button>
             {metroOpen && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.1)', width: 220, maxHeight: 280, overflowY: 'auto', zIndex: 200, padding: 6 }}>
-                <button onClick={() => { setFilter('metro', ''); setMetroOpen(false) }} style={{ width: '100%', textAlign: 'left', padding: '7px 10px', borderRadius: 8, fontSize: 13, color: '#64748b', background: 'none' }}>
-                  Все станции
-                </button>
-                {METRO_STATIONS.map(s => (
-                  <button
-                    key={s}
-                    onClick={() => { setFilter('metro', s); setMetroOpen(false) }}
-                    style={{ width: '100%', textAlign: 'left', padding: '7px 10px', borderRadius: 8, fontSize: 13, color: '#334155', background: filters.metro === s ? '#eff6ff' : 'none' }}
-                  >
-                    🚇 {s}
+              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.1)', width: 240, zIndex: 200 }}>
+                <div style={{ padding: '10px 10px 6px' }}>
+                  <input
+                    autoFocus
+                    value={metroSearch}
+                    onChange={e => setMetroSearch(e.target.value)}
+                    placeholder="Поиск станции..."
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div style={{ maxHeight: 340, overflowY: 'auto', padding: '0 6px 6px' }}>
+                  <button onClick={() => { setFilter('metro', ''); setMetroOpen(false) }} style={{ width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, fontSize: 13, color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
+                    — Любое —
                   </button>
-                ))}
+                  {filteredMetro.map(s => (
+                    <button
+                      key={s}
+                      onClick={() => { setFilter('metro', s); setMetroOpen(false) }}
+                      style={{ width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, fontSize: 13, color: '#334155', background: filters.metro === s ? '#eff6ff' : 'none', border: 'none', cursor: 'pointer', display: 'block' }}
+                    >
+                      🚇 {s}
+                    </button>
+                  ))}
+                  {filteredMetro.length === 0 && (
+                    <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '12px 0' }}>Не найдено</p>
+                  )}
+                </div>
               </div>
             )}
           </div>

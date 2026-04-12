@@ -31,7 +31,12 @@ export default function Hero() {
   const { filters, setFilter } = useStore()
   const [metroOpen, setMetroOpen] = useState(false)
   const [catOpen, setCatOpen] = useState(false)
+  const [metroSearch, setMetroSearch] = useState('')
   const metroRef = useRef<HTMLDivElement>(null)
+
+  const filteredMetro = METRO_STATIONS.filter(s =>
+    s.toLowerCase().includes(metroSearch.toLowerCase())
+  )
 
   const stats = [
     { label: 'Объявлений', target: 12400, suffix: '+' },
@@ -64,7 +69,7 @@ export default function Hero() {
         </div>
 
         {/* Search box */}
-        <div style={{ maxWidth: 780, margin: '0 auto 32px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', borderRadius: 20, padding: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ maxWidth: 780, margin: '0 auto 32px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', borderRadius: 20, padding: 12, display: 'flex', gap: 8, flexWrap: 'wrap', overflow: 'hidden' }}>
           {/* Category picker */}
           <div style={{ position: 'relative' }} ref={metroRef}>
             <button
@@ -90,19 +95,37 @@ export default function Hero() {
           {/* Metro picker */}
           <div style={{ position: 'relative' }}>
             <button
-              onClick={() => setMetroOpen(!metroOpen)}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(255,255,255,0.2)' }}
+              onClick={() => { setMetroOpen(!metroOpen); setMetroSearch('') }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }}
             >
               🚇 {filters.metro || 'Метро'} ▾
             </button>
             {metroOpen && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', width: 220, maxHeight: 260, overflowY: 'auto', zIndex: 300, padding: 6 }}>
-                <button onClick={() => { setFilter('metro', ''); setMetroOpen(false) }} style={{ width: '100%', textAlign: 'left', padding: '7px 10px', borderRadius: 8, fontSize: 13, color: '#64748b', background: 'none' }}>Все станции</button>
-                {METRO_STATIONS.map(s => (
-                  <button key={s} onClick={() => { setFilter('metro', s); setMetroOpen(false) }} style={{ width: '100%', textAlign: 'left', padding: '7px 10px', borderRadius: 8, fontSize: 13, color: '#334155', background: 'none' }}>
-                    🚇 {s}
+              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', width: 240, zIndex: 300 }}>
+                {/* Search input */}
+                <div style={{ padding: '10px 10px 6px' }}>
+                  <input
+                    autoFocus
+                    value={metroSearch}
+                    onChange={e => setMetroSearch(e.target.value)}
+                    placeholder="Поиск станции..."
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                {/* List — shows 10 items, scrollable */}
+                <div style={{ maxHeight: 340, overflowY: 'auto', padding: '0 6px 6px' }}>
+                  <button onClick={() => { setFilter('metro', ''); setMetroOpen(false) }} style={{ width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, fontSize: 13, color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
+                    — Любое —
                   </button>
-                ))}
+                  {filteredMetro.map(s => (
+                    <button key={s} onClick={() => { setFilter('metro', s); setMetroOpen(false) }} style={{ width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, fontSize: 13, color: '#334155', background: filters.metro === s ? '#eff6ff' : 'none', border: 'none', cursor: 'pointer', display: 'block' }}>
+                      🚇 {s}
+                    </button>
+                  ))}
+                  {filteredMetro.length === 0 && (
+                    <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '12px 0' }}>Не найдено</p>
+                  )}
+                </div>
               </div>
             )}
           </div>
