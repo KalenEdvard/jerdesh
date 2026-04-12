@@ -33,10 +33,20 @@ export default function Hero() {
   const [catOpen, setCatOpen] = useState(false)
   const [metroSearch, setMetroSearch] = useState('')
   const metroRef = useRef<HTMLDivElement>(null)
+  const catRef = useRef<HTMLDivElement>(null)
 
   const filteredMetro = METRO_STATIONS.filter(s =>
     s.toLowerCase().includes(metroSearch.toLowerCase())
   )
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (metroRef.current && !metroRef.current.contains(e.target as Node)) setMetroOpen(false)
+      if (catRef.current && !catRef.current.contains(e.target as Node)) setCatOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
 
   const stats = [
     { label: 'Объявлений', target: 12400, suffix: '+' },
@@ -71,7 +81,7 @@ export default function Hero() {
         {/* Search box */}
         <div style={{ maxWidth: 780, margin: '0 auto 32px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', borderRadius: 20, padding: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {/* Category picker */}
-          <div style={{ position: 'relative' }} ref={metroRef}>
+          <div style={{ position: 'relative' }} ref={catRef}>
             <button
               onClick={() => setCatOpen(!catOpen)}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(255,255,255,0.2)' }}
@@ -93,7 +103,7 @@ export default function Hero() {
           </div>
 
           {/* Metro picker */}
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative' }} ref={metroRef}>
             <button
               onClick={() => { setMetroOpen(!metroOpen); setMetroSearch('') }}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }}
