@@ -1,38 +1,20 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStore } from '@/store'
-import { METRO_STATIONS } from '@/types'
 import { createClient } from '@/lib/supabase-client'
 
 export default function Header() {
   const router = useRouter()
-  const { user, setUser, filters, setFilter, setAuthOpen, showToast } = useStore()
+  const { user, setUser, setAuthOpen, showToast } = useStore()
   const [scrolled, setScrolled] = useState(false)
-  const [metroOpen, setMetroOpen] = useState(false)
-  const [metroSearch, setMetroSearch] = useState('')
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const metroRef = useRef<HTMLDivElement>(null)
-
-  const filteredMetro = METRO_STATIONS.filter(s =>
-    s.toLowerCase().includes(metroSearch.toLowerCase())
-  )
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (metroRef.current && !metroRef.current.contains(e.target as Node)) {
-        setMetroOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
   const handleLogout = async () => {
@@ -64,67 +46,8 @@ export default function Header() {
           <span style={{ fontFamily: "'Unbounded',sans-serif", fontWeight: 700, fontSize: 16, color: '#0f172a' }}>
             Жердеш
           </span>
-          <span style={{ fontSize: 11, color: '#64748b', background: '#f1f5f9', borderRadius: 6, padding: '2px 7px' }}>Объявления в России</span>
         </Link>
 
-        {/* Search */}
-        <div style={{ flex: 1, display: 'flex', gap: 8, maxWidth: 560 }}>
-          {/* Metro dropdown */}
-          <div ref={metroRef} style={{ position: 'relative' }}>
-            <button
-              onClick={() => { setMetroOpen(!metroOpen); setMetroSearch('') }}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#f8fafc', fontSize: 13, color: '#334155', whiteSpace: 'nowrap' }}
-            >
-              🚇 {filters.metro || 'Метро'} <span style={{ color: '#94a3b8' }}>▾</span>
-            </button>
-            {metroOpen && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.1)', width: 240, zIndex: 9999 }}>
-                <div style={{ padding: '10px 10px 6px' }}>
-                  <input
-                    autoFocus
-                    value={metroSearch}
-                    onChange={e => setMetroSearch(e.target.value)}
-                    placeholder="Поиск станции..."
-                    style={{ width: '100%', padding: '7px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
-                  />
-                </div>
-                <div style={{ maxHeight: 340, overflowY: 'auto', padding: '0 6px 6px' }}>
-                  <button onClick={() => { setFilter('metro', ''); setMetroOpen(false) }} style={{ width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, fontSize: 13, color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
-                    — Любое —
-                  </button>
-                  {filteredMetro.map(s => (
-                    <button
-                      key={s}
-                      onClick={() => { setFilter('metro', s); setMetroOpen(false) }}
-                      style={{ width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, fontSize: 13, color: '#334155', background: filters.metro === s ? '#eff6ff' : 'none', border: 'none', cursor: 'pointer', display: 'block' }}
-                    >
-                      🚇 {s}
-                    </button>
-                  ))}
-                  {filteredMetro.length === 0 && (
-                    <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '12px 0' }}>Не найдено</p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Search input */}
-          <div style={{ flex: 1, display: 'flex', gap: 0, border: '1.5px solid #e2e8f0', borderRadius: 10, overflow: 'hidden', background: '#fff' }}>
-            <input
-              value={filters.query}
-              onChange={e => setFilter('query', e.target.value)}
-              placeholder="Поиск объявлений..."
-              style={{ flex: 1, border: 'none', outline: 'none', padding: '8px 14px', fontSize: 14, background: 'transparent' }}
-            />
-            <button
-              style={{ padding: '0 16px', background: '#1d4ed8', color: '#fff', fontSize: 16, borderLeft: 'none' }}
-              onClick={() => router.push(`/?q=${filters.query}`)}
-            >
-              🔍
-            </button>
-          </div>
-        </div>
 
         {/* Right actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
