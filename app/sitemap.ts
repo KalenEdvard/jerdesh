@@ -2,15 +2,21 @@ import type { MetadataRoute } from 'next'
 import { createClient } from '@/lib/supabase-server'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = await createClient()
-  const { data: listings } = await supabase
-    .from('listings')
-    .select('id,updated_at')
-    .eq('is_active', true)
-    .order('created_at', { ascending: false })
-    .limit(1000)
+  let listings: { id: string; updated_at: string }[] = []
+  try {
+    const supabase = await createClient()
+    const { data } = await supabase
+      .from('listings')
+      .select('id,updated_at')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1000)
+    listings = data || []
+  } catch {
+    listings = []
+  }
 
-  const listingUrls = (listings || []).map(l => ({
+  const listingUrls = listings.map(l => ({
     url: `https://zherdesh.ru/listings/${l.id}`,
     lastModified: new Date(l.updated_at || Date.now()),
     changeFrequency: 'daily' as const,
