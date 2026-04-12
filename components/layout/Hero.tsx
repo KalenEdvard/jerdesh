@@ -53,7 +53,7 @@ export default function Hero() {
   }
 
   return (
-    <section style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%)', padding: '56px 20px 64px', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%)', padding: '56px 20px 64px', position: 'relative' }}>
       {/* Background ornament */}
       <div style={{ position: 'absolute', inset: 0, opacity: 0.06, backgroundImage: 'radial-gradient(circle at 20% 50%, #fff 1px, transparent 1px), radial-gradient(circle at 80% 50%, #fff 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
 
@@ -69,7 +69,7 @@ export default function Hero() {
         </div>
 
         {/* Search box */}
-        <div style={{ maxWidth: 780, margin: '0 auto 32px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', borderRadius: 20, padding: 12, display: 'flex', gap: 8, flexWrap: 'wrap', overflow: 'hidden' }}>
+        <div style={{ maxWidth: 780, margin: '0 auto 32px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', borderRadius: 20, padding: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {/* Category picker */}
           <div style={{ position: 'relative' }} ref={metroRef}>
             <button
@@ -79,7 +79,7 @@ export default function Hero() {
               {CATEGORIES.find(c => c.id === filters.category)?.label || 'Все категории'} ▾
             </button>
             {catOpen && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', minWidth: 180, zIndex: 300, padding: 6 }}>
+              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', minWidth: 180, zIndex: 9999, padding: 6 }}>
                 <button onClick={() => { setFilter('category', 'all'); setCatOpen(false) }} style={{ width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, fontSize: 13, color: '#334155', background: 'none' }}>
                   Все категории
                 </button>
@@ -101,7 +101,7 @@ export default function Hero() {
               🚇 {filters.metro || 'Метро'} ▾
             </button>
             {metroOpen && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', width: 240, zIndex: 300 }}>
+              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', width: 240, zIndex: 9999 }}>
                 {/* Search input */}
                 <div style={{ padding: '10px 10px 6px' }}>
                   <input

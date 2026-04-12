@@ -78,7 +78,7 @@ export default function Header() {
               🚇 {filters.metro || 'Метро'} <span style={{ color: '#94a3b8' }}>▾</span>
             </button>
             {metroOpen && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.1)', width: 240, zIndex: 200 }}>
+              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.1)', width: 240, zIndex: 9999 }}>
                 <div style={{ padding: '10px 10px 6px' }}>
                   <input
                     autoFocus
