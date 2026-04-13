@@ -137,7 +137,7 @@ export default function AuthModal() {
             <div style={inputWrap} className="confirm-field">
               <input
                 value={form.confirm}
-                onChange={e => set('confirm', e.target.value)}
+                onChange={e => { set('confirm', e.target.value); setShowPass(false) }}
                 placeholder="Повторите пароль *"
                 type={showConfirm ? 'text' : 'password'}
                 style={{
