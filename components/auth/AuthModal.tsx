@@ -8,9 +8,11 @@ type Tab = 'login' | 'register'
 export default function AuthModal() {
   const { authOpen, setAuthOpen, setUser, showToast } = useStore()
   const [tab, setTab] = useState<Tab>('login')
-  const [form, setForm] = useState({ email: '', password: '', name: '', phone: '' })
+  const [form, setForm] = useState({ email: '', password: '', confirm: '', name: '', phone: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showPass, setShowPass] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   if (!authOpen) return null
 
@@ -20,7 +22,6 @@ export default function AuthModal() {
     setError(''); setLoading(true)
     const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password })
     if (error) { setError(error.message); setLoading(false); return }
-    // Load user profile
     const { data: profile } = await supabase.from('users').select('*').eq('id', data.user.id).single()
     setUser(profile)
     setAuthOpen(false)
@@ -30,16 +31,13 @@ export default function AuthModal() {
 
   const handleRegister = async () => {
     if (!form.name.trim()) { setError('Введите имя'); return }
+    if (form.password !== form.confirm) { setError('Пароли не совпадают'); return }
+    if (form.password.length < 6) { setError('Пароль минимум 6 символов'); return }
     setError(''); setLoading(true)
     const { data, error } = await supabase.auth.signUp({ email: form.email, password: form.password })
     if (error) { setError(error.message); setLoading(false); return }
     if (data.user) {
-      await supabase.from('users').insert({
-        id: data.user.id,
-        name: form.name,
-        phone: form.phone || null,
-        city: 'Москва',
-      })
+      await supabase.from('users').insert({ id: data.user.id, name: form.name, phone: form.phone || null, city: 'Москва' })
       const { data: profile } = await supabase.from('users').select('*').eq('id', data.user.id).single()
       setUser(profile)
     }
@@ -50,8 +48,39 @@ export default function AuthModal() {
 
   const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))
 
+  const EyeIcon = ({ show }: { show: boolean }) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      {show ? (
+        <>
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+          <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+          <line x1="1" y1="1" x2="23" y2="23" />
+        </>
+      ) : (
+        <>
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </>
+      )}
+    </svg>
+  )
+
+  const inputWrap: React.CSSProperties = { position: 'relative', display: 'flex', alignItems: 'center' }
+  const inputStyle: React.CSSProperties = { width: '100%', padding: '12px 44px 12px 16px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' }
+  const eyeBtn: React.CSSProperties = { position: 'absolute', right: 12, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', padding: 0 }
+
+  const showConfirmField = tab === 'register' && form.password.length > 0
+
   return (
     <>
+      <style>{`
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .confirm-field { animation: slideDown 0.25s ease; }
+      `}</style>
+
       {/* Backdrop */}
       <div onClick={() => setAuthOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, backdropFilter: 'blur(4px)' }} />
 
@@ -70,7 +99,7 @@ export default function AuthModal() {
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 12, padding: 4, marginBottom: 24 }}>
           {(['login', 'register'] as Tab[]).map(t => (
-            <button key={t} onClick={() => { setTab(t); setError('') }} style={{ flex: 1, padding: '9px', borderRadius: 10, background: tab === t ? '#fff' : 'none', fontWeight: tab === t ? 700 : 500, fontSize: 14, color: tab === t ? '#0f172a' : '#64748b', border: 'none', cursor: 'pointer', boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.15s' }}>
+            <button key={t} onClick={() => { setTab(t); setError(''); setForm(f => ({ ...f, password: '', confirm: '' })) }} style={{ flex: 1, padding: '9px', borderRadius: 10, background: tab === t ? '#fff' : 'none', fontWeight: tab === t ? 700 : 500, fontSize: 14, color: tab === t ? '#0f172a' : '#64748b', border: 'none', cursor: 'pointer', boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.15s' }}>
               {t === 'login' ? 'Войти' : 'Регистрация'}
             </button>
           ))}
@@ -79,13 +108,51 @@ export default function AuthModal() {
         {/* Form */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {tab === 'register' && (
-            <input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Ваше имя *" style={{ padding: '12px 16px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none' }} />
+            <input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Ваше имя *" style={inputStyle} />
           )}
-          <input value={form.email} onChange={e => set('email', e.target.value)} placeholder="Email *" type="email" style={{ padding: '12px 16px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none' }} />
+
+          <input value={form.email} onChange={e => set('email', e.target.value)} placeholder="Email *" type="email" style={inputStyle} />
+
           {tab === 'register' && (
-            <input value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="Телефон (необязательно)" type="tel" style={{ padding: '12px 16px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none' }} />
+            <input value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="Телефон (необязательно)" type="tel" style={inputStyle} />
           )}
-          <input value={form.password} onChange={e => set('password', e.target.value)} placeholder="Пароль *" type="password" style={{ padding: '12px 16px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none' }} onKeyDown={e => e.key === 'Enter' && (tab === 'login' ? handleLogin() : handleRegister())} />
+
+          {/* Password with eye */}
+          <div style={inputWrap}>
+            <input
+              value={form.password}
+              onChange={e => set('password', e.target.value)}
+              placeholder="Пароль *"
+              type={showPass ? 'text' : 'password'}
+              style={inputStyle}
+              onKeyDown={e => e.key === 'Enter' && (tab === 'login' ? handleLogin() : handleRegister())}
+            />
+            <button type="button" onClick={() => setShowPass(v => !v)} style={eyeBtn}>
+              <EyeIcon show={showPass} />
+            </button>
+          </div>
+
+          {/* Confirm password — появляется с анимацией */}
+          {showConfirmField && (
+            <div style={inputWrap} className="confirm-field">
+              <input
+                value={form.confirm}
+                onChange={e => set('confirm', e.target.value)}
+                placeholder="Повторите пароль *"
+                type={showConfirm ? 'text' : 'password'}
+                style={{
+                  ...inputStyle,
+                  borderColor: form.confirm.length > 0
+                    ? form.confirm === form.password ? '#22c55e' : '#ef4444'
+                    : '#e2e8f0',
+                }}
+                onKeyDown={e => e.key === 'Enter' && handleRegister()}
+              />
+              <button type="button" onClick={() => setShowConfirm(v => !v)} style={eyeBtn}>
+                <EyeIcon show={showConfirm} />
+              </button>
+            </div>
+          )}
 
           {error && <div style={{ fontSize: 13, color: '#ef4444', background: '#fee2e2', padding: '10px 14px', borderRadius: 10 }}>{error}</div>}
 
