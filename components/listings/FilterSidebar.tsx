@@ -53,27 +53,6 @@ export default function FilterSidebar() {
           </select>
         </div>
 
-        {/* Price */}
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 6 }}>ЦЕНА (₽)</label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input
-              type="number"
-              placeholder="От"
-              value={filters.priceMin}
-              onChange={e => setFilter('priceMin', e.target.value)}
-              style={{ flex: 1, padding: '8px 10px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none' }}
-            />
-            <input
-              type="number"
-              placeholder="До"
-              value={filters.priceMax}
-              onChange={e => setFilter('priceMax', e.target.value)}
-              style={{ flex: 1, padding: '8px 10px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none' }}
-            />
-          </div>
-        </div>
-
         {/* Sort */}
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 6 }}>СОРТИРОВКА</label>
