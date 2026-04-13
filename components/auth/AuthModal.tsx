@@ -1,13 +1,17 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useStore } from '@/store'
 import { createClient } from '@/lib/supabase-client'
 
 type Tab = 'login' | 'register'
+type Screen = 'form' | 'confirm'
 
 export default function AuthModal() {
   const { authOpen, setAuthOpen, setUser, showToast } = useStore()
+  const router = useRouter()
   const [tab, setTab] = useState<Tab>('login')
+  const [screen, setScreen] = useState<Screen>('form')
   const [form, setForm] = useState({ email: '', password: '', confirm: '', name: '', phone: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -26,6 +30,7 @@ export default function AuthModal() {
     setUser(profile)
     setAuthOpen(false)
     showToast(`Добро пожаловать, ${profile?.name || 'друг'}! 👋`, 'ok')
+    router.push('/profile')
     setLoading(false)
   }
 
@@ -38,12 +43,9 @@ export default function AuthModal() {
     if (error) { setError(error.message); setLoading(false); return }
     if (data.user) {
       await supabase.from('users').insert({ id: data.user.id, name: form.name, phone: form.phone || null, city: 'Москва' })
-      const { data: profile } = await supabase.from('users').select('*').eq('id', data.user.id).single()
-      setUser(profile)
     }
-    setAuthOpen(false)
-    showToast('Регистрация прошла успешно! 🎉', 'ok')
     setLoading(false)
+    setScreen('confirm')
   }
 
   const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))
@@ -68,7 +70,6 @@ export default function AuthModal() {
   const inputWrap: React.CSSProperties = { position: 'relative', display: 'flex', alignItems: 'center' }
   const inputStyle: React.CSSProperties = { width: '100%', padding: '12px 44px 12px 16px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' }
   const eyeBtn: React.CSSProperties = { position: 'absolute', right: 12, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', padding: 0 }
-
   const showConfirmField = tab === 'register' && form.password.length > 0
 
   return (
@@ -81,89 +82,85 @@ export default function AuthModal() {
         .confirm-field { animation: slideDown 0.25s ease; }
       `}</style>
 
-      {/* Backdrop */}
       <div onClick={() => setAuthOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, backdropFilter: 'blur(4px)' }} />
 
-      {/* Modal */}
-      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '100%', maxWidth: 440, background: '#fff', borderRadius: 24, padding: 36, zIndex: 600, animation: 'fadeIn 0.25s ease', boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}>
-        {/* Close */}
+      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '100%', maxWidth: 440, background: '#fff', borderRadius: 24, padding: 36, zIndex: 600, boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}>
         <button onClick={() => setAuthOpen(false)} style={{ position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: '50%', background: '#f1f5f9', border: 'none', cursor: 'pointer', fontSize: 16, color: '#64748b' }}>✕</button>
 
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ width: 52, height: 52, borderRadius: 16, background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: "'Unbounded',sans-serif", fontWeight: 900, fontSize: 22, margin: '0 auto 10px' }}>Ж</div>
-          <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{tab === 'login' ? 'Войти в аккаунт' : 'Создать аккаунт'}</h2>
-          <p style={{ fontSize: 13, color: '#64748b' }}>Жердеш — Объявления кыргызов в России</p>
-        </div>
-
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 12, padding: 4, marginBottom: 24 }}>
-          {(['login', 'register'] as Tab[]).map(t => (
-            <button key={t} onClick={() => { setTab(t); setError(''); setForm(f => ({ ...f, password: '', confirm: '' })) }} style={{ flex: 1, padding: '9px', borderRadius: 10, background: tab === t ? '#fff' : 'none', fontWeight: tab === t ? 700 : 500, fontSize: 14, color: tab === t ? '#0f172a' : '#64748b', border: 'none', cursor: 'pointer', boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.15s' }}>
-              {t === 'login' ? 'Войти' : 'Регистрация'}
-            </button>
-          ))}
-        </div>
-
-        {/* Form */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {tab === 'register' && (
-            <input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Ваше имя *" style={inputStyle} />
-          )}
-
-          <input value={form.email} onChange={e => set('email', e.target.value)} placeholder="Email *" type="email" style={inputStyle} />
-
-          {tab === 'register' && (
-            <input value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="Телефон (необязательно)" type="tel" style={inputStyle} />
-          )}
-
-          {/* Password with eye */}
-          <div style={inputWrap}>
-            <input
-              value={form.password}
-              onChange={e => set('password', e.target.value)}
-              placeholder="Пароль *"
-              type={showPass ? 'text' : 'password'}
-              style={inputStyle}
-              onKeyDown={e => e.key === 'Enter' && (tab === 'login' ? handleLogin() : handleRegister())}
-            />
-            <button type="button" onClick={() => setShowPass(v => !v)} style={eyeBtn}>
-              <EyeIcon show={showPass} />
+        {/* Экран подтверждения email */}
+        {screen === 'confirm' ? (
+          <div style={{ textAlign: 'center', padding: '8px 0' }}>
+            <div style={{ fontSize: 56, marginBottom: 16 }}>📧</div>
+            <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 12 }}>Подтвердите email</h2>
+            <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.6, marginBottom: 8 }}>
+              Мы отправили письмо на
+            </p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: '#1d4ed8', marginBottom: 16 }}>{form.email}</p>
+            <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.6, marginBottom: 28 }}>
+              Перейдите по ссылке в письме чтобы активировать аккаунт. Проверьте папку «Спам» если письмо не пришло.
+            </p>
+            <button
+              onClick={() => { setAuthOpen(false); setScreen('form') }}
+              style={{ width: '100%', padding: '14px', borderRadius: 12, background: '#1d4ed8', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer' }}
+            >
+              Понятно
             </button>
           </div>
+        ) : (
+          <>
+            {/* Logo */}
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <div style={{ width: 52, height: 52, borderRadius: 16, background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: "'Unbounded',sans-serif", fontWeight: 900, fontSize: 22, margin: '0 auto 10px' }}>Ж</div>
+              <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{tab === 'login' ? 'Войти в аккаунт' : 'Создать аккаунт'}</h2>
+              <p style={{ fontSize: 13, color: '#64748b' }}>Жердеш — Объявления кыргызов в России</p>
+            </div>
 
-          {/* Confirm password — появляется с анимацией */}
-          {showConfirmField && (
-            <div style={inputWrap} className="confirm-field">
-              <input
-                value={form.confirm}
-                onChange={e => { set('confirm', e.target.value); setShowPass(false) }}
-                placeholder="Повторите пароль *"
-                type={showConfirm ? 'text' : 'password'}
-                style={{
-                  ...inputStyle,
-                  borderColor: form.confirm.length > 0
-                    ? form.confirm === form.password ? '#22c55e' : '#ef4444'
-                    : '#e2e8f0',
-                }}
-                onKeyDown={e => e.key === 'Enter' && handleRegister()}
-              />
-              <button type="button" onClick={() => setShowConfirm(v => !v)} style={eyeBtn}>
-                <EyeIcon show={showConfirm} />
+            {/* Tabs */}
+            <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 12, padding: 4, marginBottom: 24 }}>
+              {(['login', 'register'] as Tab[]).map(t => (
+                <button key={t} onClick={() => { setTab(t); setError(''); setForm(f => ({ ...f, password: '', confirm: '' })) }} style={{ flex: 1, padding: '9px', borderRadius: 10, background: tab === t ? '#fff' : 'none', fontWeight: tab === t ? 700 : 500, fontSize: 14, color: tab === t ? '#0f172a' : '#64748b', border: 'none', cursor: 'pointer', boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.15s' }}>
+                  {t === 'login' ? 'Войти' : 'Регистрация'}
+                </button>
+              ))}
+            </div>
+
+            {/* Form */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {tab === 'register' && (
+                <input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Ваше имя *" style={inputStyle} />
+              )}
+              <input value={form.email} onChange={e => set('email', e.target.value)} placeholder="Email *" type="email" style={inputStyle} />
+              {tab === 'register' && (
+                <input value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="Телефон (необязательно)" type="tel" style={inputStyle} />
+              )}
+
+              <div style={inputWrap}>
+                <input value={form.password} onChange={e => set('password', e.target.value)} placeholder="Пароль *" type={showPass ? 'text' : 'password'} style={inputStyle} onKeyDown={e => e.key === 'Enter' && (tab === 'login' ? handleLogin() : handleRegister())} />
+                <button type="button" onClick={() => setShowPass(v => !v)} style={eyeBtn}><EyeIcon show={showPass} /></button>
+              </div>
+
+              {showConfirmField && (
+                <div style={inputWrap} className="confirm-field">
+                  <input
+                    value={form.confirm}
+                    onChange={e => { set('confirm', e.target.value); setShowPass(false) }}
+                    placeholder="Повторите пароль *"
+                    type={showConfirm ? 'text' : 'password'}
+                    style={{ ...inputStyle, borderColor: form.confirm.length > 0 ? form.confirm === form.password ? '#22c55e' : '#ef4444' : '#e2e8f0' }}
+                    onKeyDown={e => e.key === 'Enter' && handleRegister()}
+                  />
+                  <button type="button" onClick={() => setShowConfirm(v => !v)} style={eyeBtn}><EyeIcon show={showConfirm} /></button>
+                </div>
+              )}
+
+              {error && <div style={{ fontSize: 13, color: '#ef4444', background: '#fee2e2', padding: '10px 14px', borderRadius: 10 }}>{error}</div>}
+
+              <button onClick={tab === 'login' ? handleLogin : handleRegister} disabled={loading} style={{ padding: '14px', borderRadius: 12, background: loading ? '#94a3b8' : '#1d4ed8', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: loading ? 'default' : 'pointer', marginTop: 4 }}>
+                {loading ? '...' : tab === 'login' ? 'Войти' : 'Зарегистрироваться'}
               </button>
             </div>
-          )}
-
-          {error && <div style={{ fontSize: 13, color: '#ef4444', background: '#fee2e2', padding: '10px 14px', borderRadius: 10 }}>{error}</div>}
-
-          <button
-            onClick={tab === 'login' ? handleLogin : handleRegister}
-            disabled={loading}
-            style={{ padding: '14px', borderRadius: 12, background: loading ? '#94a3b8' : '#1d4ed8', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: loading ? 'default' : 'pointer', marginTop: 4 }}
-          >
-            {loading ? '...' : tab === 'login' ? 'Войти' : 'Зарегистрироваться'}
-          </button>
-        </div>
+          </>
+        )}
       </div>
     </>
   )

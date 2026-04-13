@@ -36,10 +36,13 @@ export default async function HomePage({
 
   const supabase = await createClient()
 
+  const now = new Date().toISOString()
+
   let query = supabase
     .from('listings')
     .select('*, user:users(*)')
     .eq('is_active', true)
+    .or(`expires_at.is.null,expires_at.gt.${now}`)
 
   if (cat && cat !== 'all') query = query.eq('category', cat)
   if (q) query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`)

@@ -53,7 +53,17 @@ export default function ProfilePage() {
     showToast('Объявление удалено', 'info')
   }
 
+  // Продлить объявление на 30 дней
+  const renewListing = async (id: string) => {
+    const newExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    await supabase.from('listings').update({ is_active: true, expires_at: newExpiry }).eq('id', id)
+    setMyListings(prev => prev.map(l => l.id === id ? { ...l, is_active: true, expires_at: newExpiry } : l))
+    showToast('Объявление снова активно! ✓', 'ok')
+  }
+
   if (!user) return null
+
+  const isExpired = (l: Listing) => l.expires_at && new Date(l.expires_at) < new Date()
 
   const tabStyle = (t: string) => ({
     padding: '10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: tab === t ? 700 : 500,
@@ -63,17 +73,23 @@ export default function ProfilePage() {
   return (
     <div style={{ maxWidth: 1000, margin: '40px auto', padding: '0 20px' }}>
       {/* Profile header */}
-      <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: 28, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 20 }}>
-        <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 28, fontWeight: 900 }}>
+      <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: 28, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+        <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 28, fontWeight: 900, flexShrink: 0 }}>
           {user.name?.[0]?.toUpperCase() || 'У'}
         </div>
-        <div>
+        <div style={{ flex: 1 }}>
           <h1 style={{ fontSize: 22, fontWeight: 800 }}>{user.name}</h1>
           <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
             ★ {user.rating} · {myListings.length} объявлений · {user.city}
           </div>
         </div>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            onClick={() => router.push('/create')}
+            style={{ padding: '10px 18px', borderRadius: 10, background: '#f59e0b', color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' }}
+          >
+            + Подать объявление
+          </button>
           {(['ads','favs','settings'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} style={tabStyle(t)}>
               {t === 'ads' ? '📋 Мои объявления' : t === 'favs' ? '❤️ Избранное' : '⚙️ Настройки'}
@@ -82,30 +98,52 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Tabs content */}
+      {/* Мои объявления */}
       {tab === 'ads' && (
         <div>
           <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Мои объявления ({myListings.length})</h2>
           {myListings.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 60, background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>📭</div>
-              <p style={{ color: '#64748b' }}>У вас пока нет объявлений</p>
+              <p style={{ color: '#64748b', marginBottom: 20 }}>У вас пока нет объявлений</p>
+              <button onClick={() => router.push('/create')} style={{ padding: '12px 24px', borderRadius: 12, background: '#1d4ed8', color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' }}>
+                Подать первое объявление
+              </button>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
-              {myListings.map(l => (
-                <div key={l.id} style={{ position: 'relative' }}>
-                  <ListingCard listing={l} />
-                  <button onClick={() => deleteListing(l.id)} style={{ position: 'absolute', top: 8, right: 50, padding: '4px 10px', borderRadius: 8, background: '#fee2e2', color: '#ef4444', fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-                    Удалить
-                  </button>
-                </div>
-              ))}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
+              {myListings.map(l => {
+                const expired = isExpired(l)
+                return (
+                  <div key={l.id} style={{ position: 'relative', opacity: expired ? 0.75 : 1 }}>
+                    {/* Статус истёкшего срока */}
+                    {expired && (
+                      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.6)', borderRadius: '16px 16px 0 0', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 }}>
+                        <span style={{ color: '#fbbf24', fontSize: 12, fontWeight: 700 }}>⏰ Истёк срок</span>
+                        <button
+                          onClick={() => renewListing(l.id)}
+                          style={{ padding: '4px 12px', borderRadius: 8, background: '#22c55e', color: '#fff', fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer' }}
+                        >
+                          Ещё актуально
+                        </button>
+                      </div>
+                    )}
+                    <ListingCard listing={l} />
+                    {/* Кнопка удалить */}
+                    {!expired && (
+                      <button onClick={() => deleteListing(l.id)} style={{ position: 'absolute', top: 8, right: 8, padding: '4px 10px', borderRadius: 8, background: '#fee2e2', color: '#ef4444', fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer', zIndex: 10 }}>
+                        Удалить
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
       )}
 
+      {/* Избранное */}
       {tab === 'favs' && (
         <div>
           <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Избранное ({favListings.length})</h2>
@@ -122,6 +160,7 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* Настройки */}
       {tab === 'settings' && (
         <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 28, maxWidth: 480 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24 }}>Настройки профиля</h2>
