@@ -5,14 +5,15 @@ import { useStore } from '@/store'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import type { Listing } from '@/types'
-import ListingCard from '@/components/listings/ListingCard'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Star, MapPin, Plus, RefreshCw, Settings, Heart, Package, Trash2 } from 'lucide-react'
 
 export default function ProfilePage() {
   const router = useRouter()
   const { user, setUser, showToast } = useStore()
   const [myListings, setMyListings] = useState<Listing[]>([])
   const [favListings, setFavListings] = useState<Listing[]>([])
-  const [tab, setTab] = useState<'ads'|'favs'|'settings'>('ads')
+  const [tab, setTab] = useState<'ads' | 'favs' | 'settings'>('ads')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [saving, setSaving] = useState(false)
@@ -53,7 +54,6 @@ export default function ProfilePage() {
     showToast('Объявление удалено', 'info')
   }
 
-  // Продлить объявление на 30 дней
   const renewListing = async (id: string) => {
     const newExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     await supabase.from('listings').update({ is_active: true, expires_at: newExpiry }).eq('id', id)
@@ -65,120 +65,203 @@ export default function ProfilePage() {
 
   const isExpired = (l: Listing) => l.expires_at && new Date(l.expires_at) < new Date()
 
-  const tabStyle = (t: string) => ({
-    padding: '10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: tab === t ? 700 : 500,
-    background: tab === t ? '#1d4ed8' : 'transparent', color: tab === t ? '#fff' : '#64748b',
-  })
+  const tabs = [
+    { id: 'ads', label: 'Мои объявления', icon: <Package size={16} /> },
+    { id: 'favs', label: 'Избранное', icon: <Heart size={16} /> },
+    { id: 'settings', label: 'Настройки', icon: <Settings size={16} /> },
+  ]
 
   return (
-    <div style={{ maxWidth: 1000, margin: '40px auto', padding: '0 20px' }}>
-      {/* Profile header */}
-      <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: 28, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-        <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 28, fontWeight: 900, flexShrink: 0 }}>
-          {user.name?.[0]?.toUpperCase() || 'У'}
-        </div>
-        <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 800 }}>{user.name}</h1>
-          <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
-            ★ {user.rating} · {myListings.length} объявлений · {user.city}
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button
+    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+
+      {/* Hero Header */}
+      <div style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #7c3aed 100%)', paddingBottom: 48 }}>
+        {/* Decorative blobs */}
+        <div style={{ position: 'absolute', top: -60, right: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -40, left: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
+
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: '48px 20px 0', textAlign: 'center', position: 'relative' }}>
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+            style={{ width: 96, height: 96, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', border: '4px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 36, fontWeight: 900, margin: '0 auto 16px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+            {user.name?.[0]?.toUpperCase() || 'У'}
+          </motion.div>
+
+          <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+            style={{ fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 12 }}>
+            {user.name}
+          </motion.h1>
+
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, color: 'rgba(255,255,255,0.85)', fontSize: 14, marginBottom: 24, flexWrap: 'wrap' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Star size={16} style={{ fill: '#fbbf24', color: '#fbbf24' }} /> {user.rating}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <MapPin size={16} /> {user.city}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Package size={16} /> {myListings.length} объявлений
+            </span>
+          </motion.div>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
             onClick={() => router.push('/create')}
-            style={{ padding: '10px 18px', borderRadius: 10, background: '#f59e0b', color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' }}
+            style={{ padding: '12px 28px', borderRadius: 14, background: '#fff', color: '#1d4ed8', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
           >
-            + Подать объявление
-          </button>
-          {(['ads','favs','settings'] as const).map(t => (
-            <button key={t} onClick={() => setTab(t)} style={tabStyle(t)}>
-              {t === 'ads' ? '📋 Мои объявления' : t === 'favs' ? '❤️ Избранное' : '⚙️ Настройки'}
-            </button>
-          ))}
+            <Plus size={18} /> Подать объявление
+          </motion.button>
+        </div>
+
+        {/* Tabs — висят над контентом */}
+        <div style={{ maxWidth: 900, margin: '32px auto 0', padding: '0 20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <div style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', borderRadius: 14, padding: 4, display: 'flex', gap: 4 }}>
+              {tabs.map(t => (
+                <button key={t.id} onClick={() => setTab(t.id as any)}
+                  style={{ padding: '10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s', background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#1d4ed8' : 'rgba(255,255,255,0.8)', boxShadow: tab === t.id ? '0 2px 8px rgba(0,0,0,0.1)' : 'none' }}>
+                  {t.icon} {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Мои объявления */}
-      {tab === 'ads' && (
-        <div>
-          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Мои объявления ({myListings.length})</h2>
-          {myListings.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 60, background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>📭</div>
-              <p style={{ color: '#64748b', marginBottom: 20 }}>У вас пока нет объявлений</p>
-              <button onClick={() => router.push('/create')} style={{ padding: '12px 24px', borderRadius: 12, background: '#1d4ed8', color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' }}>
-                Подать первое объявление
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
-              {myListings.map(l => {
-                const expired = isExpired(l)
-                return (
-                  <div key={l.id} style={{ position: 'relative', opacity: expired ? 0.75 : 1 }}>
-                    {/* Статус истёкшего срока */}
-                    {expired && (
-                      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.6)', borderRadius: '16px 16px 0 0', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 }}>
-                        <span style={{ color: '#fbbf24', fontSize: 12, fontWeight: 700 }}>⏰ Истёк срок</span>
-                        <button
-                          onClick={() => renewListing(l.id)}
-                          style={{ padding: '4px 12px', borderRadius: 8, background: '#22c55e', color: '#fff', fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer' }}
-                        >
-                          Ещё актуально
-                        </button>
+      {/* Content */}
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 20px 60px' }}>
+        <AnimatePresence mode="wait">
+
+          {/* Мои объявления */}
+          {tab === 'ads' && (
+            <motion.div key="ads" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
+              {myListings.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '64px 20px', background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: 56, marginBottom: 16 }}>📭</div>
+                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Нет объявлений</h3>
+                  <p style={{ color: '#64748b', marginBottom: 24 }}>Подайте первое объявление — это бесплатно</p>
+                  <button onClick={() => router.push('/create')} style={{ padding: '12px 28px', borderRadius: 12, background: '#1d4ed8', color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' }}>
+                    Подать объявление
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
+                  {myListings.map((l, i) => {
+                    const expired = isExpired(l)
+                    return (
+                      <motion.div key={l.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                        whileHover={{ y: -4 }}
+                        style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', transition: 'box-shadow 0.2s', position: 'relative' }}>
+
+                        {/* Фото или заглушка */}
+                        <div style={{ height: 160, background: l.photos?.[0] ? 'none' : 'linear-gradient(135deg,#eff6ff,#dbeafe)', position: 'relative', overflow: 'hidden' }}>
+                          {l.photos?.[0] ? <img src={l.photos[0]} alt={l.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> :
+                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🏷️</div>}
+
+                          {/* Expired overlay */}
+                          {expired && (
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                              <span style={{ color: '#fbbf24', fontWeight: 700, fontSize: 13 }}>⏰ Истёк срок</span>
+                              <button onClick={() => renewListing(l.id)}
+                                style={{ padding: '7px 16px', borderRadius: 10, background: '#22c55e', color: '#fff', fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <RefreshCw size={12} /> Ещё актуально
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Urgent badge */}
+                          {l.is_urgent && !expired && (
+                            <div style={{ position: 'absolute', top: 8, left: 8, background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6 }}>СРОЧНО</div>
+                          )}
+                        </div>
+
+                        <div style={{ padding: '14px 16px' }}>
+                          <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{l.category}</div>
+                          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 8, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{l.title}</h3>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ fontSize: 16, fontWeight: 800, color: '#1d4ed8' }}>{l.price ? `${l.price.toLocaleString('ru')} ₽` : 'Договорная'}</span>
+                            <span style={{ fontSize: 11, color: '#94a3b8' }}>{l.views} просмотров</span>
+                          </div>
+                        </div>
+
+                        {/* Кнопка удалить */}
+                        {!expired && (
+                          <button onClick={() => deleteListing(l.id)}
+                            style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </motion.div>
+                    )
+                  })}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* Избранное */}
+          {tab === 'favs' && (
+            <motion.div key="favs" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
+              {favListings.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '64px 20px', background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: 56, marginBottom: 16 }}>🤍</div>
+                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Нет избранного</h3>
+                  <p style={{ color: '#64748b' }}>Добавляйте понравившиеся объявления в избранное</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
+                  {favListings.map((l, i) => (
+                    <motion.div key={l.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                      whileHover={{ y: -4 }}
+                      style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                      <div style={{ height: 160, background: l.photos?.[0] ? 'none' : 'linear-gradient(135deg,#fdf4ff,#ede9fe)', position: 'relative' }}>
+                        {l.photos?.[0] ? <img src={l.photos[0]} alt={l.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> :
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>❤️</div>}
                       </div>
-                    )}
-                    <ListingCard listing={l} />
-                    {/* Кнопка удалить */}
-                    {!expired && (
-                      <button onClick={() => deleteListing(l.id)} style={{ position: 'absolute', top: 8, right: 8, padding: '4px 10px', borderRadius: 8, background: '#fee2e2', color: '#ef4444', fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer', zIndex: 10 }}>
-                        Удалить
-                      </button>
-                    )}
+                      <div style={{ padding: '14px 16px' }}>
+                        <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 8, lineHeight: 1.4 }}>{l.title}</h3>
+                        <span style={{ fontSize: 16, fontWeight: 800, color: '#1d4ed8' }}>{l.price ? `${l.price.toLocaleString('ru')} ₽` : 'Договорная'}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* Настройки */}
+          {tab === 'settings' && (
+            <motion.div key="settings" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
+              style={{ maxWidth: 480, margin: '0 auto' }}>
+              <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: 32, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24 }}>Настройки профиля</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 6 }}>Имя</label>
+                    <input value={name} onChange={e => setName(e.target.value)}
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
+                      onFocus={e => e.target.style.borderColor = '#1d4ed8'}
+                      onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
                   </div>
-                )
-              })}
-            </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 6 }}>Телефон</label>
+                    <input value={phone} onChange={e => setPhone(e.target.value)} type="tel"
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
+                      onFocus={e => e.target.style.borderColor = '#1d4ed8'}
+                      onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
+                  </div>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    onClick={saveSettings} disabled={saving}
+                    style={{ padding: '13px', borderRadius: 12, background: saving ? '#94a3b8' : '#1d4ed8', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: saving ? 'default' : 'pointer', marginTop: 4 }}>
+                    {saving ? 'Сохраняем...' : 'Сохранить изменения'}
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
           )}
-        </div>
-      )}
 
-      {/* Избранное */}
-      {tab === 'favs' && (
-        <div>
-          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Избранное ({favListings.length})</h2>
-          {favListings.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 60, background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>🤍</div>
-              <p style={{ color: '#64748b' }}>Вы ещё ничего не добавили в избранное</p>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
-              {favListings.map(l => <ListingCard key={l.id} listing={l} />)}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Настройки */}
-      {tab === 'settings' && (
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 28, maxWidth: 480 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24 }}>Настройки профиля</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 6 }}>Имя</label>
-              <input value={name} onChange={e => setName(e.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none' }} />
-            </div>
-            <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 6 }}>Телефон</label>
-              <input value={phone} onChange={e => setPhone(e.target.value)} type="tel" style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none' }} />
-            </div>
-            <button onClick={saveSettings} disabled={saving} style={{ padding: '12px', borderRadius: 12, background: '#1d4ed8', color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-              {saving ? 'Сохраняем...' : 'Сохранить'}
-            </button>
-          </div>
-        </div>
-      )}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }
