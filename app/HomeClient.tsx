@@ -15,13 +15,17 @@ export default function HomeClient({ stats }: { stats?: Stats }) {
   const { category, query, metro, city, sort } = useFilters()
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetching, setFetching] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     const supabase = createClient()
 
     const fetchListings = async () => {
-      setLoading(true)
+      // Первая загрузка — показываем скелетон
+      // При смене фильтра — просто тихий re-fetch, старые карточки остаются
+      if (listings.length === 0) setLoading(true)
+      else setFetching(true)
 
       let q = supabase
         .from('listings')
@@ -49,6 +53,7 @@ export default function HomeClient({ stats }: { stats?: Stats }) {
       if (!cancelled) {
         setListings((data || []) as unknown as Listing[])
         setLoading(false)
+        setFetching(false)
       }
     }
 
@@ -87,7 +92,7 @@ export default function HomeClient({ stats }: { stats?: Stats }) {
               ))}
               <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}`}</style>
             </div>
-          ) : listings.length === 0 ? (
+          ) : listings.length === 0 && !fetching ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -98,8 +103,16 @@ export default function HomeClient({ stats }: { stats?: Stats }) {
               <p style={{ color: '#64748b' }}>Попробуйте изменить фильтры или поисковый запрос</p>
             </motion.div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
-              {listings.map(l => <ListingCard key={l.id} listing={l} />)}
+            <div style={{ position: 'relative' }}>
+              {fetching && (
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(248,250,252,0.6)', zIndex: 10, borderRadius: 16, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 24 }}>
+                  <div style={{ width: 28, height: 28, border: '3px solid #e2e8f0', borderTopColor: '#1d4ed8', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                  <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+                </div>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
+                {listings.map(l => <ListingCard key={l.id} listing={l} />)}
+              </div>
             </div>
           )}
         </div>
