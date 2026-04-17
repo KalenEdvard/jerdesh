@@ -37,7 +37,7 @@ export default function HomeClient({ stats }: { stats?: Stats }) {
 
       const { data } = await q
       if (!cancelled) {
-        setListings(data || [])
+        setListings((data || []) as unknown as Listing[])
         setLoading(false)
       }
     }
