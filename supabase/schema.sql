@@ -97,7 +97,10 @@ CREATE POLICY "users_insert_own"   ON public.users FOR INSERT WITH CHECK (auth.u
 CREATE POLICY "users_update_own"   ON public.users FOR UPDATE USING (auth.uid() = id);
 
 -- Listings
-CREATE POLICY "listings_select_active" ON public.listings FOR SELECT USING (is_active = true);
+-- Публичные: только активные. Владелец видит все свои (включая черновики)
+CREATE POLICY "listings_select_active" ON public.listings FOR SELECT USING (
+  status = 'active' OR auth.uid() = user_id
+);
 CREATE POLICY "listings_insert_auth"   ON public.listings FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "listings_update_own"    ON public.listings FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "listings_delete_own"    ON public.listings FOR DELETE USING (auth.uid() = user_id);
