@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import HomeClient from './HomeClient'
 
 // Страница статична — HTML отдаётся мгновенно с CDN
@@ -51,5 +52,9 @@ export default async function HomePage() {
     cities: citiesCount,
   }
 
-  return <HomeClient stats={stats} />
+  return (
+    <Suspense fallback={null}>
+      <HomeClient stats={stats} />
+    </Suspense>
+  )
 }

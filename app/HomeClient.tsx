@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase-client'
 type Stats = { listings: number; users: number; cities: number }
 
 export default function HomeClient({ stats }: { stats?: Stats }) {
-  const { category, query, metro, city } = useFilters()
+  const { category, query, metro, city, sort } = useFilters()
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -33,7 +33,17 @@ export default function HomeClient({ stats }: { stats?: Stats }) {
       if (metro) q = q.eq('metro', metro)
       if (city) q = q.eq('city', city)
 
-      q = q.order('is_premium', { ascending: false }).order('created_at', { ascending: false }).limit(48)
+      // Сортировка
+      if (sort === 'pa')  q = q.order('price', { ascending: true })
+      else if (sort === 'pd')  q = q.order('price', { ascending: false })
+      else if (sort === 'pop') q = q.order('views', { ascending: false })
+      else if (sort === 'old') q = q.order('created_at', { ascending: true })
+      else {
+        // new (default) — премиум сверху, потом по дате
+        q = q.order('is_premium', { ascending: false }).order('created_at', { ascending: false })
+      }
+
+      q = q.limit(48)
 
       const { data } = await q
       if (!cancelled) {
@@ -44,7 +54,7 @@ export default function HomeClient({ stats }: { stats?: Stats }) {
 
     fetchListings()
     return () => { cancelled = true }
-  }, [category, query, metro, city])
+  }, [category, query, metro, city, sort])
 
   return (
     <>
