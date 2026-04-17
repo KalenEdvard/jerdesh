@@ -38,7 +38,7 @@ export function useFilters(): Filters & {
     } else {
       params.set(paramKey, value)
     }
-    router.push(`/?${params.toString()}`)
+    router.push(`/?${params.toString()}`, { scroll: false })
   }, [router, searchParams])
 
   const resetFilters = useCallback(() => {
