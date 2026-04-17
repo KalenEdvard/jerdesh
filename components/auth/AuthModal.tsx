@@ -43,27 +43,37 @@ export default function AuthModal() {
 
   const handleLogin = async () => {
     setError(''); setLoading(true)
+
+    // Таймаут 10 сек — если Supabase не отвечает
+    const timeout = setTimeout(() => {
+      setLoading(false)
+      setError('Сервер не отвечает. Проверьте интернет и попробуйте ещё раз.')
+    }, 10000)
+
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password })
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: form.email,
+        password: form.password,
+      })
+
       if (authError) {
         if (authError.message === 'Email not confirmed') {
           setScreen('confirm')
+        } else if (authError.message === 'Invalid login credentials') {
+          setError('Неверный email или пароль')
         } else {
           setError(authError.message)
         }
         return
       }
 
-      // Fetch profile — but don't block login if it fails
+      // Загружаем профиль — не блокируем вход если таблица недоступна
       let profile = null
       try {
         const { data: p } = await supabase.from('users').select('*').eq('id', data.user.id).single()
         profile = p
-      } catch {
-        // profile stays null — user still gets logged in
-      }
+      } catch { /* profile stays null */ }
 
-      // Fallback: build minimal profile from auth data if table query failed
       if (!profile) {
         profile = {
           id: data.user.id,
@@ -76,9 +86,10 @@ export default function AuthModal() {
       setAuthOpen(false)
       showToast(`Добро пожаловать, ${profile.name}! 👋`, 'ok')
       router.push('/profile')
-    } catch {
-      setError('Ошибка входа. Попробуйте ещё раз.')
+    } catch (e: any) {
+      setError(e?.message || 'Ошибка входа. Попробуйте ещё раз.')
     } finally {
+      clearTimeout(timeout)
       setLoading(false)
     }
   }
