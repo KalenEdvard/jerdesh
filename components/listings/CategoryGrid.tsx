@@ -1,7 +1,8 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import { useStore } from '@/store'
 import { CATEGORIES } from '@/types'
+import { motion } from 'framer-motion'
+import { useFilters } from '@/hooks/useFilters'
 
 const BG_COLORS: Record<string, string> = {
   housing:     'linear-gradient(135deg,#1d4ed8,#3b82f6)',
@@ -11,25 +12,43 @@ const BG_COLORS: Record<string, string> = {
   services:    'linear-gradient(135deg,#7c3aed,#a78bfa)',
 }
 
+const SHADOW_COLORS: Record<string, string> = {
+  housing:     'rgba(29,78,216,0.35)',
+  findhousing: 'rgba(99,102,241,0.35)',
+  jobs:        'rgba(5,150,105,0.35)',
+  sell:        'rgba(217,119,6,0.35)',
+  services:    'rgba(124,58,237,0.35)',
+}
+
 export default function CategoryGrid() {
   const router = useRouter()
-  const { setFilter } = useStore()
+  const { setFilter } = useFilters()
 
   return (
     <section style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 20px 0' }}>
-      <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 20 }}>Категории</h2>
+      <motion.h2
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 20 }}
+      >
+        Категории
+      </motion.h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 12 }}>
-        {CATEGORIES.map(cat => (
-          <button
+        {CATEGORIES.map((cat, i) => (
+          <motion.button
             key={cat.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: i * 0.06 }}
+            whileHover={{ y: -5, boxShadow: `0 12px 32px ${SHADOW_COLORS[cat.id] || 'rgba(0,0,0,0.2)'}` }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => { setFilter('category', cat.id); router.push(`/?cat=${cat.id}`) }}
-            style={{ padding: '20px 12px', borderRadius: 16, background: BG_COLORS[cat.id], color: '#fff', textAlign: 'center', cursor: 'pointer', border: 'none', transition: 'transform 0.15s, box-shadow 0.15s', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-            onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-3px)')}
-            onMouseLeave={e => (e.currentTarget.style.transform = 'none')}
+            style={{ padding: '22px 12px', borderRadius: 18, background: BG_COLORS[cat.id], color: '#fff', textAlign: 'center', cursor: 'pointer', border: 'none', boxShadow: `0 4px 16px ${SHADOW_COLORS[cat.id] || 'rgba(0,0,0,0.1)'}` }}
           >
-            <div style={{ fontSize: 28, marginBottom: 8 }}>{cat.icon}</div>
+            <div style={{ fontSize: 30, marginBottom: 9 }}>{cat.icon}</div>
             <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3 }}>{cat.label}</div>
-          </button>
+          </motion.button>
         ))}
       </div>
     </section>

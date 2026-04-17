@@ -7,8 +7,8 @@ export default function Footer() {
         {/* Brand */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: "'Unbounded',sans-serif", fontWeight: 900, fontSize: 14 }}>Ж</div>
-            <span style={{ fontFamily: "'Unbounded',sans-serif", fontWeight: 700, fontSize: 16, color: '#fff' }}>Жердеш</span>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: "'Unbounded',sans-serif", fontWeight: 900, fontSize: 14 }}>М</div>
+            <span style={{ fontFamily: "'Unbounded',sans-serif", fontWeight: 700, fontSize: 16, color: '#fff' }}>Мекендеш</span>
           </div>
           <p style={{ fontSize: 13, lineHeight: 1.6, maxWidth: 220 }}>
             Объявления для кыргызской диаспоры в России. Жильё, работа, услуги — всё в одном месте.
@@ -40,11 +40,9 @@ export default function Footer() {
         <div>
           <h4 style={{ color: '#e2e8f0', fontWeight: 700, marginBottom: 12, fontSize: 14 }}>Проект</h4>
           {[
-            { label: 'О нас',             href: '/about' },
-            { label: 'Правила',           href: '/rules' },
-            { label: 'Конфиденциальность',href: '/privacy' },
-            { label: 'Помощь',            href: '/help' },
-            { label: 'Скачать приложение',href: '/app' },
+            { label: 'Подать объявление', href: '/create' },
+            { label: 'Мой профиль',       href: '/profile' },
+            { label: 'Избранное',         href: '/profile?tab=favs' },
           ].map(l => (
             <Link key={l.label} href={l.href} style={{ display: 'block', marginBottom: 8, fontSize: 13, color: '#94a3b8' }}>
               {l.label}
@@ -68,7 +66,7 @@ export default function Footer() {
       </div>
 
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '20px', textAlign: 'center', fontSize: 12 }}>
-        © {new Date().getFullYear()} Жердеш — Объявления кыргызов в России
+        © {new Date().getFullYear()} Мекендеш — Объявления кыргызов в России
       </div>
     </footer>
   )

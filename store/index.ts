@@ -1,14 +1,10 @@
 'use client'
 import { create } from 'zustand'
-import type { User, FilterState, Category, SortOption } from '@/types'
+import type { User } from '@/types'
 
 interface AppState {
   user: User | null
   setUser: (user: User | null) => void
-
-  filters: FilterState
-  setFilter: <K extends keyof FilterState>(key: K, value: FilterState[K]) => void
-  resetFilters: () => void
 
   favIds: string[]
   toggleFav: (id: string) => void
@@ -25,24 +21,9 @@ interface AppState {
   closeChat: () => void
 }
 
-const defaultFilters: FilterState = {
-  category: 'all',
-  query: '',
-  city: 'Москва',
-  metro: '',
-  priceMin: '',
-  priceMax: '',
-  sort: 'new',
-}
-
-export const useStore = create<AppState>((set, get) => ({
+export const useStore = create<AppState>((set) => ({
   user: null,
   setUser: (user) => set({ user }),
-
-  filters: defaultFilters,
-  setFilter: (key, value) =>
-    set((s) => ({ filters: { ...s.filters, [key]: value } })),
-  resetFilters: () => set({ filters: defaultFilters }),
 
   favIds: [],
   toggleFav: (id) =>

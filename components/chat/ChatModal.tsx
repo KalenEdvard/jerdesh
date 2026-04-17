@@ -25,7 +25,9 @@ export default function ChatModal({ listingId, receiverId }: { listingId: string
         .from('messages')
         .select('*, sender:users(name,avatar_url)')
         .eq('listing_id', listingId)
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .or(
+          `and(sender_id.eq.${user.id},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${user.id})`
+        )
         .order('created_at', { ascending: true })
       setMessages(data || [])
     }
@@ -40,7 +42,12 @@ export default function ChatModal({ listingId, receiverId }: { listingId: string
         table: 'messages',
         filter: `listing_id=eq.${listingId}`,
       }, (payload) => {
-        setMessages(prev => [...prev, payload.new as Message])
+        const message = payload.new as Message
+        const isConversationMessage =
+          (message.sender_id === user.id && message.receiver_id === receiverId) ||
+          (message.sender_id === receiverId && message.receiver_id === user.id)
+        if (!isConversationMessage) return
+        setMessages(prev => [...prev, message])
       })
       .subscribe()
 

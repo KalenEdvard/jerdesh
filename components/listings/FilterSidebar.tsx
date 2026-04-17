@@ -1,52 +1,90 @@
 'use client'
-import { useStore } from '@/store'
 import { METRO_STATIONS, CATEGORIES } from '@/types'
 import dynamic from 'next/dynamic'
+import { motion } from 'framer-motion'
+import { SlidersHorizontal, RotateCcw, MapPin, Tag, ArrowUpDown } from 'lucide-react'
+import { useFilters } from '@/hooks/useFilters'
 
 const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false })
 
+const CAT_COLORS: Record<string, string> = {
+  all:         '#64748b',
+  housing:     '#1d4ed8',
+  findhousing: '#6366f1',
+  jobs:        '#059669',
+  sell:        '#d97706',
+  services:    '#7c3aed',
+}
+
 export default function FilterSidebar() {
-  const { filters, setFilter, resetFilters } = useStore()
+  const { category, metro, sort, setFilter, resetFilters } = useFilters()
 
   return (
     <aside style={{ width: 260, flexShrink: 0 }}>
-      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 20, marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700 }}>Фильтры</h3>
-          <button onClick={resetFilters} style={{ fontSize: 12, color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>
+      <motion.div
+        initial={{ opacity: 0, x: -16 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.35 }}
+        style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: 20, marginBottom: 16, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <SlidersHorizontal size={15} color="#fff" />
+            </div>
+            <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>Фильтры</h3>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={resetFilters}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#ef4444', background: '#fee2e2', border: 'none', cursor: 'pointer', borderRadius: 8, padding: '5px 10px', fontWeight: 600 }}
+          >
+            <RotateCcw size={11} />
             Сбросить
-          </button>
+          </motion.button>
         </div>
 
         {/* Category */}
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 6 }}>КАТЕГОРИЯ</label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+            <Tag size={13} color="#94a3b8" />
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.5px' }}>КАТЕГОРИЯ</label>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <button
               onClick={() => setFilter('category', 'all')}
-              style={{ textAlign: 'left', padding: '7px 10px', borderRadius: 8, fontSize: 13, background: filters.category === 'all' ? '#eff6ff' : 'none', color: filters.category === 'all' ? '#1d4ed8' : '#334155', fontWeight: filters.category === 'all' ? 700 : 400, border: 'none', cursor: 'pointer' }}
+              style={{ textAlign: 'left', padding: '8px 12px', borderRadius: 10, fontSize: 13, background: category === 'all' ? '#eff6ff' : 'none', color: category === 'all' ? '#1d4ed8' : '#334155', fontWeight: category === 'all' ? 700 : 500, border: category === 'all' ? '1.5px solid #bfdbfe' : '1.5px solid transparent', cursor: 'pointer', transition: 'all 0.15s' }}
             >
               Все категории
             </button>
-            {CATEGORIES.map(c => (
-              <button
-                key={c.id}
-                onClick={() => setFilter('category', c.id)}
-                style={{ textAlign: 'left', padding: '7px 10px', borderRadius: 8, fontSize: 13, background: filters.category === c.id ? '#eff6ff' : 'none', color: filters.category === c.id ? '#1d4ed8' : '#334155', fontWeight: filters.category === c.id ? 700 : 400, border: 'none', cursor: 'pointer' }}
-              >
-                {c.icon} {c.label}
-              </button>
-            ))}
+            {CATEGORIES.map(c => {
+              const color = CAT_COLORS[c.id] || '#1d4ed8'
+              const isActive = category === c.id
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setFilter('category', c.id)}
+                  style={{ textAlign: 'left', padding: '8px 12px', borderRadius: 10, fontSize: 13, background: isActive ? color + '12' : 'none', color: isActive ? color : '#334155', fontWeight: isActive ? 700 : 500, border: isActive ? `1.5px solid ${color}33` : '1.5px solid transparent', cursor: 'pointer', transition: 'all 0.15s' }}
+                >
+                  {c.icon} {c.label}
+                </button>
+              )
+            })}
           </div>
         </div>
 
         {/* Metro */}
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 6 }}>СТАНЦИЯ МЕТРО</label>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+            <MapPin size={13} color="#94a3b8" />
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.5px' }}>СТАНЦИЯ МЕТРО</label>
+          </div>
           <select
-            value={filters.metro}
+            value={metro}
             onChange={e => setFilter('metro', e.target.value)}
-            style={{ width: '100%', padding: '8px 10px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', background: '#f8fafc' }}
+            style={{ width: '100%', padding: '9px 12px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', background: '#f8fafc', color: '#334155', cursor: 'pointer' }}
           >
             <option value="">Все станции</option>
             {METRO_STATIONS.map(s => <option key={s} value={s}>🚇 {s}</option>)}
@@ -55,11 +93,14 @@ export default function FilterSidebar() {
 
         {/* Sort */}
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 6 }}>СОРТИРОВКА</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+            <ArrowUpDown size={13} color="#94a3b8" />
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.5px' }}>СОРТИРОВКА</label>
+          </div>
           <select
-            value={filters.sort}
+            value={sort}
             onChange={e => setFilter('sort', e.target.value as any)}
-            style={{ width: '100%', padding: '8px 10px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', background: '#f8fafc' }}
+            style={{ width: '100%', padding: '9px 12px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', background: '#f8fafc', color: '#334155', cursor: 'pointer' }}
           >
             <option value="new">Сначала новые</option>
             <option value="old">Сначала старые</option>
@@ -68,13 +109,20 @@ export default function FilterSidebar() {
             <option value="pop">Популярные</option>
           </select>
         </div>
-      </div>
+      </motion.div>
 
       {/* Map */}
-      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-        <div style={{ padding: '14px 16px 10px', fontSize: 13, fontWeight: 700 }}>🗺️ Карта</div>
+      <motion.div
+        initial={{ opacity: 0, x: -16 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.35, delay: 0.1 }}
+        style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
+      >
+        <div style={{ padding: '14px 16px 10px', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, color: '#0f172a' }}>
+          <MapPin size={14} color="#1d4ed8" /> Карта
+        </div>
         <MapView />
-      </div>
+      </motion.div>
     </aside>
   )
 }

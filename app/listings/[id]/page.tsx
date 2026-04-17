@@ -9,11 +9,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { data } = await supabase.from('listings').select('title,description,photos').eq('id', id).single()
   if (!data) return { title: 'Объявление не найдено' }
   return {
-    title: `${data.title} | Жердеш`,
+    title: `${data.title} | Мекендеш`,
     description: data.description?.slice(0, 160),
+    alternates: { canonical: `https://mekendesh.site/listings/${id}` },
     openGraph: {
       title: data.title,
       description: data.description?.slice(0, 160),
+      url: `https://mekendesh.site/listings/${id}`,
+      siteName: 'Мекендеш',
       images: data.photos?.[0] ? [{ url: data.photos[0] }] : [],
     },
   }
@@ -31,8 +34,8 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   if (!listing) notFound()
 
-  // Increment views
-  await supabase.from('listings').update({ views: (listing.views || 0) + 1 }).eq('id', id)
+  // Increment views via RPC (atomic, no race condition)
+  await supabase.rpc('increment_listing_views', { listing_id: id })
 
   // Get seller reviews
   const { data: reviews } = await supabase

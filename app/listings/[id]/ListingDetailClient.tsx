@@ -5,6 +5,8 @@ import type { Listing, Review } from '@/types'
 import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import ChatModal from '@/components/chat/ChatModal'
+import { toggleFavorite } from '@/lib/toggleFavorite'
+import { createClient } from '@/lib/supabase-client'
 
 const CAT_LABELS: Record<string, string> = {
   housing: 'Сдаю жильё', findhousing: 'Сниму жильё',
@@ -16,10 +18,12 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
   const [photoIdx, setPhotoIdx] = useState(0)
   const isFav = favIds.includes(listing.id)
 
-  const handleFav = () => {
+  const handleFav = async () => {
     if (!user) { setAuthOpen(true); return }
+    const supabase = createClient()
+    const saved = await toggleFavorite(supabase, user.id, listing.id)
     toggleFav(listing.id)
-    showToast(isFav ? 'Удалено из избранного' : 'Добавлено в избранное ❤️', isFav ? 'info' : 'ok')
+    showToast(saved ? 'Добавлено в избранное ❤️' : 'Удалено из избранного', saved ? 'ok' : 'info')
   }
 
   const handleChat = () => {

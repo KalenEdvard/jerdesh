@@ -1,0 +1,49 @@
+'use client'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useCallback } from 'react'
+
+export type SortOption = 'new' | 'old' | 'pa' | 'pd' | 'pop'
+
+export interface Filters {
+  query: string
+  category: string
+  metro: string
+  city: string
+  sort: SortOption
+}
+
+export function useFilters(): Filters & {
+  setFilter: (key: keyof Filters, value: string) => void
+  resetFilters: () => void
+} {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const filters: Filters = {
+    query:    searchParams.get('q')    ?? '',
+    category: searchParams.get('cat')  ?? 'all',
+    metro:    searchParams.get('metro') ?? '',
+    city:     searchParams.get('city') ?? 'Москва',
+    sort:     (searchParams.get('sort') ?? 'new') as SortOption,
+  }
+
+  const setFilter = useCallback((key: keyof Filters, value: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    const map: Record<keyof Filters, string> = {
+      query: 'q', category: 'cat', metro: 'metro', city: 'city', sort: 'sort',
+    }
+    const paramKey = map[key]
+    if (!value || value === 'all' || value === 'new' || value === 'Москва' && key === 'city') {
+      params.delete(paramKey)
+    } else {
+      params.set(paramKey, value)
+    }
+    router.push(`/?${params.toString()}`)
+  }, [router, searchParams])
+
+  const resetFilters = useCallback(() => {
+    router.push('/')
+  }, [router])
+
+  return { ...filters, setFilter, resetFilters }
+}

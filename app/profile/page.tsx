@@ -1,69 +1,106 @@
 'use client'
 export const dynamic = 'force-dynamic'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useStore } from '@/store'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import type { Listing } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Star, MapPin, Plus, RefreshCw, Settings, Heart, Package, Trash2 } from 'lucide-react'
+import { Star, MapPin, Plus, RefreshCw, Settings, Heart, Package, Trash2, Camera } from 'lucide-react'
 
-export default function ProfilePage() {
+type Tab = 'ads' | 'favs' | 'settings'
+
+type FavoriteRow = { listing: Listing | null }
+
+export default function ProfilePageWrapper() {
+  return <Suspense fallback={null}><ProfilePage /></Suspense>
+}
+
+function ProfilePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, setUser, showToast } = useStore()
   const [myListings, setMyListings] = useState<Listing[]>([])
   const [favListings, setFavListings] = useState<Listing[]>([])
-  const [tab, setTab] = useState<'ads' | 'favs' | 'settings'>('ads')
+  const tab = (searchParams.get('tab') ?? 'ads') as Tab
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
+  const [telegram, setTelegram] = useState('')
+  const [vk, setVk] = useState('')
   const [saving, setSaving] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
     if (!user) { router.push('/'); return }
     setName(user.name || '')
     setPhone(user.phone || '')
+    setWhatsapp((user as any).whatsapp || '')
+    setTelegram((user as any).telegram || '')
+    setVk((user as any).vk || '')
     loadMyListings()
     loadFavListings()
   }, [user])
 
   const loadMyListings = async () => {
     if (!user) return
-    const { data } = await supabase.from('listings').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
+    const { data } = await supabase
+      .from('listings')
+      .select('*')
+      .eq('user_id', user.id)
+      .in('status', ['active', 'draft'])
+      .order('status', { ascending: true }) // active сначала
+      .order('created_at', { ascending: false })
     setMyListings(data || [])
   }
 
   const loadFavListings = async () => {
     if (!user) return
     const { data } = await supabase.from('favorites').select('listing:listings(*, user:users(*))').eq('user_id', user.id)
-    setFavListings(data?.map((f: any) => f.listing).filter(Boolean) || [])
+    setFavListings((data as FavoriteRow[] | null)?.map(f => f.listing).filter(Boolean) as Listing[] || [])
   }
 
   const saveSettings = async () => {
     if (!user) return
     setSaving(true)
-    await supabase.from('users').update({ name, phone }).eq('id', user.id)
-    setUser({ ...user, name, phone })
+    await supabase.from('users').update({ name, phone, whatsapp, telegram, vk }).eq('id', user.id)
+    setUser({ ...user, name, phone, whatsapp, telegram, vk })
     showToast('Профиль обновлён ✓', 'ok')
     setSaving(false)
   }
 
+  const uploadAvatar = async (file: File) => {
+    if (!user) return
+    if (file.size > 5 * 1024 * 1024) { showToast('Файл больше 5MB', 'error'); return }
+    setAvatarUploading(true)
+    const ext = file.name.split('.').pop()
+    const path = `avatars/${user.id}.${ext}`
+    const { error } = await supabase.storage.from('listings').upload(path, file, { upsert: true })
+    if (error) { showToast('Ошибка загрузки', 'error'); setAvatarUploading(false); return }
+    const { data: { publicUrl } } = supabase.storage.from('listings').getPublicUrl(path)
+    await supabase.from('users').update({ avatar_url: publicUrl }).eq('id', user.id)
+    setUser({ ...user, avatar_url: publicUrl })
+    showToast('Фото обновлено ✓', 'ok')
+    setAvatarUploading(false)
+  }
+
   const deleteListing = async (id: string) => {
-    await supabase.from('listings').update({ is_active: false }).eq('id', id)
-    setMyListings(prev => prev.filter(l => l.id !== id))
-    showToast('Объявление удалено', 'info')
+    // Переводим в черновик — физически не удаляем (cron удалит через 180 дней)
+    await supabase.from('listings').update({ status: 'draft' }).eq('id', id)
+    setMyListings(prev => prev.map(l => l.id === id ? { ...l, status: 'draft' as const } : l))
+    showToast('Объявление снято с публикации', 'info')
   }
 
   const renewListing = async (id: string) => {
-    const newExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-    await supabase.from('listings').update({ is_active: true, expires_at: newExpiry }).eq('id', id)
-    setMyListings(prev => prev.map(l => l.id === id ? { ...l, is_active: true, expires_at: newExpiry } : l))
+    await supabase.from('listings').update({ status: 'active' }).eq('id', id)
+    setMyListings(prev => prev.map(l => l.id === id ? { ...l, status: 'active' as const } : l))
     showToast('Объявление снова активно! ✓', 'ok')
   }
 
   if (!user) return null
 
-  const isExpired = (l: Listing) => l.expires_at && new Date(l.expires_at) < new Date()
+  const isDraft = (l: Listing) => l.status === 'draft'
 
   const tabs = [
     { id: 'ads', label: 'Мои объявления', icon: <Package size={16} /> },
@@ -82,8 +119,18 @@ export default function ProfilePage() {
 
         <div style={{ maxWidth: 900, margin: '0 auto', padding: '48px 20px 0', textAlign: 'center', position: 'relative' }}>
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            style={{ width: 96, height: 96, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', border: '4px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 36, fontWeight: 900, margin: '0 auto 16px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-            {user.name?.[0]?.toUpperCase() || 'У'}
+            style={{ position: 'relative', width: 96, height: 96, margin: '0 auto 16px' }}>
+            <label style={{ cursor: 'pointer', display: 'block', width: '100%', height: '100%' }}>
+              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && uploadAvatar(e.target.files[0])} />
+              <div style={{ width: 96, height: 96, borderRadius: '50%', background: user.avatar_url ? 'none' : 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', border: '4px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 36, fontWeight: 900, boxShadow: '0 8px 32px rgba(0,0,0,0.2)', overflow: 'hidden' }}>
+                {user.avatar_url
+                  ? <img src={user.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : (avatarUploading ? '⏳' : user.name?.[0]?.toUpperCase() || 'У')}
+              </div>
+              <div style={{ position: 'absolute', bottom: 2, right: 2, width: 28, height: 28, borderRadius: '50%', background: '#1d4ed8', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                <Camera size={13} color="#fff" />
+              </div>
+            </label>
           </motion.div>
 
           <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
@@ -118,7 +165,7 @@ export default function ProfilePage() {
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <div style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', borderRadius: 14, padding: 4, display: 'flex', gap: 4 }}>
               {tabs.map(t => (
-                <button key={t.id} onClick={() => setTab(t.id as any)}
+                <button key={t.id} onClick={() => router.push(`/profile?tab=${t.id}`)}
                   style={{ padding: '10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s', background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#1d4ed8' : 'rgba(255,255,255,0.8)', boxShadow: tab === t.id ? '0 2px 8px rgba(0,0,0,0.1)' : 'none' }}>
                   {t.icon} {t.label}
                 </button>
@@ -147,31 +194,36 @@ export default function ProfilePage() {
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
                   {myListings.map((l, i) => {
-                    const expired = isExpired(l)
+                    const draft = isDraft(l)
                     return (
                       <motion.div key={l.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                         whileHover={{ y: -4 }}
-                        style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', transition: 'box-shadow 0.2s', position: 'relative' }}>
+                        style={{ background: '#fff', borderRadius: 16, border: `1px solid ${draft ? '#fed7aa' : '#e2e8f0'}`, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', transition: 'box-shadow 0.2s', position: 'relative', opacity: draft ? 0.85 : 1 }}>
 
                         {/* Фото или заглушка */}
                         <div style={{ height: 160, background: l.photos?.[0] ? 'none' : 'linear-gradient(135deg,#eff6ff,#dbeafe)', position: 'relative', overflow: 'hidden' }}>
                           {l.photos?.[0] ? <img src={l.photos[0]} alt={l.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> :
                             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🏷️</div>}
 
-                          {/* Expired overlay */}
-                          {expired && (
-                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                              <span style={{ color: '#fbbf24', fontWeight: 700, fontSize: 13 }}>⏰ Истёк срок</span>
+                          {/* Draft overlay */}
+                          {draft && (
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                              <span style={{ color: '#fbbf24', fontWeight: 700, fontSize: 13 }}>📁 Черновик</span>
                               <button onClick={() => renewListing(l.id)}
                                 style={{ padding: '7px 16px', borderRadius: 10, background: '#22c55e', color: '#fff', fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <RefreshCw size={12} /> Ещё актуально
+                                <RefreshCw size={12} /> Опубликовать снова
                               </button>
                             </div>
                           )}
 
                           {/* Urgent badge */}
-                          {l.is_urgent && !expired && (
+                          {l.is_urgent && !draft && (
                             <div style={{ position: 'absolute', top: 8, left: 8, background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6 }}>СРОЧНО</div>
+                          )}
+
+                          {/* Active badge */}
+                          {!draft && (
+                            <div style={{ position: 'absolute', top: 8, left: l.is_urgent ? 70 : 8, background: '#22c55e', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6 }}>АКТИВНО</div>
                           )}
                         </div>
 
@@ -184,8 +236,8 @@ export default function ProfilePage() {
                           </div>
                         </div>
 
-                        {/* Кнопка удалить */}
-                        {!expired && (
+                        {/* Кнопка в черновик (только для активных) */}
+                        {!draft && (
                           <button onClick={() => deleteListing(l.id)}
                             style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                             <Trash2 size={13} />
@@ -250,6 +302,40 @@ export default function ProfilePage() {
                       onFocus={e => e.target.style.borderColor = '#1d4ed8'}
                       onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
                   </div>
+
+                  <div style={{ height: 1, background: '#f1f5f9', margin: '4px 0' }} />
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.05em' }}>СОЦСЕТИ</div>
+
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      <span style={{ fontSize: 16 }}>💬</span> WhatsApp
+                    </label>
+                    <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="+7 999 123-45-67" type="tel"
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
+                      onFocus={e => e.target.style.borderColor = '#25d366'}
+                      onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      <span style={{ fontSize: 16 }}>✈️</span> Telegram
+                    </label>
+                    <input value={telegram} onChange={e => setTelegram(e.target.value)} placeholder="@username"
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
+                      onFocus={e => e.target.style.borderColor = '#2aabee'}
+                      onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      <span style={{ fontSize: 16 }}>🔵</span> ВКонтакте
+                    </label>
+                    <input value={vk} onChange={e => setVk(e.target.value)} placeholder="vk.com/username"
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
+                      onFocus={e => e.target.style.borderColor = '#4680c2'}
+                      onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
+                  </div>
+
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     onClick={saveSettings} disabled={saving}
                     style={{ padding: '13px', borderRadius: 12, background: saving ? '#94a3b8' : '#1d4ed8', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: saving ? 'default' : 'pointer', marginTop: 4 }}>

@@ -5,6 +5,9 @@ import { createClient } from '@/lib/supabase-client'
 import type { Listing } from '@/types'
 import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
+import { motion } from 'framer-motion'
+import { MapPin, Eye, Star, Heart } from 'lucide-react'
+import { toggleFavorite } from '@/lib/toggleFavorite'
 
 const CAT_COLORS: Record<string, string> = {
   housing:     '#1d4ed8',
@@ -13,6 +16,13 @@ const CAT_COLORS: Record<string, string> = {
   sell:        '#d97706',
   services:    '#7c3aed',
 }
+const CAT_GRADIENTS: Record<string, string> = {
+  housing:     'linear-gradient(135deg,#1d4ed8,#3b82f6)',
+  findhousing: 'linear-gradient(135deg,#6366f1,#818cf8)',
+  jobs:        'linear-gradient(135deg,#059669,#34d399)',
+  sell:        'linear-gradient(135deg,#d97706,#fbbf24)',
+  services:    'linear-gradient(135deg,#7c3aed,#a78bfa)',
+}
 const CAT_LABELS: Record<string, string> = {
   housing:     'Сдаю жильё',
   findhousing: 'Сниму жильё',
@@ -20,111 +30,133 @@ const CAT_LABELS: Record<string, string> = {
   sell:        'Продаю',
   services:    'Услуга',
 }
+const CAT_ICONS: Record<string, string> = {
+  housing: '🏠', findhousing: '🔍', jobs: '💼', sell: '🛍️', services: '🔧',
+}
 
 export default function ListingCard({ listing }: { listing: Listing }) {
   const { user, favIds, toggleFav, showToast, setAuthOpen } = useStore()
-
   const isFav = favIds.includes(listing.id)
 
   const handleFav = async (e: React.MouseEvent) => {
     e.preventDefault()
     if (!user) { setAuthOpen(true); return }
     const supabase = createClient()
-    const { data: existing } = await supabase
-      .from('favorites').select('id').eq('listing_id', listing.id).eq('user_id', user.id).single()
-    if (existing) {
-      await supabase.from('favorites').delete().eq('id', existing.id)
-      toggleFav(listing.id)
-      showToast('Удалено из избранного', 'info')
-    } else {
-      await supabase.from('favorites').insert({ listing_id: listing.id, user_id: user.id })
-      toggleFav(listing.id)
-      showToast('Добавлено в избранное ❤️', 'ok')
-    }
+    const saved = await toggleFavorite(supabase, user.id, listing.id)
+    toggleFav(listing.id)
+    showToast(saved ? 'Добавлено в избранное ❤️' : 'Удалено из избранного', saved ? 'ok' : 'info')
   }
 
   const timeAgo = formatDistanceToNow(new Date(listing.created_at), { addSuffix: true, locale: ru })
   const catColor = CAT_COLORS[listing.category] || '#1d4ed8'
+  const catGradient = CAT_GRADIENTS[listing.category] || 'linear-gradient(135deg,#1d4ed8,#3b82f6)'
   const catLabel = CAT_LABELS[listing.category] || listing.category
+  const catIcon = CAT_ICONS[listing.category] || '📌'
   const photo = listing.photos?.[0]
 
   return (
-    <Link
-      href={`/listings/${listing.id}`}
-      style={{ display: 'block', background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden', transition: 'transform 0.2s, box-shadow 0.2s', textDecoration: 'none', position: 'relative' }}
-      className="listing-card"
+    <motion.div
+      whileHover={{ y: -4, boxShadow: '0 20px 48px rgba(0,0,0,0.1)' }}
+      transition={{ duration: 0.2 }}
+      style={{ borderRadius: 18, overflow: 'hidden', background: '#fff', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
     >
-      {/* Photo */}
-      <div style={{ height: 180, background: '#f1f5f9', position: 'relative', overflow: 'hidden' }}>
-        {photo ? (
-          <img src={photo} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, color: '#cbd5e1' }}>
-            {listing.category === 'housing' || listing.category === 'findhousing' ? '🏠' : listing.category === 'jobs' ? '💼' : listing.category === 'sell' ? '🛍️' : '🔧'}
-          </div>
-        )}
-        {/* Badges */}
-        <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 6 }}>
-          {listing.is_urgent && (
-            <span style={{ background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20 }}>Срочно</span>
-          )}
-          {listing.is_premium && (
-            <span style={{ background: '#f59e0b', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20 }}>⭐ Топ</span>
-          )}
-        </div>
-        {/* Favorite button */}
-        <button
-          onClick={handleFav}
-          style={{ position: 'absolute', top: 10, right: 10, width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, cursor: 'pointer', backdropFilter: 'blur(4px)' }}
-        >
-          {isFav ? '❤️' : '🤍'}
-        </button>
-      </div>
-
-      {/* Content */}
-      <div style={{ padding: '14px 16px' }}>
-        {/* Category + metro */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, color: catColor, background: catColor + '18', padding: '2px 8px', borderRadius: 20 }}>
-            {catLabel}
-          </span>
-          {listing.metro && (
-            <span style={{ fontSize: 11, color: '#64748b' }}>🚇 {listing.metro}</span>
-          )}
-        </div>
-
-        {/* Title */}
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 4, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-          {listing.title}
-        </h3>
-
-        {/* Price */}
-        {listing.price ? (
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#1d4ed8', marginBottom: 8 }}>
-            {listing.price.toLocaleString('ru')} ₽<span style={{ fontSize: 12, fontWeight: 400, color: '#64748b' }}>/мес</span>
-          </div>
-        ) : (
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>Договорная</div>
-        )}
-
-        {/* Footer */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
-          {/* Author */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ width: 22, height: 22, borderRadius: '50%', background: catColor + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: catColor }}>
-              {listing.user?.name?.[0]?.toUpperCase() || 'У'}
+      <Link href={`/listings/${listing.id}`} style={{ display: 'block', textDecoration: 'none', position: 'relative' }}>
+        {/* Photo */}
+        <div style={{ height: 186, background: '#f1f5f9', position: 'relative', overflow: 'hidden' }}>
+          {photo ? (
+            <img src={photo} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: catGradient, opacity: 0.12 }}>
+              <span style={{ fontSize: 52, opacity: 0.6 }}>{catIcon}</span>
             </div>
-            <span style={{ fontSize: 12, color: '#64748b' }}>{listing.user?.name || 'Пользователь'}</span>
-            {listing.user?.rating && (
-              <span style={{ fontSize: 11, color: '#f59e0b' }}>★ {listing.user.rating}</span>
+          )}
+          {!photo && (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: 52 }}>{catIcon}</span>
+            </div>
+          )}
+
+          {/* Gradient overlay bottom */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60, background: 'linear-gradient(to top, rgba(0,0,0,0.3), transparent)' }} />
+
+          {/* Badges */}
+          <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 6 }}>
+            {listing.is_premium && (
+              <span style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20, boxShadow: '0 2px 8px rgba(245,158,11,0.4)' }}>⭐ Топ</span>
+            )}
+            {listing.is_urgent && (
+              <span style={{ background: 'linear-gradient(135deg,#ef4444,#dc2626)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20, boxShadow: '0 2px 8px rgba(239,68,68,0.4)' }}>🔴 Срочно</span>
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#94a3b8' }}>
-            <span>👁 {listing.views}</span>
-            <span>{timeAgo}</span>
+
+          {/* Favorite button */}
+          <motion.button
+            whileHover={{ scale: 1.12 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleFav}
+            style={{ position: 'absolute', top: 10, right: 10, width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
+          >
+            <Heart size={16} fill={isFav ? '#ef4444' : 'none'} color={isFav ? '#ef4444' : '#64748b'} />
+          </motion.button>
+
+          {/* Category pill on photo */}
+          <div style={{ position: 'absolute', bottom: 10, left: 10 }}>
+            <span style={{ background: catGradient, color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 20, boxShadow: `0 2px 8px ${catColor}55` }}>
+              {catLabel}
+            </span>
           </div>
         </div>
-      </div>
-    </Link>
+
+        {/* Content */}
+        <div style={{ padding: '14px 16px' }}>
+          {/* Metro */}
+          {listing.metro && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6 }}>
+              <MapPin size={11} color="#94a3b8" />
+              <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>м. {listing.metro}</span>
+            </div>
+          )}
+
+          {/* Title */}
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 8, lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {listing.title}
+          </h3>
+
+          {/* Price */}
+          {listing.price ? (
+            <div style={{ fontSize: 19, fontWeight: 800, color: catColor, marginBottom: 10, letterSpacing: '-0.5px' }}>
+              {listing.price.toLocaleString('ru')} ₽
+              <span style={{ fontSize: 12, fontWeight: 400, color: '#94a3b8', marginLeft: 4 }}>/мес</span>
+            </div>
+          ) : (
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#94a3b8', marginBottom: 10 }}>Договорная</div>
+          )}
+
+          {/* Footer */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
+            {/* Author */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <div style={{ width: 24, height: 24, borderRadius: '50%', background: catGradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#fff' }}>
+                {listing.user?.name?.[0]?.toUpperCase() || 'У'}
+              </div>
+              <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>{listing.user?.name || 'Пользователь'}</span>
+              {listing.user?.rating && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Star size={11} fill="#f59e0b" color="#f59e0b" />
+                  <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 600 }}>{listing.user.rating}</span>
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#94a3b8' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <Eye size={12} />
+                <span>{listing.views}</span>
+              </div>
+              <span>{timeAgo}</span>
+            </div>
+          </div>
+        </div>
+      </Link>
+    </motion.div>
   )
 }

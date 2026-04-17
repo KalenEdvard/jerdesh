@@ -1,8 +1,8 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useStore } from '@/store'
 import { CATEGORIES, METRO_STATIONS, CITIES } from '@/types'
+import { useFilters } from '@/hooks/useFilters'
 
 function Counter({ target, suffix = '' }: { target: number; suffix?: string }) {
   const [count, setCount] = useState(0)
@@ -26,9 +26,11 @@ function Counter({ target, suffix = '' }: { target: number; suffix?: string }) {
   return <span ref={ref}>{count.toLocaleString('ru')}{suffix}</span>
 }
 
-export default function Hero() {
+type HeroStats = { listings: number; users: number; cities: number }
+
+export default function Hero({ stats }: { stats?: HeroStats }) {
   const router = useRouter()
-  const { filters, setFilter } = useStore()
+  const { query, category, metro, city, setFilter } = useFilters()
   const [metroOpen, setMetroOpen] = useState(false)
   const [catOpen, setCatOpen] = useState(false)
   const [cityOpen, setCityOpen] = useState(false)
@@ -51,17 +53,18 @@ export default function Hero() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  const stats = [
-    { label: 'Объявлений', target: 12400, suffix: '+' },
-    { label: 'Пользователей', target: 8200, suffix: '+' },
-    { label: 'Городов', target: 24, suffix: '' },
+  const statItems = [
+    { label: 'Объявлений', target: stats?.listings ?? 0, suffix: stats?.listings ? '+' : '' },
+    { label: 'Пользователей', target: stats?.users ?? 0, suffix: stats?.users ? '+' : '' },
+    { label: 'Городов', target: stats?.cities ?? 0, suffix: '' },
   ]
 
   const handleSearch = () => {
     const params = new URLSearchParams()
-    if (filters.query)    params.set('q', filters.query)
-    if (filters.metro)    params.set('metro', filters.metro)
-    if (filters.category !== 'all') params.set('cat', filters.category)
+    if (query)             params.set('q', query)
+    if (metro)             params.set('metro', metro)
+    if (category !== 'all') params.set('cat', category)
+    if (city && city !== 'Москва') params.set('city', city)
     router.push(`/?${params.toString()}`)
   }
 
@@ -74,7 +77,7 @@ export default function Hero() {
         {/* Title */}
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <h1 style={{ fontFamily: "'Unbounded',sans-serif", fontWeight: 900, fontSize: 'clamp(24px,5vw,48px)', color: '#fff', lineHeight: 1.15, marginBottom: 12 }}>
-            Жердеш — Объявления<br />кыргызов в России
+            Мекендеш — Объявления<br />кыргызов в России
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 16, maxWidth: 520, margin: '0 auto' }}>
             Жильё, работа, услуги и товары от соотечественников. Найди всё что нужно рядом с тобой.
@@ -89,7 +92,7 @@ export default function Hero() {
               onClick={() => setCityOpen(!cityOpen)}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }}
             >
-              {CITIES.find(c => c.id === filters.city)?.flag || '🏙️'} {filters.city || 'Город'} ▾
+              {CITIES.find(c => c.id === city)?.flag || '🏙️'} {city || 'Город'} ▾
             </button>
             {cityOpen && (
               <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', minWidth: 200, zIndex: 9999, padding: 6 }}>
@@ -97,7 +100,7 @@ export default function Hero() {
                   <button
                     key={c.id}
                     onClick={() => { setFilter('city', c.id); setCityOpen(false) }}
-                    style={{ width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, fontSize: 13, color: '#334155', background: filters.city === c.id ? '#eff6ff' : 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+                    style={{ width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, fontSize: 13, color: '#334155', background: city === c.id ? '#eff6ff' : 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
                   >
                     <span style={{ fontSize: 18 }}>{c.flag}</span> {c.id}
                   </button>
@@ -112,7 +115,7 @@ export default function Hero() {
               onClick={() => setCatOpen(!catOpen)}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(255,255,255,0.2)' }}
             >
-              {CATEGORIES.find(c => c.id === filters.category)?.label || 'Все категории'} ▾
+              {CATEGORIES.find(c => c.id === category)?.label || 'Все категории'} ▾
             </button>
             {catOpen && (
               <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', minWidth: 180, zIndex: 9999, padding: 6 }}>
@@ -120,7 +123,7 @@ export default function Hero() {
                   Все категории
                 </button>
                 {CATEGORIES.map(c => (
-                  <button key={c.id} onClick={() => { setFilter('category', c.id); setCatOpen(false) }} style={{ width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, fontSize: 13, color: '#334155', background: filters.category === c.id ? '#eff6ff' : 'none' }}>
+                  <button key={c.id} onClick={() => { setFilter('category', c.id); setCatOpen(false) }} style={{ width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, fontSize: 13, color: '#334155', background: category === c.id ? '#eff6ff' : 'none' }}>
                     {c.icon} {c.label}
                   </button>
                 ))}
@@ -134,7 +137,7 @@ export default function Hero() {
               onClick={() => { setMetroOpen(!metroOpen); setMetroSearch('') }}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }}
             >
-              🚇 {filters.metro || 'Метро'} ▾
+              🚇 {metro || 'Метро'} ▾
             </button>
             {metroOpen && (
               <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', width: 240, zIndex: 9999 }}>
@@ -154,7 +157,7 @@ export default function Hero() {
                     — Любое —
                   </button>
                   {filteredMetro.map(s => (
-                    <button key={s} onClick={() => { setFilter('metro', s); setMetroOpen(false) }} style={{ width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, fontSize: 13, color: '#334155', background: filters.metro === s ? '#eff6ff' : 'none', border: 'none', cursor: 'pointer', display: 'block' }}>
+                    <button key={s} onClick={() => { setFilter('metro', s); setMetroOpen(false) }} style={{ width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, fontSize: 13, color: '#334155', background: metro === s ? '#eff6ff' : 'none', border: 'none', cursor: 'pointer', display: 'block' }}>
                       🚇 {s}
                     </button>
                   ))}
@@ -168,7 +171,7 @@ export default function Hero() {
 
           {/* Search input */}
           <input
-            value={filters.query}
+            value={query}
             onChange={e => setFilter('query', e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
             placeholder="Что ищете? Комнату, работу, услуги..."
@@ -198,7 +201,7 @@ export default function Hero() {
 
         {/* Stats */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 48, flexWrap: 'wrap' }}>
-          {stats.map(s => (
+          {statItems.map(s => (
             <div key={s.label} style={{ textAlign: 'center', color: '#fff' }}>
               <div style={{ fontSize: 28, fontFamily: "'Unbounded',sans-serif", fontWeight: 900 }}>
                 <Counter target={s.target} suffix={s.suffix} />

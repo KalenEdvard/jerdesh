@@ -11,6 +11,9 @@ export interface User {
   rating: number
   ads_count: number
   created_at: string
+  whatsapp?: string
+  telegram?: string
+  vk?: string
 }
 
 export interface Listing {
@@ -25,6 +28,7 @@ export interface Listing {
   phone?: string
   photos: string[]
   views: number
+  status: 'active' | 'draft' | 'deleted'
   is_active: boolean
   is_urgent: boolean
   is_premium: boolean
@@ -106,5 +110,5 @@ export const METRO_STATIONS = [
   'Первомайская','Измайловская','Партизанская','Семёновская','Электрозаводская',
   'Бауманская','Курская','Площадь Революции','Театральная','Новокузнецкая',
   'Третьяковская','Октябрьская','Добрынинская','Серпуховская','Тульская',
-  'Нагатинская','Коломенская','Каширская','Кантемировская','Царицыно',
+  'Коломенская','Каширская','Кантемировская','Царицыно',
 ]

@@ -7,8 +7,8 @@ import Toast from '@/components/ui/Toast'
 import AuthProvider from '@/components/auth/AuthProvider'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://zherdesh.ru'),
-  title: { default: 'Жердеш — Объявления кыргызов в России', template: '%s | Жердеш' },
+  metadataBase: new URL('https://mekendesh.site'),
+  title: { default: 'Мекендеш — Объявления кыргызов в России', template: '%s | Мекендеш' },
   description: 'Сайт объявлений для кыргызской диаспоры в России. Жильё, работа, услуги, продажа товаров.',
   icons: { icon: '/favicon.ico' },
 }

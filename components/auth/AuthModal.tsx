@@ -7,6 +7,25 @@ import { createClient } from '@/lib/supabase-client'
 type Tab = 'login' | 'register'
 type Screen = 'form' | 'confirm'
 
+function EyeIcon({ show }: { show: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      {show ? (
+        <>
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+          <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+          <line x1="1" y1="1" x2="23" y2="23" />
+        </>
+      ) : (
+        <>
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </>
+      )}
+    </svg>
+  )
+}
+
 export default function AuthModal() {
   const { authOpen, setAuthOpen, setUser, showToast } = useStore()
   const router = useRouter()
@@ -24,14 +43,52 @@ export default function AuthModal() {
 
   const handleLogin = async () => {
     setError(''); setLoading(true)
-    const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password })
-    if (error) { setError(error.message); setLoading(false); return }
-    const { data: profile } = await supabase.from('users').select('*').eq('id', data.user.id).single()
-    setUser(profile)
-    setAuthOpen(false)
-    showToast(`Добро пожаловать, ${profile?.name || 'друг'}! 👋`, 'ok')
-    router.push('/profile')
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password })
+      if (authError) {
+        if (authError.message === 'Email not confirmed') {
+          setScreen('confirm')
+        } else {
+          setError(authError.message)
+        }
+        return
+      }
+
+      // Fetch profile — but don't block login if it fails
+      let profile = null
+      try {
+        const { data: p } = await supabase.from('users').select('*').eq('id', data.user.id).single()
+        profile = p
+      } catch {
+        // profile stays null — user still gets logged in
+      }
+
+      // Fallback: build minimal profile from auth data if table query failed
+      if (!profile) {
+        profile = {
+          id: data.user.id,
+          name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Пользователь',
+          email: data.user.email,
+        }
+      }
+
+      setUser(profile)
+      setAuthOpen(false)
+      showToast(`Добро пожаловать, ${profile.name}! 👋`, 'ok')
+      router.push('/profile')
+    } catch {
+      setError('Ошибка входа. Попробуйте ещё раз.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResendEmail = async () => {
+    setLoading(true)
+    const { error } = await supabase.auth.resend({ type: 'signup', email: form.email })
     setLoading(false)
+    if (error) { showToast('Ошибка при отправке', 'error'); return }
+    showToast('Письмо отправлено повторно', 'ok')
   }
 
   const handleRegister = async () => {
@@ -39,33 +96,22 @@ export default function AuthModal() {
     if (form.password !== form.confirm) { setError('Пароли не совпадают'); return }
     if (form.password.length < 6) { setError('Пароль минимум 6 символов'); return }
     setError(''); setLoading(true)
-    const { data, error } = await supabase.auth.signUp({ email: form.email, password: form.password })
-    if (error) { setError(error.message); setLoading(false); return }
-    if (data.user) {
-      await supabase.from('users').insert({ id: data.user.id, name: form.name, phone: form.phone || null, city: 'Москва' })
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: { data: { name: form.name } },
+      })
+      if (error) { setError(error.message); return }
+      setScreen('confirm')
+    } catch {
+      setError('Ошибка регистрации. Попробуйте ещё раз.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
-    setScreen('confirm')
   }
 
   const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))
-
-  const EyeIcon = ({ show }: { show: boolean }) => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      {show ? (
-        <>
-          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-          <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-          <line x1="1" y1="1" x2="23" y2="23" />
-        </>
-      ) : (
-        <>
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-          <circle cx="12" cy="12" r="3" />
-        </>
-      )}
-    </svg>
-  )
 
   const inputWrap: React.CSSProperties = { position: 'relative', display: 'flex', alignItems: 'center' }
   const inputStyle: React.CSSProperties = { width: '100%', padding: '12px 44px 12px 16px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' }
@@ -100,10 +146,17 @@ export default function AuthModal() {
               Перейдите по ссылке в письме чтобы активировать аккаунт. Проверьте папку «Спам» если письмо не пришло.
             </p>
             <button
-              onClick={() => { setAuthOpen(false); setScreen('form') }}
-              style={{ width: '100%', padding: '14px', borderRadius: 12, background: '#1d4ed8', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer' }}
+              onClick={handleResendEmail}
+              disabled={loading}
+              style={{ width: '100%', padding: '14px', borderRadius: 12, background: loading ? '#94a3b8' : '#1d4ed8', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: loading ? 'default' : 'pointer', marginBottom: 10 }}
             >
-              Понятно
+              {loading ? '...' : 'Отправить письмо повторно'}
+            </button>
+            <button
+              onClick={() => { setScreen('form'); setError('') }}
+              style={{ width: '100%', padding: '12px', borderRadius: 12, background: '#f1f5f9', color: '#64748b', fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer' }}
+            >
+              Назад
             </button>
           </div>
         ) : (
@@ -112,7 +165,7 @@ export default function AuthModal() {
             <div style={{ textAlign: 'center', marginBottom: 24 }}>
               <div style={{ width: 52, height: 52, borderRadius: 16, background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: "'Unbounded',sans-serif", fontWeight: 900, fontSize: 22, margin: '0 auto 10px' }}>Ж</div>
               <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{tab === 'login' ? 'Войти в аккаунт' : 'Создать аккаунт'}</h2>
-              <p style={{ fontSize: 13, color: '#64748b' }}>Жердеш — Объявления кыргызов в России</p>
+              <p style={{ fontSize: 13, color: '#64748b' }}>Мекендеш — Объявления кыргызов в России</p>
             </div>
 
             {/* Tabs */}
