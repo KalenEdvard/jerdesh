@@ -28,14 +28,15 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   const { data: listing } = await supabase
     .from('listings')
-    .select('*, user:users(*)')
+    .select('id,title,description,category,price,metro,city,phone,photos,views,is_urgent,is_premium,status,created_at,user_id,user:users(id,name,avatar_url,rating,city,ads_count,created_at)')
     .eq('id', id)
+    .eq('status', 'active')
     .single()
 
   if (!listing) notFound()
 
-  // Increment views via RPC (atomic, no race condition)
-  await supabase.rpc('increment_listing_views', { listing_id: id })
+  // Increment views (fire-and-forget, не блокирует рендер)
+  supabase.from('listings').update({ views: (listing.views || 0) + 1 }).eq('id', id).then(() => {})
 
   // Get seller reviews
   const { data: reviews } = await supabase
@@ -45,5 +46,5 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     .order('created_at', { ascending: false })
     .limit(5)
 
-  return <ListingDetailClient listing={listing} reviews={reviews || []} />
+  return <ListingDetailClient listing={listing as any} reviews={reviews || []} />
 }

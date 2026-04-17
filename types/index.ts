@@ -29,12 +29,13 @@ export interface Listing {
   photos: string[]
   views: number
   status: 'active' | 'draft' | 'deleted'
-  is_active: boolean
   is_urgent: boolean
   is_premium: boolean
   created_at: string
-  expires_at: string
   user?: User
+  // legacy — не использовать в новом коде
+  is_active?: boolean
+  expires_at?: string
 }
 
 export interface Message {
