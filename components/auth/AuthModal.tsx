@@ -2,7 +2,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore } from '@/store'
-import { createClient } from '@/lib/supabase-client'
 
 type Tab = 'login' | 'register'
 type Screen = 'form' | 'confirm'
@@ -39,67 +38,52 @@ export default function AuthModal() {
 
   if (!authOpen) return null
 
-  const supabase = createClient()
-
   const handleLogin = async () => {
     setError(''); setLoading(true)
-
-    // Таймаут 10 сек — если Supabase не отвечает
-    const timeout = setTimeout(() => {
-      setLoading(false)
-      setError('Сервер не отвечает. Проверьте интернет и попробуйте ещё раз.')
-    }, 10000)
-
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: form.email,
-        password: form.password,
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, password: form.password }),
       })
+      const json = await res.json()
 
-      if (authError) {
-        if (authError.message === 'Email not confirmed') {
+      if (!res.ok) {
+        if (json.error === 'EMAIL_NOT_CONFIRMED') {
           setScreen('confirm')
-        } else if (authError.message === 'Invalid login credentials') {
-          setError('Неверный email или пароль')
         } else {
-          setError(authError.message)
+          setError(json.error || 'Ошибка входа')
         }
         return
       }
 
-      // Загружаем профиль — не блокируем вход если таблица недоступна
-      let profile = null
-      try {
-        const { data: p } = await supabase.from('users').select('*').eq('id', data.user.id).single()
-        profile = p
-      } catch { /* profile stays null */ }
-
-      if (!profile) {
-        profile = {
-          id: data.user.id,
-          name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Пользователь',
-          email: data.user.email,
-        }
-      }
-
+      const profile = json.profile
       setUser(profile)
       setAuthOpen(false)
       showToast(`Добро пожаловать, ${profile.name}! 👋`, 'ok')
       router.push('/profile')
-    } catch (e: any) {
-      setError(e?.message || 'Ошибка входа. Попробуйте ещё раз.')
+    } catch {
+      setError('Сервер не отвечает. Проверьте интернет и попробуйте ещё раз.')
     } finally {
-      clearTimeout(timeout)
       setLoading(false)
     }
   }
 
   const handleResendEmail = async () => {
     setLoading(true)
-    const { error } = await supabase.auth.resend({ type: 'signup', email: form.email })
-    setLoading(false)
-    if (error) { showToast('Ошибка при отправке', 'error'); return }
-    showToast('Письмо отправлено повторно', 'ok')
+    try {
+      const res = await fetch('/api/auth/resend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email }),
+      })
+      if (!res.ok) { showToast('Ошибка при отправке', 'error'); return }
+      showToast('Письмо отправлено повторно', 'ok')
+    } catch {
+      showToast('Ошибка при отправке', 'error')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleRegister = async () => {
@@ -108,15 +92,16 @@ export default function AuthModal() {
     if (form.password.length < 6) { setError('Пароль минимум 6 символов'); return }
     setError(''); setLoading(true)
     try {
-      const { error } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-        options: { data: { name: form.name } },
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, password: form.password, name: form.name }),
       })
-      if (error) { setError(error.message); return }
+      const json = await res.json()
+      if (!res.ok) { setError(json.error || 'Ошибка регистрации'); return }
       setScreen('confirm')
     } catch {
-      setError('Ошибка регистрации. Попробуйте ещё раз.')
+      setError('Сервер не отвечает. Попробуйте ещё раз.')
     } finally {
       setLoading(false)
     }
