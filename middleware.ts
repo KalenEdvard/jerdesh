@@ -5,11 +5,9 @@ const PROTECTED = ['/profile', '/create']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const isProtected = PROTECTED.some(p => pathname.startsWith(p))
-  if (!isProtected) return NextResponse.next()
-
   const response = NextResponse.next()
 
+  // Обновляем сессию на каждом запросе (продлевает токен автоматически)
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -27,10 +25,12 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
+  // Защита приватных маршрутов
+  const isProtected = PROTECTED.some(p => pathname.startsWith(p))
+  if (isProtected && !user) {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = '/'
-    redirectUrl.searchParams.set('auth', '1') // сигнал открыть AuthModal
+    redirectUrl.searchParams.set('auth', '1')
     return NextResponse.redirect(redirectUrl)
   }
 
@@ -38,5 +38,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/profile/:path*', '/create/:path*'],
+  matcher: [
+    // Запускаем на всех страницах кроме статики и api
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)).*)',
+  ],
 }

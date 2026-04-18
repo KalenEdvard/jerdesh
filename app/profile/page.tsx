@@ -1,387 +1,64 @@
-'use client'
-export const dynamic = 'force-dynamic'
-import { useEffect, useState, Suspense } from 'react'
-import { useStore } from '@/store'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { createClient } from '@/lib/supabase-client'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase-server'
 import type { Listing } from '@/types'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Star, MapPin, Plus, RefreshCw, Settings, Heart, Package, Trash2, Camera, Clock } from 'lucide-react'
-
-function plural(n: number, forms: [string, string, string]): string {
-  const mod10 = n % 10
-  const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return forms[0]
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return forms[1]
-  return forms[2]
-}
-
-function memberSince(createdAt: string): string {
-  const diff = Date.now() - new Date(createdAt).getTime()
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  if (days < 30) {
-    return `На сайте ${days} ${plural(days, ['день', 'дня', 'дней'])}`
-  }
-  const months = Math.floor(days / 30.44)
-  if (months < 12) {
-    return `На сайте ${months} ${plural(months, ['месяц', 'месяца', 'месяцев'])}`
-  }
-  const years = Math.floor(months / 12)
-  const remMonths = months % 12
-  const yearStr = `${years} ${plural(years, ['год', 'года', 'лет'])}`
-  if (remMonths === 0) return `На сайте ${yearStr}`
-  return `На сайте ${yearStr} и ${remMonths} ${plural(remMonths, ['месяц', 'месяца', 'месяцев'])}`
-}
-
-type Tab = 'ads' | 'favs' | 'settings'
+import ProfileClient from './ProfileClient'
 
 type FavoriteRow = { listing: Listing | null }
 
-export default function ProfilePageWrapper() {
-  return <Suspense fallback={null}><ProfilePage /></Suspense>
-}
+export default async function ProfilePage() {
+  const supabase = await createClient()
 
-function ProfilePage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { user, setUser, showToast } = useStore()
-  const [myListings, setMyListings] = useState<Listing[]>([])
-  const [favListings, setFavListings] = useState<Listing[]>([])
-  const tab = (searchParams.get('tab') ?? 'ads') as Tab
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [whatsapp, setWhatsapp] = useState('')
-  const [telegram, setTelegram] = useState('')
-  const [vk, setVk] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [avatarUploading, setAvatarUploading] = useState(false)
-  const supabase = createClient()
+  // Источник истины — сервер. Нет сессии — редирект до рендера.
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/?auth=1')
 
-  useEffect(() => {
-    if (!user) { router.push('/'); return }
-    setName(user.name || '')
-    setPhone(user.phone || '')
-    setWhatsapp((user as any).whatsapp || '')
-    setTelegram((user as any).telegram || '')
-    setVk((user as any).vk || '')
-    loadMyListings()
-    loadFavListings()
-  }, [user])
+  // Загружаем профиль
+  const { data: profile } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', user.id)
+    .single()
 
-  const loadMyListings = async () => {
-    if (!user) return
-    const { data } = await supabase
-      .from('listings')
-      .select('*')
-      .eq('user_id', user.id)
-      .in('status', ['active', 'draft'])
-      .order('status', { ascending: true }) // active сначала
-      .order('created_at', { ascending: false })
-    setMyListings(data || [])
+  // Fallback если профиль не создан в public.users
+  const resolvedProfile = profile ?? {
+    id: user.id,
+    name: user.user_metadata?.name || user.email?.split('@')[0] || 'Пользователь',
+    email: user.email ?? '',
+    city: 'Москва',
+    rating: 5,
+    avatar_url: null,
+    phone: null,
+    whatsapp: null,
+    telegram: null,
+    vk: null,
+    created_at: user.created_at,
+    ads_count: 0,
   }
 
-  const loadFavListings = async () => {
-    if (!user) return
-    const { data } = await supabase.from('favorites').select('listing:listings(*, user:users(*))').eq('user_id', user.id)
-    setFavListings((data as FavoriteRow[] | null)?.map(f => f.listing).filter(Boolean) as Listing[] || [])
-  }
+  // Загружаем объявления
+  const { data: listings } = await supabase
+    .from('listings')
+    .select('*')
+    .eq('user_id', user.id)
+    .in('status', ['active', 'draft'])
+    .order('status', { ascending: true })
+    .order('created_at', { ascending: false })
 
-  const saveSettings = async () => {
-    if (!user) return
-    setSaving(true)
-    await supabase.from('users').update({ name, phone, whatsapp, telegram, vk }).eq('id', user.id)
-    setUser({ ...user, name, phone, whatsapp, telegram, vk })
-    showToast('Профиль обновлён ✓', 'ok')
-    setSaving(false)
-  }
+  // Загружаем избранное
+  const { data: favRows } = await supabase
+    .from('favorites')
+    .select('listing:listings(*)')
+    .eq('user_id', user.id)
 
-  const uploadAvatar = async (file: File) => {
-    if (!user) return
-    if (file.size > 5 * 1024 * 1024) { showToast('Файл больше 5MB', 'error'); return }
-    setAvatarUploading(true)
-    try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res = await fetch('/api/profile/avatar', { method: 'POST', body: fd })
-      const json = await res.json()
-      if (!res.ok) { showToast(json.error || 'Ошибка загрузки', 'error'); return }
-      setUser({ ...user, avatar_url: json.url })
-      showToast('Фото обновлено ✓', 'ok')
-    } catch {
-      showToast('Ошибка загрузки. Попробуйте ещё раз.', 'error')
-    } finally {
-      setAvatarUploading(false)
-    }
-  }
-
-  const deleteListing = async (id: string) => {
-    // Переводим в черновик — физически не удаляем (cron удалит через 180 дней)
-    await supabase.from('listings').update({ status: 'draft' }).eq('id', id)
-    setMyListings(prev => prev.map(l => l.id === id ? { ...l, status: 'draft' as const } : l))
-    showToast('Объявление снято с публикации', 'info')
-  }
-
-  const renewListing = async (id: string) => {
-    await supabase.from('listings').update({ status: 'active' }).eq('id', id)
-    setMyListings(prev => prev.map(l => l.id === id ? { ...l, status: 'active' as const } : l))
-    showToast('Объявление снова активно! ✓', 'ok')
-  }
-
-  if (!user) return null
-
-  const isDraft = (l: Listing) => l.status === 'draft'
-
-  const tabs = [
-    { id: 'ads', label: 'Мои объявления', icon: <Package size={16} /> },
-    { id: 'favs', label: 'Избранное', icon: <Heart size={16} /> },
-    { id: 'settings', label: 'Настройки', icon: <Settings size={16} /> },
-  ]
+  const favListings = (favRows as FavoriteRow[] | null)
+    ?.map(f => f.listing)
+    .filter(Boolean) as Listing[] ?? []
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
-
-      {/* Hero Header */}
-      <div style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #7c3aed 100%)', paddingBottom: 48 }}>
-        {/* Decorative blobs */}
-        <div style={{ position: 'absolute', top: -60, right: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -40, left: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
-
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '48px 20px 0', textAlign: 'center', position: 'relative' }}>
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            style={{ position: 'relative', width: 96, height: 96, margin: '0 auto 16px' }}>
-            <label style={{ cursor: 'pointer', display: 'block', width: '100%', height: '100%' }}>
-              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && uploadAvatar(e.target.files[0])} />
-              <div style={{ width: 96, height: 96, borderRadius: '50%', background: user.avatar_url ? 'none' : 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', border: '4px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 36, fontWeight: 900, boxShadow: '0 8px 32px rgba(0,0,0,0.2)', overflow: 'hidden' }}>
-                {user.avatar_url
-                  ? <img src={user.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : (avatarUploading ? '⏳' : user.name?.[0]?.toUpperCase() || 'У')}
-              </div>
-              <div style={{ position: 'absolute', bottom: 2, right: 2, width: 28, height: 28, borderRadius: '50%', background: '#1d4ed8', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-                <Camera size={13} color="#fff" />
-              </div>
-            </label>
-          </motion.div>
-
-          <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            style={{ fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 12 }}>
-            {user.name}
-          </motion.h1>
-
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, color: 'rgba(255,255,255,0.85)', fontSize: 14, marginBottom: 24, flexWrap: 'wrap' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Star size={16} style={{ fill: '#fbbf24', color: '#fbbf24' }} /> {user.rating}
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <MapPin size={16} /> {user.city}
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Package size={16} /> {myListings.length} объявлений
-            </span>
-            {user.created_at && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <Clock size={16} /> {memberSince(user.created_at)}
-              </span>
-            )}
-          </motion.div>
-
-          <motion.button
-            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-            onClick={() => router.push('/create')}
-            style={{ padding: '12px 28px', borderRadius: 14, background: '#fff', color: '#1d4ed8', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
-          >
-            <Plus size={18} /> Подать объявление
-          </motion.button>
-        </div>
-
-        {/* Tabs — висят над контентом */}
-        <div style={{ maxWidth: 900, margin: '32px auto 0', padding: '0 20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <div style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', borderRadius: 14, padding: 4, display: 'flex', gap: 4 }}>
-              {tabs.map(t => (
-                <button key={t.id} onClick={() => router.push(`/profile?tab=${t.id}`)}
-                  style={{ padding: '10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s', background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#1d4ed8' : 'rgba(255,255,255,0.8)', boxShadow: tab === t.id ? '0 2px 8px rgba(0,0,0,0.1)' : 'none' }}>
-                  {t.icon} {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 20px 60px' }}>
-        <AnimatePresence mode="wait">
-
-          {/* Мои объявления */}
-          {tab === 'ads' && (
-            <motion.div key="ads" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
-              {myListings.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '64px 20px', background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: 56, marginBottom: 16 }}>📭</div>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Нет объявлений</h3>
-                  <p style={{ color: '#64748b', marginBottom: 24 }}>Подайте первое объявление — это бесплатно</p>
-                  <button onClick={() => router.push('/create')} style={{ padding: '12px 28px', borderRadius: 12, background: '#1d4ed8', color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' }}>
-                    Подать объявление
-                  </button>
-                </div>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
-                  {myListings.map((l, i) => {
-                    const draft = isDraft(l)
-                    return (
-                      <motion.div key={l.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                        whileHover={{ y: -4 }}
-                        style={{ background: '#fff', borderRadius: 16, border: `1px solid ${draft ? '#fed7aa' : '#e2e8f0'}`, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', transition: 'box-shadow 0.2s', position: 'relative', opacity: draft ? 0.85 : 1 }}>
-
-                        {/* Фото или заглушка */}
-                        <div style={{ height: 160, background: l.photos?.[0] ? 'none' : 'linear-gradient(135deg,#eff6ff,#dbeafe)', position: 'relative', overflow: 'hidden' }}>
-                          {l.photos?.[0] ? <img src={l.photos[0]} alt={l.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> :
-                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🏷️</div>}
-
-                          {/* Draft overlay */}
-                          {draft && (
-                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                              <span style={{ color: '#fbbf24', fontWeight: 700, fontSize: 13 }}>📁 Черновик</span>
-                              <button onClick={() => renewListing(l.id)}
-                                style={{ padding: '7px 16px', borderRadius: 10, background: '#22c55e', color: '#fff', fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <RefreshCw size={12} /> Опубликовать снова
-                              </button>
-                            </div>
-                          )}
-
-                          {/* Urgent badge */}
-                          {l.is_urgent && !draft && (
-                            <div style={{ position: 'absolute', top: 8, left: 8, background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6 }}>СРОЧНО</div>
-                          )}
-
-                          {/* Active badge */}
-                          {!draft && (
-                            <div style={{ position: 'absolute', top: 8, left: l.is_urgent ? 70 : 8, background: '#22c55e', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6 }}>АКТИВНО</div>
-                          )}
-                        </div>
-
-                        <div style={{ padding: '14px 16px' }}>
-                          <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{l.category}</div>
-                          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 8, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{l.title}</h3>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <span style={{ fontSize: 16, fontWeight: 800, color: '#1d4ed8' }}>{l.price ? `${l.price.toLocaleString('ru')} ₽` : 'Договорная'}</span>
-                            <span style={{ fontSize: 11, color: '#94a3b8' }}>{l.views} просмотров</span>
-                          </div>
-                        </div>
-
-                        {/* Кнопка в черновик (только для активных) */}
-                        {!draft && (
-                          <button onClick={() => deleteListing(l.id)}
-                            style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                            <Trash2 size={13} />
-                          </button>
-                        )}
-                      </motion.div>
-                    )
-                  })}
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {/* Избранное */}
-          {tab === 'favs' && (
-            <motion.div key="favs" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
-              {favListings.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '64px 20px', background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: 56, marginBottom: 16 }}>🤍</div>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Нет избранного</h3>
-                  <p style={{ color: '#64748b' }}>Добавляйте понравившиеся объявления в избранное</p>
-                </div>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
-                  {favListings.map((l, i) => (
-                    <motion.div key={l.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                      whileHover={{ y: -4 }}
-                      style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-                      <div style={{ height: 160, background: l.photos?.[0] ? 'none' : 'linear-gradient(135deg,#fdf4ff,#ede9fe)', position: 'relative' }}>
-                        {l.photos?.[0] ? <img src={l.photos[0]} alt={l.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> :
-                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>❤️</div>}
-                      </div>
-                      <div style={{ padding: '14px 16px' }}>
-                        <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 8, lineHeight: 1.4 }}>{l.title}</h3>
-                        <span style={{ fontSize: 16, fontWeight: 800, color: '#1d4ed8' }}>{l.price ? `${l.price.toLocaleString('ru')} ₽` : 'Договорная'}</span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {/* Настройки */}
-          {tab === 'settings' && (
-            <motion.div key="settings" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
-              style={{ maxWidth: 480, margin: '0 auto' }}>
-              <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: 32, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-                <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24 }}>Настройки профиля</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                  <div>
-                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 6 }}>Имя</label>
-                    <input value={name} onChange={e => setName(e.target.value)}
-                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-                      onFocus={e => e.target.style.borderColor = '#1d4ed8'}
-                      onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 6 }}>Телефон</label>
-                    <input value={phone} onChange={e => setPhone(e.target.value)} type="tel"
-                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-                      onFocus={e => e.target.style.borderColor = '#1d4ed8'}
-                      onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
-                  </div>
-
-                  <div style={{ height: 1, background: '#f1f5f9', margin: '4px 0' }} />
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.05em' }}>СОЦСЕТИ</div>
-
-                  <div>
-                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                      <span style={{ fontSize: 16 }}>💬</span> WhatsApp
-                    </label>
-                    <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="+7 999 123-45-67" type="tel"
-                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-                      onFocus={e => e.target.style.borderColor = '#25d366'}
-                      onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                      <span style={{ fontSize: 16 }}>✈️</span> Telegram
-                    </label>
-                    <input value={telegram} onChange={e => setTelegram(e.target.value)} placeholder="@username"
-                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-                      onFocus={e => e.target.style.borderColor = '#2aabee'}
-                      onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                      <span style={{ fontSize: 16 }}>🔵</span> ВКонтакте
-                    </label>
-                    <input value={vk} onChange={e => setVk(e.target.value)} placeholder="vk.com/username"
-                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-                      onFocus={e => e.target.style.borderColor = '#4680c2'}
-                      onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
-                  </div>
-
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                    onClick={saveSettings} disabled={saving}
-                    style={{ padding: '13px', borderRadius: 12, background: saving ? '#94a3b8' : '#1d4ed8', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: saving ? 'default' : 'pointer', marginTop: 4 }}>
-                    {saving ? 'Сохраняем...' : 'Сохранить изменения'}
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-        </AnimatePresence>
-      </div>
-    </div>
+    <ProfileClient
+      profile={resolvedProfile}
+      initialListings={(listings ?? []) as Listing[]}
+      initialFavs={favListings}
+    />
   )
 }
