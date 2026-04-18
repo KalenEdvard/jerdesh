@@ -6,7 +6,32 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import type { Listing } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Star, MapPin, Plus, RefreshCw, Settings, Heart, Package, Trash2, Camera } from 'lucide-react'
+import { Star, MapPin, Plus, RefreshCw, Settings, Heart, Package, Trash2, Camera, Clock } from 'lucide-react'
+
+function plural(n: number, forms: [string, string, string]): string {
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return forms[0]
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return forms[1]
+  return forms[2]
+}
+
+function memberSince(createdAt: string): string {
+  const diff = Date.now() - new Date(createdAt).getTime()
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  if (days < 30) {
+    return `На сайте ${days} ${plural(days, ['день', 'дня', 'дней'])}`
+  }
+  const months = Math.floor(days / 30.44)
+  if (months < 12) {
+    return `На сайте ${months} ${plural(months, ['месяц', 'месяца', 'месяцев'])}`
+  }
+  const years = Math.floor(months / 12)
+  const remMonths = months % 12
+  const yearStr = `${years} ${plural(years, ['год', 'года', 'лет'])}`
+  if (remMonths === 0) return `На сайте ${yearStr}`
+  return `На сайте ${yearStr} и ${remMonths} ${plural(remMonths, ['месяц', 'месяца', 'месяцев'])}`
+}
 
 type Tab = 'ads' | 'favs' | 'settings'
 
@@ -149,6 +174,11 @@ function ProfilePage() {
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <Package size={16} /> {myListings.length} объявлений
             </span>
+            {user.created_at && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Clock size={16} /> {memberSince(user.created_at)}
+              </span>
+            )}
           </motion.div>
 
           <motion.button
