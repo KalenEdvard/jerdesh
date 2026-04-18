@@ -99,15 +99,19 @@ function ProfilePage() {
     if (!user) return
     if (file.size > 5 * 1024 * 1024) { showToast('Файл больше 5MB', 'error'); return }
     setAvatarUploading(true)
-    const ext = file.name.split('.').pop()
-    const path = `avatars/${user.id}.${ext}`
-    const { error } = await supabase.storage.from('listings').upload(path, file, { upsert: true })
-    if (error) { showToast('Ошибка загрузки', 'error'); setAvatarUploading(false); return }
-    const { data: { publicUrl } } = supabase.storage.from('listings').getPublicUrl(path)
-    await supabase.from('users').update({ avatar_url: publicUrl }).eq('id', user.id)
-    setUser({ ...user, avatar_url: publicUrl })
-    showToast('Фото обновлено ✓', 'ok')
-    setAvatarUploading(false)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/profile/avatar', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!res.ok) { showToast(json.error || 'Ошибка загрузки', 'error'); return }
+      setUser({ ...user, avatar_url: json.url })
+      showToast('Фото обновлено ✓', 'ok')
+    } catch {
+      showToast('Ошибка загрузки. Попробуйте ещё раз.', 'error')
+    } finally {
+      setAvatarUploading(false)
+    }
   }
 
   const deleteListing = async (id: string) => {
