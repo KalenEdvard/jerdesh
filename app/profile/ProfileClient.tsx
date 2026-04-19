@@ -80,13 +80,24 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
     if (file.size > 5 * 1024 * 1024) { showToast('Файл больше 5MB', 'error'); return }
     setAvatarUploading(true)
     try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res = await fetch('/api/profile/avatar', { method: 'POST', body: fd })
-      const json = await res.json()
-      if (!res.ok) { showToast(json.error || 'Ошибка загрузки', 'error'); return }
-      setCurrentProfile(p => ({ ...p, avatar_url: json.url }))
-      setUser({ ...profile, avatar_url: json.url } as any)
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { showToast('Сессия истекла, войдите снова', 'error'); return }
+
+      const ext = file.name.split('.').pop()
+      const path = `avatars/${session.user.id}.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('listings')
+        .upload(path, file, { upsert: true, contentType: file.type })
+
+      if (uploadError) { showToast(uploadError.message, 'error'); return }
+
+      const { data: { publicUrl } } = supabase.storage.from('listings').getPublicUrl(path)
+
+      await supabase.from('users').update({ avatar_url: publicUrl }).eq('id', session.user.id)
+
+      setCurrentProfile(p => ({ ...p, avatar_url: publicUrl }))
+      setUser({ ...profile, avatar_url: publicUrl } as any)
       showToast('Фото обновлено ✓', 'ok')
     } catch (e: any) {
       showToast(e?.message || 'Ошибка загрузки', 'error')
