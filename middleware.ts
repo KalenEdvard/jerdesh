@@ -18,8 +18,8 @@ export async function middleware(request: NextRequest) {
         getAll: () => request.cookies.getAll(),
         setAll: (cookiesToSet) => {
           // Сначала пишем в request (для последующих server-side читалок)
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value, options)
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
           )
           // Пересоздаём response с обновлённым request
           supabaseResponse = NextResponse.next({ request })
