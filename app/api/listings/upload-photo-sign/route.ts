@@ -3,7 +3,6 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
-const MAX_FILE_SIZE = 4 * 1024 * 1024
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,36 +28,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
     }
 
-    const formData = await request.formData()
-    const file = formData.get('file') as File | null
-    if (!file) {
-      return NextResponse.json({ error: 'Файл не передан' }, { status: 400 })
-    }
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    const { fileName, fileType } = await request.json()
+
+    if (!ALLOWED_TYPES.includes(fileType)) {
       return NextResponse.json({ error: 'Неподдерживаемый формат' }, { status: 400 })
     }
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: 'Файл больше 4MB' }, { status: 400 })
-    }
 
-    const ext = file.name.split('.').pop() || 'jpg'
+    const ext = (fileName as string).split('.').pop() || 'jpg'
     const path = `${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
 
-    const { error: uploadError } = await supabase.storage
+    const { data, error } = await supabase.storage
       .from('listings')
-      .upload(path, buffer, { upsert: false, contentType: file.type })
+      .createSignedUploadUrl(path)
 
-    if (uploadError) {
-      console.error('[upload-photo] error:', uploadError.message)
-      return NextResponse.json({ error: uploadError.message }, { status: 500 })
+    if (error) {
+      console.error('[upload-photo-sign] error:', error.message)
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    const { data: { publicUrl } } = supabase.storage.from('listings').getPublicUrl(path)
-    return NextResponse.json({ url: publicUrl })
+    return NextResponse.json({ path: data.path, token: data.token })
   } catch (e: any) {
-    console.error('[upload-photo] crash:', e?.message)
+    console.error('[upload-photo-sign] crash:', e?.message)
     return NextResponse.json({ error: e?.message || 'Ошибка сервера' }, { status: 500 })
   }
 }

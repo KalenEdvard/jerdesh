@@ -72,20 +72,29 @@ export default function CreatePage() {
     setLoading(true)
 
     const supabase = createClient()
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      showToast('Сессия истекла, войдите снова', 'error')
-      setLoading(false)
-      return
-    }
 
     const photoUrls: string[] = []
     for (const photo of photos) {
-      const ext = photo.name.split('.').pop()
-      const path = `${session.user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+      // Шаг 1: сервер проверяет авторизацию и генерирует signed upload URL
+      const signRes = await fetch('/api/listings/upload-photo-sign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: photo.name, fileType: photo.type }),
+      })
+
+      if (!signRes.ok) {
+        const { error } = await signRes.json()
+        showToast(`Ошибка: ${error}`, 'error')
+        setLoading(false)
+        return
+      }
+
+      const { path, token } = await signRes.json()
+
+      // Шаг 2: браузер грузит файл напрямую в Supabase Storage по подписанному URL
       const { error: uploadError } = await supabase.storage
         .from('listings')
-        .upload(path, photo, { upsert: false, contentType: photo.type })
+        .uploadToSignedUrl(path, token, photo, { contentType: photo.type })
 
       if (uploadError) {
         showToast(`Ошибка загрузки фото: ${uploadError.message}`, 'error')
