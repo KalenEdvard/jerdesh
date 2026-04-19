@@ -1,76 +1,62 @@
 import { createServerClient } from '@supabase/ssr'
-import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
-  const cookieStore = await cookies()
+    const cookieStore = await cookies()
 
-  // Проверяем сессию через anon key
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-          })
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          },
         },
-      },
+      }
+    )
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
     }
-  )
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
-    return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
-  }
+    const formData = await request.formData()
+    const file = formData.get('file') as File | null
+    if (!file) {
+      return NextResponse.json({ error: 'Файл не передан' }, { status: 400 })
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json({ error: 'Файл больше 5MB' }, { status: 400 })
+    }
 
-  const formData = await request.formData()
-  const file = formData.get('file') as File | null
-  if (!file) {
-    return NextResponse.json({ error: 'Файл не передан' }, { status: 400 })
-  }
-  if (file.size > 5 * 1024 * 1024) {
-    return NextResponse.json({ error: 'Файл больше 5MB' }, { status: 400 })
-  }
+    const ext = file.name.split('.').pop()
+    const path = `avatars/${user.id}.${ext}`
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
 
-  const ext = file.name.split('.').pop()
-  const path = `avatars/${user.id}.${ext}`
-  const bytes = await file.arrayBuffer()
-  const buffer = Buffer.from(bytes)
+    // Используем сессию пользователя — не нужен service role key
+    const { error: uploadError } = await supabase.storage
+      .from('listings')
+      .upload(path, buffer, { upsert: true, contentType: file.type })
 
-  // Используем service role key для обхода Storage RLS
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!serviceKey) {
-    return NextResponse.json({ error: 'SERVICE_KEY_MISSING: добавь SUPABASE_SERVICE_ROLE_KEY в Vercel env' }, { status: 500 })
-  }
+    if (uploadError) {
+      console.error('[avatar] upload error:', uploadError.message)
+      return NextResponse.json({ error: uploadError.message }, { status: 500 })
+    }
 
-  const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceKey
-  )
+    const { data: { publicUrl } } = supabase.storage.from('listings').getPublicUrl(path)
 
-  console.log('[avatar] uploading to listings/', path, 'size:', buffer.length, 'type:', file.type)
+    await supabase.from('users').update({ avatar_url: publicUrl }).eq('id', user.id)
 
-  const { error: uploadError } = await admin.storage
-    .from('listings')
-    .upload(path, buffer, { upsert: true, contentType: file.type })
-
-  if (uploadError) {
-    console.error('[avatar] upload error:', JSON.stringify(uploadError))
-    return NextResponse.json({ error: `Upload failed: ${uploadError.message} (status: ${(uploadError as any).statusCode})` }, { status: 500 })
-  }
-
-  const { data: { publicUrl } } = admin.storage.from('listings').getPublicUrl(path)
-
-  await admin.from('users').update({ avatar_url: publicUrl }).eq('id', user.id)
-
-  return NextResponse.json({ url: publicUrl })
+    return NextResponse.json({ url: publicUrl })
   } catch (e: any) {
-    console.error('[avatar route crash]', e)
-    return NextResponse.json({ error: e?.message || 'Внутренняя ошибка сервера' }, { status: 500 })
+    console.error('[avatar] crash:', e?.message)
+    return NextResponse.json({ error: e?.message || 'Ошибка сервера' }, { status: 500 })
   }
 }
