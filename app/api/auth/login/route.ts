@@ -55,10 +55,10 @@ export async function POST(request: NextRequest) {
     response.cookies.set(name, value, {
       ...options,
       path: '/',
-      // Сессия живёт 1 год — пользователь не вылетает после закрытия браузера
       maxAge: 60 * 60 * 24 * 365,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
+      httpOnly: false, // браузерный клиент читает куки через document.cookie
     })
   })
 
