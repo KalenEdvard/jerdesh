@@ -42,9 +42,14 @@ export async function POST(request: NextRequest) {
   const buffer = Buffer.from(bytes)
 
   // Используем service role key для обхода Storage RLS
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceKey) {
+    return NextResponse.json({ error: 'SERVICE_KEY_MISSING: добавь SUPABASE_SERVICE_ROLE_KEY в Vercel env' }, { status: 500 })
+  }
+
   const admin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    serviceKey
   )
 
   const { error: uploadError } = await admin.storage
@@ -52,6 +57,7 @@ export async function POST(request: NextRequest) {
     .upload(path, buffer, { upsert: true, contentType: file.type })
 
   if (uploadError) {
+    console.error('[avatar upload]', uploadError)
     return NextResponse.json({ error: uploadError.message }, { status: 500 })
   }
 
