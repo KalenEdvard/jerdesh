@@ -77,7 +77,7 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
   }, [profile.id])
 
   const uploadAvatar = async (file: File) => {
-    if (file.size > 5 * 1024 * 1024) { showToast('Файл больше 5MB', 'error'); return }
+    if (file.size > 4 * 1024 * 1024) { showToast('Файл больше 4MB', 'error'); return }
     setAvatarUploading(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()

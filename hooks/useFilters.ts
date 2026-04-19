@@ -1,6 +1,7 @@
 'use client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback } from 'react'
+import { DEFAULT_CITY } from '@/types'
 
 export type SortOption = 'new' | 'old' | 'pa' | 'pd' | 'pop'
 
@@ -20,24 +21,30 @@ export function useFilters(): Filters & {
   const searchParams = useSearchParams()
 
   const filters: Filters = {
-    query:    searchParams.get('q')    ?? '',
-    category: searchParams.get('cat')  ?? 'all',
-    metro:    searchParams.get('metro') ?? '',
-    city:     searchParams.get('city') ?? 'Москва',
-    sort:     (searchParams.get('sort') ?? 'new') as SortOption,
+    query: searchParams.get('q') ?? '',
+    category: searchParams.get('cat') ?? 'all',
+    metro: searchParams.get('metro') ?? '',
+    city: searchParams.get('city') ?? DEFAULT_CITY,
+    sort: (searchParams.get('sort') ?? 'new') as SortOption,
   }
 
   const setFilter = useCallback((key: keyof Filters, value: string) => {
     const params = new URLSearchParams(searchParams.toString())
     const map: Record<keyof Filters, string> = {
-      query: 'q', category: 'cat', metro: 'metro', city: 'city', sort: 'sort',
+      query: 'q',
+      category: 'cat',
+      metro: 'metro',
+      city: 'city',
+      sort: 'sort',
     }
+
     const paramKey = map[key]
-    if (!value || value === 'all' || value === 'new' || value === 'Москва' && key === 'city') {
+    if (!value || value === 'all' || value === 'new' || (key === 'city' && value === DEFAULT_CITY)) {
       params.delete(paramKey)
     } else {
       params.set(paramKey, value)
     }
+
     router.push(`/?${params.toString()}`, { scroll: false })
   }, [router, searchParams])
 

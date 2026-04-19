@@ -78,12 +78,44 @@ export interface FilterState {
   sort: SortOption
 }
 
+export const DEFAULT_CITY = 'Москва'
+
 export const CITIES = [
   { id: 'Москва',          flag: '🏙️' },
   { id: 'Санкт-Петербург', flag: '🌉' },
+  { id: 'Екатеринбург',    flag: '🏙️' },
+  { id: 'Новосибирск',     flag: '🏙️' },
+  { id: 'Казань',          flag: '🏙️' },
+  { id: 'Краснодар',       flag: '🏙️' },
+  { id: 'Стамбул',         flag: '🌉' },
+  { id: 'Анкара',          flag: '🏙️' },
+  { id: 'Берлин',          flag: '🏙️' },
+  { id: 'Мюнхен',          flag: '🏙️' },
+  { id: 'Варшава',         flag: '🏙️' },
+  { id: 'Чикаго',          flag: '🏙️' },
+  { id: 'Нью-Йорк',        flag: '🗽' },
+  { id: 'Сеул',            flag: '🏙️' },
+  { id: 'Дубай',           flag: '🏙️' },
+  { id: 'Лондон',          flag: '🏙️' },
+  { id: 'Прага',           flag: '🏙️' },
+  { id: 'Вена',            flag: '🏙️' },
+  { id: 'Торонто',         flag: '🏙️' },
+  { id: 'Алматы',          flag: '🏔️' },
+  { id: 'Бишкек',          flag: '🏔️' },
+  { id: 'Россия',          flag: '🇷🇺' },
+  { id: 'Казахстан',       flag: '🇰🇿' },
+  { id: 'Турция',          flag: '🇹🇷' },
   { id: 'Германия',        flag: '🇩🇪' },
-  { id: 'США',             flag: '🇺🇸' },
   { id: 'Польша',          flag: '🇵🇱' },
+  { id: 'США',             flag: '🇺🇸' },
+  { id: 'Канада',          flag: '🇨🇦' },
+  { id: 'Южная Корея',     flag: '🇰🇷' },
+  { id: 'ОАЭ',             flag: '🇦🇪' },
+  { id: 'Великобритания',  flag: '🇬🇧' },
+  { id: 'Франция',         flag: '🇫🇷' },
+  { id: 'Италия',          flag: '🇮🇹' },
+  { id: 'Чехия',           flag: '🇨🇿' },
+  { id: 'Австрия',         flag: '🇦🇹' },
 ]
 
 export const CATEGORIES: { id: Category; label: string; icon: string; color: string }[] = [

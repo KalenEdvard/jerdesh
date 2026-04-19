@@ -29,7 +29,7 @@ export default function CreatePage() {
 
   const set = (k: keyof typeof form, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }))
 
-  const MAX_FILE_SIZE = 5 * 1024 * 1024
+  const MAX_FILE_SIZE = 4 * 1024 * 1024
   const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
   const onDrop = useCallback((files: File[]) => {
@@ -40,7 +40,7 @@ export default function CreatePage() {
         continue
       }
       if (file.size > MAX_FILE_SIZE) {
-        showToast(`${file.name}: файл больше 5MB`, 'error')
+        showToast(`${file.name}: файл больше 4MB`, 'error')
         continue
       }
       valid.push(file)
@@ -182,7 +182,7 @@ export default function CreatePage() {
             <input {...getInputProps()} />
             <motion.div animate={{ y: isDragActive ? -4 : 0 }} style={{ fontSize: 36, marginBottom: 10 }}>📸</motion.div>
             <p style={{ fontSize: 14, color: '#64748b', fontWeight: 600 }}>Перетащите фото или нажмите для выбора</p>
-            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>JPG, PNG до 5MB · максимум 8 фото</p>
+            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>JPG, PNG, WEBP до 4MB · максимум 8 фото</p>
           </div>
           {previews.length > 0 && (
             <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>

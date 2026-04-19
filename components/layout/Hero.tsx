@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { CATEGORIES, METRO_STATIONS, CITIES } from '@/types'
+import { CATEGORIES, METRO_STATIONS, CITIES, DEFAULT_CITY } from '@/types'
 import { useFilters } from '@/hooks/useFilters'
 
 function Counter({ target, suffix = '' }: { target: number; suffix?: string }) {
@@ -64,7 +64,7 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
     if (query)             params.set('q', query)
     if (metro)             params.set('metro', metro)
     if (category !== 'all') params.set('cat', category)
-    if (city && city !== 'Москва') params.set('city', city)
+    if (city && city !== DEFAULT_CITY) params.set('city', city)
     router.push(`/?${params.toString()}`)
   }
 
