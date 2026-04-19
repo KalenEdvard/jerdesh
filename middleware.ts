@@ -5,9 +5,11 @@ const PROTECTED = ['/profile', '/create']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const response = NextResponse.next()
 
-  // Обновляем сессию на каждом запросе (продлевает токен автоматически)
+  // ВАЖНО: supabaseResponse пересоздаётся внутри setAll, чтобы cookies
+  // были записаны и в request, и в response — иначе токен не обновится
+  let supabaseResponse = NextResponse.next({ request })
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -15,14 +17,22 @@ export async function middleware(request: NextRequest) {
       cookies: {
         getAll: () => request.cookies.getAll(),
         setAll: (cookiesToSet) => {
+          // Сначала пишем в request (для последующих server-side читалок)
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            request.cookies.set(name, value, options)
+          )
+          // Пересоздаём response с обновлённым request
+          supabaseResponse = NextResponse.next({ request })
+          // Пишем в response (браузер получит обновлённые cookies)
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
           )
         },
       },
     }
   )
 
+  // getUser() обращается к Supabase и обновляет токен если нужно
   const { data: { user } } = await supabase.auth.getUser()
 
   // Защита приватных маршрутов
@@ -34,7 +44,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  return response
+  return supabaseResponse
 }
 
 export const config = {
