@@ -16,9 +16,11 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
     const supabase = createClient()
 
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (user) {
-        const { data: profile } = await supabase.from('users').select('*').eq('id', user.id).single()
+    // getSession() читает куку локально — не требует сетевого запроса к Supabase
+    // Безопасность: middleware и серверные компоненты проверяют сессию на сервере
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const { data: profile } = await supabase.from('users').select('*').eq('id', session.user.id).single()
         if (profile) setUser(profile)
       }
     })
