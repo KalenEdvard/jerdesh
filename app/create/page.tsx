@@ -1,5 +1,5 @@
 'use client'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import { useStore } from '@/store'
@@ -7,6 +7,25 @@ import { createClient } from '@/lib/supabase-client'
 import { CATEGORIES, METRO_STATIONS } from '@/types'
 import { motion } from 'framer-motion'
 import { Upload, X, Send, Tag, FileText, Phone, MapPin, DollarSign, AlertCircle } from 'lucide-react'
+
+// Вынесено за компонент — не пересоздаётся при каждом рендере
+function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+  return (
+    <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+        <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          {icon}
+        </div>
+        <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{title}</span>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+const CAT_COLORS: Record<string, string> = {
+  housing: '#1d4ed8', findhousing: '#6366f1', jobs: '#059669', sell: '#d97706', services: '#7c3aed',
+}
 
 export default function CreatePage() {
   const router = useRouter()
@@ -18,26 +37,32 @@ export default function CreatePage() {
 
   const set = (k: keyof typeof form, v: any) => setForm(f => ({ ...f, [k]: v }))
 
-  const MAX_FILE_SIZE = 5 * 1024 * 1024
-  const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+  // Очищаем object URLs при размонтировании
+  useEffect(() => {
+    return () => { previews.forEach(p => URL.revokeObjectURL(p)) }
+  }, [previews])
+
+  const removePhoto = (i: number) => {
+    URL.revokeObjectURL(previews[i])
+    setPhotos(ph => ph.filter((_, j) => j !== i))
+    setPreviews(pv => pv.filter((_, j) => j !== i))
+  }
 
   const onDrop = useCallback((files: File[]) => {
+    const MAX_FILE_SIZE = 5 * 1024 * 1024
+    const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
     const valid: File[] = []
     for (const file of files) {
-      if (!ACCEPTED_TYPES.includes(file.type)) {
-        showToast(`${file.name}: неподдерживаемый формат`, 'error')
-        continue
-      }
-      if (file.size > MAX_FILE_SIZE) {
-        showToast(`${file.name}: файл больше 5MB`, 'error')
-        continue
-      }
+      if (!ACCEPTED_TYPES.includes(file.type)) { showToast(`${file.name}: неподдерживаемый формат`, 'error'); continue }
+      if (file.size > MAX_FILE_SIZE) { showToast(`${file.name}: файл больше 5MB`, 'error'); continue }
       valid.push(file)
     }
-    const newFiles = valid.slice(0, 8 - photos.length)
-    setPhotos(prev => [...prev, ...newFiles])
-    setPreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))])
-  }, [photos])
+    setPhotos(prev => {
+      const newFiles = valid.slice(0, 8 - prev.length)
+      setPreviews(pv => [...pv, ...newFiles.map(f => URL.createObjectURL(f))])
+      return [...prev, ...newFiles]
+    })
+  }, [])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'image/*': [] }, multiple: true })
 
@@ -45,17 +70,23 @@ export default function CreatePage() {
     if (!user) { setAuthOpen(true); return }
     if (!form.title.trim()) { showToast('Введите заголовок', 'error'); return }
     setLoading(true)
-    const supabase = createClient()
+
+    // Загружаем фото через server route (обходит Storage RLS)
     const photoUrls: string[] = []
     for (const photo of photos) {
-      const ext = photo.name.split('.').pop()
-      const path = `${user.id}/${Date.now()}.${ext}`
-      const { error } = await supabase.storage.from('listings').upload(path, photo)
-      if (!error) {
-        const { data: { publicUrl } } = supabase.storage.from('listings').getPublicUrl(path)
-        photoUrls.push(publicUrl)
+      const fd = new FormData()
+      fd.append('file', photo)
+      const res = await fetch('/api/listings/upload-photo', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!res.ok) {
+        showToast(`Ошибка загрузки фото: ${json.error}`, 'error')
+        setLoading(false)
+        return
       }
+      photoUrls.push(json.url)
     }
+
+    const supabase = createClient()
     const { data, error } = await supabase.from('listings').insert({
       user_id: user.id,
       title: form.title,
@@ -69,45 +100,21 @@ export default function CreatePage() {
       is_urgent: form.isUrgent,
       status: 'active',
     }).select().single()
+
     setLoading(false)
     if (error) { showToast('Ошибка при публикации', 'error'); return }
     showToast('Объявление опубликовано! 🎉', 'ok')
     router.push(`/listings/${data.id}`)
   }
 
-  const CAT_COLORS: Record<string, string> = {
-    housing: '#1d4ed8', findhousing: '#6366f1', jobs: '#059669', sell: '#d97706', services: '#7c3aed',
-  }
-
-  const Section = ({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-        <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {icon}
-        </div>
-        <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{title}</span>
-      </div>
-      {children}
-    </motion.div>
-  )
-
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 60px' }}>
-      {/* Page header */}
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        style={{ marginBottom: 32 }}
-      >
+      <div style={{ marginBottom: 32 }}>
         <h1 style={{ fontSize: 28, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.5px', marginBottom: 6 }}>
           Подать объявление
         </h1>
         <p style={{ color: '#64748b', fontSize: 15 }}>Заполните форму — объявление появится сразу после публикации</p>
-      </motion.div>
+      </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
@@ -118,15 +125,13 @@ export default function CreatePage() {
               const color = CAT_COLORS[c.id] || '#1d4ed8'
               const isActive = form.category === c.id
               return (
-                <motion.button
+                <button
                   key={c.id}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.96 }}
                   onClick={() => set('category', c.id)}
                   style={{ padding: '9px 16px', borderRadius: 50, border: `2px solid ${isActive ? color : '#e2e8f0'}`, background: isActive ? color + '14' : '#f8fafc', color: isActive ? color : '#334155', fontSize: 13, fontWeight: isActive ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s' }}
                 >
                   {c.icon} {c.label}
-                </motion.button>
+                </button>
               )
             })}
           </div>
@@ -139,29 +144,22 @@ export default function CreatePage() {
             style={{ border: `2px dashed ${isDragActive ? '#1d4ed8' : '#e2e8f0'}`, borderRadius: 14, padding: 28, textAlign: 'center', cursor: 'pointer', background: isDragActive ? '#eff6ff' : '#f8fafc', transition: 'all 0.2s' }}
           >
             <input {...getInputProps()} />
-            <motion.div animate={{ y: isDragActive ? -4 : 0 }} style={{ fontSize: 36, marginBottom: 10 }}>📸</motion.div>
+            <div style={{ fontSize: 36, marginBottom: 10 }}>📸</div>
             <p style={{ fontSize: 14, color: '#64748b', fontWeight: 600 }}>Перетащите фото или нажмите для выбора</p>
             <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>JPG, PNG до 5MB · максимум 8 фото</p>
           </div>
           {previews.length > 0 && (
             <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
               {previews.map((p, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  style={{ position: 'relative' }}
-                >
-                  <img src={p} style={{ width: 88, height: 88, objectFit: 'cover', borderRadius: 12, border: '2px solid #e2e8f0' }} />
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => { setPhotos(ph => ph.filter((_, j) => j !== i)); setPreviews(pv => pv.filter((_, j) => j !== i)) }}
+                <div key={i} style={{ position: 'relative' }}>
+                  <img src={p} style={{ width: 88, height: 88, objectFit: 'cover', borderRadius: 12, border: '2px solid #e2e8f0' }} alt="" />
+                  <button
+                    onClick={() => removePhoto(i)}
                     style={{ position: 'absolute', top: -7, right: -7, width: 22, height: 22, borderRadius: '50%', background: '#ef4444', color: '#fff', border: '2px solid #fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}
                   >
                     <X size={11} strokeWidth={3} />
-                  </motion.button>
-                </motion.div>
+                  </button>
+                </div>
               ))}
             </div>
           )}
@@ -240,11 +238,7 @@ export default function CreatePage() {
         </Section>
 
         {/* Urgent toggle */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          style={{ background: form.isUrgent ? '#fef2f2' : '#fff', borderRadius: 20, border: `1.5px solid ${form.isUrgent ? '#fecaca' : '#e2e8f0'}`, padding: 20, transition: 'all 0.2s', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
-        >
+        <div style={{ background: form.isUrgent ? '#fef2f2' : '#fff', borderRadius: 20, border: `1.5px solid ${form.isUrgent ? '#fecaca' : '#e2e8f0'}`, padding: 20, transition: 'all 0.2s', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
             <div
               onClick={() => set('isUrgent', !form.isUrgent)}
@@ -263,7 +257,7 @@ export default function CreatePage() {
               <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>Выделит объявление в списке</div>
             </div>
           </label>
-        </motion.div>
+        </div>
 
         {/* Submit */}
         <motion.button
@@ -273,14 +267,7 @@ export default function CreatePage() {
           disabled={loading}
           style={{ padding: '17px', borderRadius: 16, background: loading ? '#94a3b8' : 'linear-gradient(135deg,#1d4ed8,#7c3aed)', color: '#fff', fontSize: 16, fontWeight: 800, border: 'none', cursor: loading ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: loading ? 'none' : '0 8px 24px rgba(29,78,216,0.3)' }}
         >
-          {loading ? (
-            <>⏳ Публикуем...</>
-          ) : (
-            <>
-              <Send size={18} />
-              Опубликовать объявление
-            </>
-          )}
+          {loading ? <>⏳ Публикуем...</> : <><Send size={18} /> Опубликовать объявление</>}
         </motion.button>
       </div>
     </div>

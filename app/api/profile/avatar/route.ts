@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
+  try {
   const cookieStore = await cookies()
 
   // Проверяем сессию через anon key
@@ -66,4 +67,8 @@ export async function POST(request: NextRequest) {
   await admin.from('users').update({ avatar_url: publicUrl }).eq('id', user.id)
 
   return NextResponse.json({ url: publicUrl })
+  } catch (e: any) {
+    console.error('[avatar route crash]', e)
+    return NextResponse.json({ error: e?.message || 'Внутренняя ошибка сервера' }, { status: 500 })
+  }
 }

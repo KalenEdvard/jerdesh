@@ -88,8 +88,8 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
       setCurrentProfile(p => ({ ...p, avatar_url: json.url }))
       setUser({ ...profile, avatar_url: json.url } as any)
       showToast('Фото обновлено ✓', 'ok')
-    } catch {
-      showToast('Ошибка загрузки. Попробуйте ещё раз.', 'error')
+    } catch (e: any) {
+      showToast(e?.message || 'Ошибка загрузки. Попробуйте ещё раз.', 'error')
     } finally {
       setAvatarUploading(false)
     }
