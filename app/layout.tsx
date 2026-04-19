@@ -1,10 +1,26 @@
 import type { Metadata } from 'next'
+import { Unbounded, Onest } from 'next/font/google'
 import './globals.css'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import AuthModal from '@/components/auth/AuthModal'
 import Toast from '@/components/ui/Toast'
 import AuthProvider from '@/components/auth/AuthProvider'
+
+// Шрифты скачиваются при билде и раздаются с Vercel — не зависят от Google
+const unbounded = Unbounded({
+  subsets: ['cyrillic', 'latin'],
+  weight: ['700', '900'],
+  variable: '--font-unbounded',
+  display: 'swap',
+})
+
+const onest = Onest({
+  subsets: ['cyrillic', 'latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-onest',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://mekendesh.site'),
@@ -15,11 +31,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Onest:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="ru" className={`${unbounded.variable} ${onest.variable}`}>
       <body>
         <AuthProvider>
           <Header />
