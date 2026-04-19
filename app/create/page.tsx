@@ -4,7 +4,9 @@ import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import { useStore } from '@/store'
 import { createClient } from '@/lib/supabase-client'
-import { CATEGORIES, METRO_STATIONS, CITIES, DEFAULT_CITY } from '@/types'
+import { CATEGORIES, METRO_STATIONS, CITIES } from '@/types'
+
+const DEFAULT_CITY = 'Москва'
 import { motion } from 'framer-motion'
 import { Upload, X, Send, Tag, FileText, Phone, MapPin, DollarSign, AlertCircle } from 'lucide-react'
 
