@@ -93,11 +93,13 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
       if (uploadError) { showToast(uploadError.message, 'error'); return }
 
       const { data: { publicUrl } } = supabase.storage.from('listings').getPublicUrl(path)
+      const urlWithBust = `${publicUrl}?t=${Date.now()}`
 
-      await supabase.from('users').update({ avatar_url: publicUrl }).eq('id', session.user.id)
+      // fire-and-forget: не ждём, RLS может блокировать из браузера
+      supabase.from('users').update({ avatar_url: publicUrl }).eq('id', session.user.id)
 
-      setCurrentProfile(p => ({ ...p, avatar_url: publicUrl }))
-      setUser({ ...profile, avatar_url: publicUrl } as any)
+      setCurrentProfile(p => ({ ...p, avatar_url: urlWithBust }))
+      setUser({ ...profile, avatar_url: urlWithBust } as any)
       showToast('Фото обновлено ✓', 'ok')
     } catch (e: any) {
       showToast(e?.message || 'Ошибка загрузки', 'error')
