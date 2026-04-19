@@ -53,13 +53,15 @@ export async function POST(request: NextRequest) {
     serviceKey
   )
 
+  console.log('[avatar] uploading to listings/', path, 'size:', buffer.length, 'type:', file.type)
+
   const { error: uploadError } = await admin.storage
     .from('listings')
     .upload(path, buffer, { upsert: true, contentType: file.type })
 
   if (uploadError) {
-    console.error('[avatar upload]', uploadError)
-    return NextResponse.json({ error: uploadError.message }, { status: 500 })
+    console.error('[avatar] upload error:', JSON.stringify(uploadError))
+    return NextResponse.json({ error: `Upload failed: ${uploadError.message} (status: ${(uploadError as any).statusCode})` }, { status: 500 })
   }
 
   const { data: { publicUrl } } = admin.storage.from('listings').getPublicUrl(path)
