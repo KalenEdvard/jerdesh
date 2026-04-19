@@ -1,5 +1,4 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -9,19 +8,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Заполните все поля' }, { status: 400 })
   }
 
-  const cookieStore = await cookies()
+  const cookiesToSet: { name: string; value: string; options: any }[] = []
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name: n, value, options }) => {
-            cookieStore.set(n, value, options)
-          })
-        },
+        getAll: () => request.cookies.getAll(),
+        setAll: (list) => { cookiesToSet.push(...list) },
       },
     }
   )
@@ -36,5 +31,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
-  return NextResponse.json({ ok: true })
+  const response = NextResponse.json({ ok: true })
+  cookiesToSet.forEach(({ name: n, value, options }) => {
+    response.cookies.set(n, value, {
+      ...options,
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    })
+  })
+
+  return response
 }

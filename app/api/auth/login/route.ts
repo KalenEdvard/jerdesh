@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { DEFAULT_CITY } from '@/types'
 
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json()
@@ -9,19 +9,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Email и пароль обязательны' }, { status: 400 })
   }
 
-  const cookieStore = await cookies()
+  // Собираем куки которые Supabase хочет выставить
+  const cookiesToSet: { name: string; value: string; options: any }[] = []
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-          })
-        },
+        getAll: () => request.cookies.getAll(),
+        setAll: (list) => { cookiesToSet.push(...list) },
       },
     }
   )
@@ -37,7 +34,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: msg }, { status: 401 })
   }
 
-  // Загружаем профиль
   const { data: profile } = await supabase
     .from('users')
     .select('*')
@@ -48,11 +44,24 @@ export async function POST(request: NextRequest) {
     id: data.user.id,
     name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Пользователь',
     email: data.user.email,
-    city: 'Москва',
+    city: DEFAULT_CITY,
     rating: 5.0,
     ads_count: 0,
     created_at: new Date().toISOString(),
   }
 
-  return NextResponse.json({ profile: userProfile })
+  // Устанавливаем куки на Response — единственный надёжный способ в Route Handler
+  const response = NextResponse.json({ profile: userProfile })
+  cookiesToSet.forEach(({ name, value, options }) => {
+    response.cookies.set(name, value, {
+      ...options,
+      path: '/',
+      // Сессия живёт 1 год — пользователь не вылетает после закрытия браузера
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    })
+  })
+
+  return response
 }
