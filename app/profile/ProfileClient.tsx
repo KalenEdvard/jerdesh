@@ -86,16 +86,21 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
       const ext = file.name.split('.').pop()
       const path = `avatars/${session.user.id}.${ext}`
 
-      const { error: uploadError } = await supabase.storage
-        .from('listings')
-        .upload(path, file, { upsert: true, contentType: file.type })
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Таймаут загрузки (30с). Попробуй снова.')), 30_000)
+      )
+
+      const { error: uploadError } = await Promise.race([
+        supabase.storage.from('listings').upload(path, file, { upsert: true, contentType: file.type }),
+        timeout,
+      ])
 
       if (uploadError) { showToast(uploadError.message, 'error'); return }
 
       const { data: { publicUrl } } = supabase.storage.from('listings').getPublicUrl(path)
       const urlWithBust = `${publicUrl}?t=${Date.now()}`
 
-      // fire-and-forget: не ждём, RLS может блокировать из браузера
+      // fire-and-forget: не ждём ответа от DB
       supabase.from('users').update({ avatar_url: publicUrl }).eq('id', session.user.id)
 
       setCurrentProfile(p => ({ ...p, avatar_url: urlWithBust }))
