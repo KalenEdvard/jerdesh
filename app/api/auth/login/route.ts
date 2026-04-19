@@ -1,6 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
-import { DEFAULT_CITY } from '@/types'
 
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json()
@@ -44,7 +43,7 @@ export async function POST(request: NextRequest) {
     id: data.user.id,
     name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Пользователь',
     email: data.user.email,
-    city: DEFAULT_CITY,
+    city: 'Москва',
     rating: 5.0,
     ads_count: 0,
     created_at: new Date().toISOString(),
