@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -8,7 +9,8 @@ export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies()
 
-    const supabase = createServerClient(
+    // Anon client — только чтобы проверить авторизацию юзера
+    const supabaseAuth = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
       }
     )
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await supabaseAuth.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
     }
@@ -37,7 +39,13 @@ export async function POST(request: NextRequest) {
     const ext = (fileName as string).split('.').pop() || 'jpg'
     const path = `${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
 
-    const { data, error } = await supabase.storage
+    // Service role client — нужен для createSignedUploadUrl
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { data, error } = await supabaseAdmin.storage
       .from('listings')
       .createSignedUploadUrl(path)
 
