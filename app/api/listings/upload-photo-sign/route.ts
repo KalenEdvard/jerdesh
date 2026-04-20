@@ -7,12 +7,15 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 export async function POST(request: NextRequest) {
   try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({ error: 'Supabase env не настроены на сервере' }, { status: 500 })
+    }
+
     const cookieStore = await cookies()
 
-    // Anon client — только чтобы проверить авторизацию юзера
     const supabaseAuth = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
           getAll: () => cookieStore.getAll(),
@@ -39,10 +42,9 @@ export async function POST(request: NextRequest) {
     const ext = (fileName as string).split('.').pop() || 'jpg'
     const path = `${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
 
-    // Service role client — нужен для createSignedUploadUrl
     const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
     )
 
     const { data, error } = await supabaseAdmin.storage
@@ -55,8 +57,9 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ path: data.path, token: data.token })
-  } catch (e: any) {
-    console.error('[upload-photo-sign] crash:', e?.message)
-    return NextResponse.json({ error: e?.message || 'Ошибка сервера' }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Ошибка сервера'
+    console.error('[upload-photo-sign] crash:', message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

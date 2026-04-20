@@ -2,13 +2,33 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
+import { motion } from 'framer-motion'
+import { Upload, X, Send, Tag, FileText, Phone, MapPin, DollarSign, AlertCircle } from 'lucide-react'
 import { useStore } from '@/store'
 import { createClient } from '@/lib/supabase-client'
 import { CATEGORIES, METRO_STATIONS, CITIES } from '@/types'
 
 const DEFAULT_CITY = 'Москва'
-import { motion } from 'framer-motion'
-import { Upload, X, Send, Tag, FileText, Phone, MapPin, DollarSign, AlertCircle } from 'lucide-react'
+const MAX_FILE_SIZE = 4 * 1024 * 1024
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
+function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+        <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {icon}
+        </div>
+        <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{title}</span>
+      </div>
+      {children}
+    </motion.div>
+  )
+}
 
 export default function CreatePage() {
   const router = useRouter()
@@ -28,9 +48,6 @@ export default function CreatePage() {
   const [loading, setLoading] = useState(false)
 
   const set = (k: keyof typeof form, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }))
-
-  const MAX_FILE_SIZE = 4 * 1024 * 1024
-  const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
   const onDrop = useCallback((files: File[]) => {
     const valid: File[] = []
@@ -60,73 +77,94 @@ export default function CreatePage() {
   })
 
   const handleSubmit = async () => {
-    if (!user) {
-      setAuthOpen(true)
-      return
-    }
     if (!form.title.trim()) {
       showToast('Введите заголовок', 'error')
       return
     }
 
     setLoading(true)
-
     const supabase = createClient()
 
-    const photoUrls: string[] = []
-    for (const photo of photos) {
-      // Шаг 1: сервер проверяет авторизацию и генерирует signed upload URL
-      const signRes = await fetch('/api/listings/upload-photo-sign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileName: photo.name, fileType: photo.type }),
-      })
-
-      if (!signRes.ok) {
-        const { error } = await signRes.json()
-        showToast(`Ошибка: ${error}`, 'error')
+    try {
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+      if (authError || !authUser) {
+        setAuthOpen(true)
+        showToast('Войдите, чтобы опубликовать объявление', 'info')
         setLoading(false)
         return
       }
 
-      const { path, token } = await signRes.json()
+      const { error: profileError } = await supabase
+        .from('users')
+        .upsert({
+          id: authUser.id,
+          name: user?.name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Пользователь',
+          city: user?.city || form.city || DEFAULT_CITY,
+        }, { onConflict: 'id' })
 
-      // Шаг 2: браузер грузит файл напрямую в Supabase Storage по подписанному URL
-      const { error: uploadError } = await supabase.storage
-        .from('listings')
-        .uploadToSignedUrl(path, token, photo, { contentType: photo.type })
-
-      if (uploadError) {
-        showToast(`Ошибка загрузки фото: ${uploadError.message}`, 'error')
+      if (profileError) {
+        showToast(`Ошибка профиля: ${profileError.message}`, 'error')
         setLoading(false)
         return
       }
 
-      const { data: { publicUrl } } = supabase.storage.from('listings').getPublicUrl(path)
-      photoUrls.push(publicUrl)
-    }
-    const { data, error } = await supabase.from('listings').insert({
-      user_id: user.id,
-      title: form.title,
-      description: form.description,
-      category: form.category,
-      price: form.price ? parseInt(form.price, 10) : null,
-      metro: form.metro || null,
-      city: form.city || DEFAULT_CITY,
-      phone: form.phone || null,
-      photos: photoUrls,
-      is_urgent: form.isUrgent,
-      status: 'active',
-    }).select().single()
+      const photoUrls: string[] = []
+      for (const photo of photos) {
+        const signRes = await fetch('/api/listings/upload-photo-sign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName: photo.name, fileType: photo.type }),
+        })
 
-    setLoading(false)
-    if (error) {
-      showToast('Ошибка при публикации', 'error')
-      return
-    }
+        const signJson = await signRes.json().catch(() => ({ error: 'Некорректный ответ сервера' }))
+        if (!signRes.ok) {
+          showToast(`Ошибка загрузки: ${signJson.error || signRes.statusText}`, 'error')
+          setLoading(false)
+          return
+        }
 
-    showToast('Объявление опубликовано!', 'ok')
-    router.push(`/listings/${data.id}`)
+        const { path, token } = signJson
+        const { error: uploadError } = await supabase.storage
+          .from('listings')
+          .uploadToSignedUrl(path, token, photo, { contentType: photo.type })
+
+        if (uploadError) {
+          showToast(`Ошибка загрузки фото: ${uploadError.message}`, 'error')
+          setLoading(false)
+          return
+        }
+
+        const { data: { publicUrl } } = supabase.storage.from('listings').getPublicUrl(path)
+        photoUrls.push(publicUrl)
+      }
+
+      const { data, error } = await supabase.from('listings').insert({
+        user_id: authUser.id,
+        title: form.title,
+        description: form.description,
+        category: form.category,
+        price: form.price ? parseInt(form.price, 10) : null,
+        metro: form.metro || null,
+        city: form.city || DEFAULT_CITY,
+        phone: form.phone || null,
+        photos: photoUrls,
+        is_urgent: form.isUrgent,
+        status: 'active',
+      }).select().single()
+
+      setLoading(false)
+      if (error) {
+        showToast(`Ошибка при публикации: ${error.message}`, 'error')
+        return
+      }
+
+      showToast('Объявление опубликовано!', 'ok')
+      router.push(`/listings/${data.id}`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'unknown error'
+      setLoading(false)
+      showToast(`Сбой публикации: ${message}`, 'error')
+    }
   }
 
   const CAT_COLORS: Record<string, string> = {
@@ -136,22 +174,6 @@ export default function CreatePage() {
     sell: '#d97706',
     services: '#7c3aed',
   }
-
-  const Section = ({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-        <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {icon}
-        </div>
-        <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{title}</span>
-      </div>
-      {children}
-    </motion.div>
-  )
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 60px' }}>
