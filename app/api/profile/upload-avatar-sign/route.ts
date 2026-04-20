@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     const { data: { publicUrl } } = supabaseAdmin.storage.from('listings').getPublicUrl(path)
 
-    return NextResponse.json({ path: data.path, token: data.token, publicUrl })
+    return NextResponse.json({ signedUrl: data.signedUrl, publicUrl })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Ошибка сервера'
     console.error('[upload-avatar-sign] crash:', message)

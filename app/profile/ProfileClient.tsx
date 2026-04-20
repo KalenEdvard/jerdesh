@@ -92,14 +92,20 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
         return
       }
 
-      const { path, token, publicUrl } = signJson
+      const { signedUrl, publicUrl } = signJson
 
-      // Шаг 2: браузер грузит напрямую в Storage по подписанному URL
-      const { error: uploadError } = await supabase.storage
-        .from('listings')
-        .uploadToSignedUrl(path, token, file, { contentType: file.type })
+      // Шаг 2: прямой PUT по signed URL — надёжнее чем SDK uploadToSignedUrl
+      const uploadRes = await fetch(signedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      })
 
-      if (uploadError) { showToast(uploadError.message, 'error'); return }
+      if (!uploadRes.ok) {
+        const errText = await uploadRes.text().catch(() => uploadRes.statusText)
+        showToast(`Ошибка загрузки: ${errText}`, 'error')
+        return
+      }
 
       const urlWithBust = `${publicUrl}?t=${Date.now()}`
 
