@@ -30,7 +30,11 @@ const IS_SUPABASE_CONFIGURED = Boolean(
 
 export default async function HomePage() {
   if (!IS_SUPABASE_CONFIGURED) {
-    return <HomeClient stats={undefined} />
+    return (
+      <Suspense fallback={null}>
+        <HomeClient stats={undefined} />
+      </Suspense>
+    )
   }
 
   const supabase = await createClient()
