@@ -56,7 +56,7 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { setUser, showToast } = useStore()
-  const tab = (searchParams.get('tab') ?? 'ads') as Tab
+  const [tab, setTab] = useState<Tab>((searchParams.get('tab') ?? 'ads') as Tab)
 
   const [myListings, setMyListings] = useState<Listing[]>(initialListings)
   const [favListings] = useState<Listing[]>(initialFavs)
@@ -211,7 +211,7 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <div style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', borderRadius: 14, padding: 4, display: 'flex', gap: 4 }}>
               {tabs.map(t => (
-                <button key={t.id} onClick={() => router.push(`/profile?tab=${t.id}`, { scroll: false })}
+                <button key={t.id} onClick={() => setTab(t.id as Tab)}
                   style={{ padding: '10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s', background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#1d4ed8' : 'rgba(255,255,255,0.8)', boxShadow: tab === t.id ? '0 2px 8px rgba(0,0,0,0.1)' : 'none' }}>
                   {t.icon} {t.label}
                 </button>
