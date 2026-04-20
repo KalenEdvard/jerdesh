@@ -186,19 +186,6 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
           </button>
         </div>
 
-        {/* Category chips */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 40 }}>
-          {CATEGORIES.map(c => (
-            <button
-              key={c.id}
-              onClick={() => { setFilter('category', c.id); router.push(`/?cat=${c.id}`) }}
-              style={{ padding: '7px 16px', borderRadius: 100, background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: 13, border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', transition: 'background 0.15s' }}
-            >
-              {c.icon} {c.label}
-            </button>
-          ))}
-        </div>
-
         {/* Stats */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 48, flexWrap: 'wrap' }}>
           {statItems.map(s => (
