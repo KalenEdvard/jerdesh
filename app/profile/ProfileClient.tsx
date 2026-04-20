@@ -5,9 +5,9 @@ import { useStore } from '@/store'
 import { createClient } from '@/lib/supabase-client'
 import type { Listing } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Star, MapPin, Plus, RefreshCw, Settings, Heart, Package, Trash2, Camera, Clock } from 'lucide-react'
+import { Star, MapPin, Plus, RefreshCw, Settings, Heart, Package, Trash2, Camera, Clock, Archive } from 'lucide-react'
 
-type Tab = 'ads' | 'favs' | 'settings'
+type Tab = 'ads' | 'drafts' | 'favs' | 'settings'
 type FavoriteRow = { listing: Listing | null }
 
 function plural(n: number, forms: [string, string, string]): string {
@@ -143,12 +143,14 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
     setSaving(false)
   }
 
-  const isDraft = (l: Listing) => l.status === 'draft'
+  const activeListings = myListings.filter(l => l.status === 'active')
+  const draftListings = myListings.filter(l => l.status === 'draft')
 
   const tabs = [
-    { id: 'ads', label: 'Мои объявления', icon: <Package size={16} /> },
-    { id: 'favs', label: 'Избранное', icon: <Heart size={16} /> },
-    { id: 'settings', label: 'Настройки', icon: <Settings size={16} /> },
+    { id: 'ads', label: 'Мои объявления', icon: <Package size={16} />, count: activeListings.length },
+    { id: 'drafts', label: 'Черновики', icon: <Archive size={16} />, count: draftListings.length },
+    { id: 'favs', label: 'Избранное', icon: <Heart size={16} />, count: 0 },
+    { id: 'settings', label: 'Настройки', icon: <Settings size={16} />, count: 0 },
   ]
 
   return (
@@ -212,8 +214,13 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
             <div style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', borderRadius: 14, padding: 4, display: 'flex', gap: 4 }}>
               {tabs.map(t => (
                 <button key={t.id} onClick={() => setTab(t.id as Tab)}
-                  style={{ padding: '10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s', background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#1d4ed8' : 'rgba(255,255,255,0.8)', boxShadow: tab === t.id ? '0 2px 8px rgba(0,0,0,0.1)' : 'none' }}>
+                  style={{ padding: '10px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s', background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#1d4ed8' : 'rgba(255,255,255,0.8)', boxShadow: tab === t.id ? '0 2px 8px rgba(0,0,0,0.1)' : 'none' }}>
                   {t.icon} {t.label}
+                  {t.count > 0 && (
+                    <span style={{ fontSize: 11, fontWeight: 700, background: tab === t.id ? '#1d4ed8' : 'rgba(255,255,255,0.25)', color: tab === t.id ? '#fff' : '#fff', borderRadius: 10, padding: '1px 6px', minWidth: 18, textAlign: 'center' }}>
+                      {t.count}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -227,7 +234,7 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
 
           {tab === 'ads' && (
             <motion.div key="ads" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
-              {myListings.length === 0 ? (
+              {activeListings.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '64px 20px', background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0' }}>
                   <div style={{ fontSize: 56, marginBottom: 16 }}>📭</div>
                   <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Нет объявлений</h3>
@@ -238,48 +245,72 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
-                  {myListings.map((l, i) => {
-                    const draft = isDraft(l)
-                    return (
-                      <motion.div key={l.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                        whileHover={{ y: -4 }}
-                        style={{ background: '#fff', borderRadius: 16, border: `1px solid ${draft ? '#fed7aa' : '#e2e8f0'}`, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', position: 'relative', opacity: draft ? 0.85 : 1 }}>
-                        <div style={{ height: 160, background: l.photos?.[0] ? 'none' : 'linear-gradient(135deg,#eff6ff,#dbeafe)', position: 'relative', overflow: 'hidden' }}>
-                          {l.photos?.[0] ? <img src={l.photos[0]} alt={l.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> :
-                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🏷️</div>}
-                          {draft && (
-                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                              <span style={{ color: '#fbbf24', fontWeight: 700, fontSize: 13 }}>📁 Черновик</span>
-                              <button onClick={() => renewListing(l.id)}
-                                style={{ padding: '7px 16px', borderRadius: 10, background: '#22c55e', color: '#fff', fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <RefreshCw size={12} /> Опубликовать снова
-                              </button>
-                            </div>
-                          )}
-                          {l.is_urgent && !draft && (
-                            <div style={{ position: 'absolute', top: 8, left: 8, background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6 }}>СРОЧНО</div>
-                          )}
-                          {!draft && (
-                            <div style={{ position: 'absolute', top: 8, left: l.is_urgent ? 70 : 8, background: '#22c55e', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6 }}>АКТИВНО</div>
-                          )}
-                        </div>
-                        <div style={{ padding: '14px 16px' }}>
-                          <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{l.category}</div>
-                          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 8, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{l.title}</h3>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <span style={{ fontSize: 16, fontWeight: 800, color: '#1d4ed8' }}>{l.price ? `${l.price.toLocaleString('ru')} ₽` : 'Договорная'}</span>
-                            <span style={{ fontSize: 11, color: '#94a3b8' }}>{l.views} просмотров</span>
-                          </div>
-                        </div>
-                        {!draft && (
-                          <button onClick={() => deleteListing(l.id)}
-                            style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                            <Trash2 size={13} />
-                          </button>
+                  {activeListings.map((l, i) => (
+                    <motion.div key={l.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                      whileHover={{ y: -4 }}
+                      style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', position: 'relative' }}>
+                      <div style={{ height: 160, background: l.photos?.[0] ? 'none' : 'linear-gradient(135deg,#eff6ff,#dbeafe)', position: 'relative', overflow: 'hidden' }}>
+                        {l.photos?.[0] ? <img src={l.photos[0]} alt={l.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> :
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🏷️</div>}
+                        {l.is_urgent && (
+                          <div style={{ position: 'absolute', top: 8, left: 8, background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6 }}>СРОЧНО</div>
                         )}
-                      </motion.div>
-                    )
-                  })}
+                        <div style={{ position: 'absolute', top: 8, left: l.is_urgent ? 70 : 8, background: '#22c55e', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6 }}>АКТИВНО</div>
+                      </div>
+                      <div style={{ padding: '14px 16px' }}>
+                        <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{l.category}</div>
+                        <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 8, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{l.title}</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: 16, fontWeight: 800, color: '#1d4ed8' }}>{l.price ? `${l.price.toLocaleString('ru')} ₽` : 'Договорная'}</span>
+                          <span style={{ fontSize: 11, color: '#94a3b8' }}>{l.views} просмотров</span>
+                        </div>
+                      </div>
+                      <button onClick={() => deleteListing(l.id)}
+                        style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                        <Trash2 size={13} />
+                      </button>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {tab === 'drafts' && (
+            <motion.div key="drafts" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
+              {draftListings.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '64px 20px', background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: 56, marginBottom: 16 }}>📁</div>
+                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Черновиков нет</h3>
+                  <p style={{ color: '#64748b' }}>Здесь появятся удалённые или истёкшие объявления</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
+                  {draftListings.map((l, i) => (
+                    <motion.div key={l.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                      whileHover={{ y: -4 }}
+                      style={{ background: '#fff', borderRadius: 16, border: '1px solid #fed7aa', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', position: 'relative', opacity: 0.9 }}>
+                      <div style={{ height: 160, background: l.photos?.[0] ? 'none' : 'linear-gradient(135deg,#fff7ed,#ffedd5)', position: 'relative', overflow: 'hidden' }}>
+                        {l.photos?.[0] ? <img src={l.photos[0]} alt={l.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> :
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>📁</div>}
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                          <span style={{ color: '#fbbf24', fontWeight: 700, fontSize: 13 }}>Снято с публикации</span>
+                          <button onClick={() => renewListing(l.id)}
+                            style={{ padding: '7px 16px', borderRadius: 10, background: '#22c55e', color: '#fff', fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <RefreshCw size={12} /> Опубликовать снова
+                          </button>
+                        </div>
+                      </div>
+                      <div style={{ padding: '14px 16px' }}>
+                        <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{l.category}</div>
+                        <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 8, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{l.title}</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: 16, fontWeight: 800, color: '#94a3b8' }}>{l.price ? `${l.price.toLocaleString('ru')} ₽` : 'Договорная'}</span>
+                          <span style={{ fontSize: 11, color: '#94a3b8' }}>{l.views} просмотров</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               )}
             </motion.div>
