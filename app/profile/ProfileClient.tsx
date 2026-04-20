@@ -103,11 +103,12 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
 
       const urlWithBust = `${publicUrl}?t=${Date.now()}`
 
-      await supabase.from('users').update({ avatar_url: publicUrl }).eq('id', profile.id)
-
+      // Сначала обновляем UI, потом fire-and-forget в БД
       setCurrentProfile(p => ({ ...p, avatar_url: urlWithBust }))
       setUser({ ...profile, avatar_url: urlWithBust } as any)
       showToast('Фото обновлено ✓', 'ok')
+
+      supabase.from('users').update({ avatar_url: publicUrl }).eq('id', profile.id).then(() => {})
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Ошибка загрузки'
       showToast(message, 'error')
