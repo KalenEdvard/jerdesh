@@ -123,18 +123,22 @@ export default function CreatePage() {
           return
         }
 
-        const { path, token } = signJson
-        const { error: uploadError } = await supabase.storage
-          .from('listings')
-          .uploadToSignedUrl(path, token, photo, { contentType: photo.type })
+        const { signedUrl, publicUrl } = signJson
 
-        if (uploadError) {
-          showToast(`Ошибка загрузки фото: ${uploadError.message}`, 'error')
+        // Прямой PUT — надёжнее чем SDK uploadToSignedUrl
+        const uploadRes = await fetch(signedUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': photo.type },
+          body: photo,
+        })
+
+        if (!uploadRes.ok) {
+          const errText = await uploadRes.text().catch(() => uploadRes.statusText)
+          showToast(`Ошибка загрузки фото: ${errText}`, 'error')
           setLoading(false)
           return
         }
 
-        const { data: { publicUrl } } = supabase.storage.from('listings').getPublicUrl(path)
         photoUrls.push(publicUrl)
       }
 

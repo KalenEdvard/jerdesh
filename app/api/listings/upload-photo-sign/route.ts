@@ -56,7 +56,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ path: data.path, token: data.token })
+    const { data: { publicUrl } } = supabaseAdmin.storage.from('listings').getPublicUrl(data.path)
+    return NextResponse.json({ signedUrl: data.signedUrl, publicUrl })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Ошибка сервера'
     console.error('[upload-photo-sign] crash:', message)
