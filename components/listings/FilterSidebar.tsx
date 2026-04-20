@@ -1,11 +1,8 @@
 'use client'
 import { METRO_STATIONS, CATEGORIES } from '@/types'
-import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
 import { SlidersHorizontal, RotateCcw, MapPin, Tag, ArrowUpDown } from 'lucide-react'
 import { useFilters } from '@/hooks/useFilters'
-
-const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false })
 
 const CAT_COLORS: Record<string, string> = {
   all:         '#64748b',
@@ -111,18 +108,6 @@ export default function FilterSidebar() {
         </div>
       </motion.div>
 
-      {/* Map */}
-      <motion.div
-        initial={{ opacity: 0, x: -16 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.35, delay: 0.1 }}
-        style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
-      >
-        <div style={{ padding: '14px 16px 10px', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, color: '#0f172a' }}>
-          <MapPin size={14} color="#1d4ed8" /> Карта
-        </div>
-        <MapView />
-      </motion.div>
     </aside>
   )
 }
