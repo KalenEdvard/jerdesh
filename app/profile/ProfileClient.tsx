@@ -80,34 +80,37 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
     if (file.size > 4 * 1024 * 1024) { showToast('Файл больше 4MB', 'error'); return }
     setAvatarUploading(true)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { showToast('Сессия истекла, войдите снова', 'error'); return }
+      // Шаг 1: сервер проверяет авторизацию и возвращает signed upload URL
+      const signRes = await fetch('/api/profile/upload-avatar-sign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileType: file.type }),
+      })
+      const signJson = await signRes.json().catch(() => ({ error: 'Некорректный ответ сервера' }))
+      if (!signRes.ok) {
+        showToast(`Ошибка: ${signJson.error || signRes.statusText}`, 'error')
+        return
+      }
 
-      const ext = file.name.split('.').pop()
-      const path = `avatars/${session.user.id}.${ext}`
+      const { path, token, publicUrl } = signJson
 
-      const timeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Таймаут загрузки (30с). Попробуй снова.')), 30_000)
-      )
-
-      const { error: uploadError } = await Promise.race([
-        supabase.storage.from('listings').upload(path, file, { upsert: true, contentType: file.type }),
-        timeout,
-      ])
+      // Шаг 2: браузер грузит напрямую в Storage по подписанному URL
+      const { error: uploadError } = await supabase.storage
+        .from('listings')
+        .uploadToSignedUrl(path, token, file, { contentType: file.type })
 
       if (uploadError) { showToast(uploadError.message, 'error'); return }
 
-      const { data: { publicUrl } } = supabase.storage.from('listings').getPublicUrl(path)
       const urlWithBust = `${publicUrl}?t=${Date.now()}`
 
-      // fire-and-forget: не ждём ответа от DB
-      supabase.from('users').update({ avatar_url: publicUrl }).eq('id', session.user.id)
+      await supabase.from('users').update({ avatar_url: publicUrl }).eq('id', profile.id)
 
       setCurrentProfile(p => ({ ...p, avatar_url: urlWithBust }))
       setUser({ ...profile, avatar_url: urlWithBust } as any)
       showToast('Фото обновлено ✓', 'ok')
-    } catch (e: any) {
-      showToast(e?.message || 'Ошибка загрузки', 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Ошибка загрузки'
+      showToast(message, 'error')
     } finally {
       setAvatarUploading(false)
     }
