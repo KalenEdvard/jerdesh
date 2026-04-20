@@ -5,7 +5,6 @@ import { useDropzone } from 'react-dropzone'
 import { motion } from 'framer-motion'
 import { Upload, X, Send, Tag, FileText, Phone, MapPin, DollarSign, AlertCircle } from 'lucide-react'
 import { useStore } from '@/store'
-import { createClient } from '@/lib/supabase-client'
 import { CATEGORIES, METRO_STATIONS, CITIES } from '@/types'
 
 const DEFAULT_CITY = 'Москва'
@@ -77,37 +76,12 @@ export default function CreatePage() {
   })
 
   const handleSubmit = async () => {
-    if (!form.title.trim()) {
-      showToast('Введите заголовок', 'error')
-      return
-    }
+    if (!user) { setAuthOpen(true); return }
+    if (!form.title.trim()) { showToast('Введите заголовок', 'error'); return }
 
     setLoading(true)
-    const supabase = createClient()
-
     try {
-      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
-      if (authError || !authUser) {
-        setAuthOpen(true)
-        showToast('Войдите, чтобы опубликовать объявление', 'info')
-        setLoading(false)
-        return
-      }
-
-      const { error: profileError } = await supabase
-        .from('users')
-        .upsert({
-          id: authUser.id,
-          name: user?.name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Пользователь',
-          city: user?.city || form.city || DEFAULT_CITY,
-        }, { onConflict: 'id' })
-
-      if (profileError) {
-        showToast(`Ошибка профиля: ${profileError.message}`, 'error')
-        setLoading(false)
-        return
-      }
-
+      // 1. Загрузка фото через signed URL (прямой PUT)
       const photoUrls: string[] = []
       for (const photo of photos) {
         const signRes = await fetch('/api/listings/upload-photo-sign', {
@@ -115,59 +89,44 @@ export default function CreatePage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fileName: photo.name, fileType: photo.type }),
         })
-
-        const signJson = await signRes.json().catch(() => ({ error: 'Некорректный ответ сервера' }))
+        const signJson = await signRes.json().catch(() => ({ error: 'Ошибка сервера' }))
         if (!signRes.ok) {
-          showToast(`Ошибка загрузки: ${signJson.error || signRes.statusText}`, 'error')
+          showToast(`Ошибка фото: ${signJson.error}`, 'error')
           setLoading(false)
           return
         }
-
-        const { signedUrl, publicUrl } = signJson
-
-        // Прямой PUT — надёжнее чем SDK uploadToSignedUrl
-        const uploadRes = await fetch(signedUrl, {
+        const uploadRes = await fetch(signJson.signedUrl, {
           method: 'PUT',
           headers: { 'Content-Type': photo.type },
           body: photo,
         })
-
         if (!uploadRes.ok) {
-          const errText = await uploadRes.text().catch(() => uploadRes.statusText)
-          showToast(`Ошибка загрузки фото: ${errText}`, 'error')
+          showToast(`Ошибка загрузки фото: ${uploadRes.statusText}`, 'error')
           setLoading(false)
           return
         }
-
-        photoUrls.push(publicUrl)
+        photoUrls.push(signJson.publicUrl)
       }
 
-      const { data, error } = await supabase.from('listings').insert({
-        user_id: authUser.id,
-        title: form.title,
-        description: form.description,
-        category: form.category,
-        price: form.price ? parseInt(form.price, 10) : null,
-        metro: form.metro || null,
-        city: form.city || DEFAULT_CITY,
-        phone: form.phone || null,
-        photos: photoUrls,
-        is_urgent: form.isUrgent,
-        status: 'active',
-      }).select().single()
+      // 2. Создание объявления через серверный API (авторизация + insert на сервере)
+      const res = await fetch('/api/listings/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, photos: photoUrls }),
+      })
+      const json = await res.json().catch(() => ({ error: 'Ошибка сервера' }))
 
       setLoading(false)
-      if (error) {
-        showToast(`Ошибка при публикации: ${error.message}`, 'error')
+      if (!res.ok) {
+        showToast(`Ошибка: ${json.error}`, 'error')
         return
       }
 
       showToast('Объявление опубликовано!', 'ok')
-      router.push(`/listings/${data.id}`)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'unknown error'
+      router.push(`/listings/${json.id}`)
+    } catch (e: unknown) {
       setLoading(false)
-      showToast(`Сбой публикации: ${message}`, 'error')
+      showToast(e instanceof Error ? e.message : 'Ошибка публикации', 'error')
     }
   }
 
