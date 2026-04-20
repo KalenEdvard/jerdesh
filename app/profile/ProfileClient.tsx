@@ -124,13 +124,23 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
   }
 
   const deleteListing = async (id: string) => {
-    await supabase.from('listings').update({ status: 'draft' }).eq('id', id)
+    const res = await fetch('/api/listings/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status: 'draft' }),
+    })
+    if (!res.ok) { showToast('Ошибка удаления', 'error'); return }
     setMyListings(prev => prev.map(l => l.id === id ? { ...l, status: 'draft' as const } : l))
-    showToast('Объявление снято с публикации', 'info')
+    showToast('Объявление перенесено в черновики', 'info')
   }
 
   const renewListing = async (id: string) => {
-    await supabase.from('listings').update({ status: 'active' }).eq('id', id)
+    const res = await fetch('/api/listings/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status: 'active' }),
+    })
+    if (!res.ok) { showToast('Ошибка публикации', 'error'); return }
     setMyListings(prev => prev.map(l => l.id === id ? { ...l, status: 'active' as const } : l))
     showToast('Объявление снова активно! ✓', 'ok')
   }
