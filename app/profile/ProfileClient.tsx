@@ -5,7 +5,7 @@ import { useStore } from '@/store'
 import { createClient } from '@/lib/supabase-client'
 import type { Listing } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Star, MapPin, Plus, RefreshCw, Settings, Heart, Package, Trash2, Camera, Clock, Archive } from 'lucide-react'
+import { Star, MapPin, Plus, RefreshCw, Settings, Heart, Package, Trash2, Camera, Clock, Archive, Pencil } from 'lucide-react'
 
 type Tab = 'ads' | 'drafts' | 'favs' | 'settings'
 type FavoriteRow = { listing: Listing | null }
@@ -275,10 +275,16 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
                           <span style={{ fontSize: 11, color: '#94a3b8' }}>{l.views} просмотров</span>
                         </div>
                       </div>
-                      <button onClick={() => deleteListing(l.id)}
-                        style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                        <Trash2 size={13} />
-                      </button>
+                      <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <button onClick={() => router.push(`/listings/${l.id}/edit`)}
+                          style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1d4ed8', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                          <Pencil size={13} />
+                        </button>
+                        <button onClick={() => deleteListing(l.id)}
+                          style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </motion.div>
                   ))}
                 </div>
