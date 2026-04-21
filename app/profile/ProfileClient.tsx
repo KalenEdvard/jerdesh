@@ -70,6 +70,7 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
   const [max, setMax] = useState(profile.max || '')
   const [saving, setSaving] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [navigatingId, setNavigatingId] = useState<string | null>(null)
   const [currentProfile, setCurrentProfile] = useState(profile)
 
   const supabase = createClient()
@@ -260,9 +261,13 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
                   {activeListings.map((l, i) => (
                     <motion.div key={l.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                      whileHover={{ y: -4, cursor: 'pointer' }}
-                      onClick={() => router.push(`/listings/${l.id}/edit`)}
-                      style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', position: 'relative', cursor: 'pointer' }}>
+                      whileHover={{ y: -4 }}
+                      onClick={() => {
+                        setNavigatingId(l.id)
+                        sessionStorage.setItem(`listing_edit_${l.id}`, JSON.stringify(l))
+                        router.push(`/listings/${l.id}/edit`)
+                      }}
+                      style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', position: 'relative', cursor: navigatingId === l.id ? 'wait' : 'pointer' }}>
                       <div style={{ height: 160, background: l.photos?.[0] ? 'none' : 'linear-gradient(135deg,#eff6ff,#dbeafe)', position: 'relative', overflow: 'hidden' }}>
                         {l.photos?.[0] ? <img src={l.photos[0]} alt={l.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> :
                           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🏷️</div>}
@@ -279,8 +284,14 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
                           <span style={{ fontSize: 11, color: '#94a3b8' }}>{l.views} просмотров</span>
                         </div>
                       </div>
+                      {navigatingId === l.id && (
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, borderRadius: 16 }}>
+                          <div style={{ width: 28, height: 28, border: '3px solid #e2e8f0', borderTopColor: '#1d4ed8', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+                        </div>
+                      )}
                       <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <button onClick={e => { e.stopPropagation(); router.push(`/listings/${l.id}/edit`) }}
+                        <button onClick={e => { e.stopPropagation(); setNavigatingId(l.id); sessionStorage.setItem(`listing_edit_${l.id}`, JSON.stringify(l)); router.push(`/listings/${l.id}/edit`) }}
                           style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1d4ed8', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                           <Pencil size={13} />
                         </button>
