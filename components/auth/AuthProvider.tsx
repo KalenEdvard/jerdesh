@@ -9,26 +9,27 @@ const IS_SUPABASE_CONFIGURED = (
   !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
 )
 
+async function fetchMyProfile() {
+  const res = await fetch('/api/profile/me')
+  if (!res.ok) return null
+  return res.json()
+}
+
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setUser } = useStore()
 
   useEffect(() => {
     if (!IS_SUPABASE_CONFIGURED) return
 
-    const supabase = createClient()
-
-    // getSession() читает куку локально — не требует сетевого запроса к Supabase
-    // Безопасность: middleware и серверные компоненты проверяют сессию на сервере
-    supabase.auth.getSession().then(async ({ data: { session } }: { data: { session: Session | null } }) => {
-      if (session?.user) {
-        const { data: profile } = await supabase.from('users').select('*').eq('id', session.user.id).single()
-        if (profile) setUser(profile)
-      }
+    // Восстанавливаем сессию через серверный API — надёжнее чем браузерный клиент
+    fetchMyProfile().then(profile => {
+      if (profile) setUser(profile)
     })
 
+    const supabase = createClient()
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: string, session: Session | null) => {
       if (session?.user) {
-        const { data: profile } = await supabase.from('users').select('*').eq('id', session.user.id).single()
+        const profile = await fetchMyProfile()
         if (profile) setUser(profile)
       } else {
         setUser(null)
