@@ -3,11 +3,34 @@ import Link from 'next/link'
 import { useStore } from '@/store'
 import { createClient } from '@/lib/supabase-client'
 import type { Listing } from '@/types'
-import { formatDistanceToNow } from 'date-fns'
-import { ru } from 'date-fns/locale'
 import { motion } from 'framer-motion'
 import { MapPin, Eye, Star, Heart } from 'lucide-react'
 import { toggleFavorite } from '@/lib/toggleFavorite'
+
+function plural(n: number, one: string, few: string, many: string) {
+  const mod10 = n % 10, mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return one
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few
+  return many
+}
+
+function getTimeAgo(dateStr: string): string {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
+  if (diff < 3600) {
+    const m = Math.max(1, Math.floor(diff / 60))
+    return `${m} ${plural(m, 'минуту', 'минуты', 'минут')} назад`
+  }
+  if (diff < 86400) {
+    const h = Math.floor(diff / 3600)
+    return `${h} ${plural(h, 'час', 'часа', 'часов')} назад`
+  }
+  if (diff < 86400 * 30) {
+    const d = Math.floor(diff / 86400)
+    return `${d} ${plural(d, 'день', 'дня', 'дней')} назад`
+  }
+  const mo = Math.floor(diff / (86400 * 30))
+  return `${mo} ${plural(mo, 'месяц', 'месяца', 'месяцев')} назад`
+}
 
 const CAT_COLORS: Record<string, string> = {
   housing:     '#1d4ed8',
@@ -47,7 +70,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
     showToast(saved ? 'Добавлено в избранное ❤️' : 'Удалено из избранного', saved ? 'ok' : 'info')
   }
 
-  const timeAgo = formatDistanceToNow(new Date(listing.created_at), { addSuffix: true, locale: ru })
+  const timeAgo = getTimeAgo(listing.created_at)
   const catColor = CAT_COLORS[listing.category] || '#1d4ed8'
   const catGradient = CAT_GRADIENTS[listing.category] || 'linear-gradient(135deg,#1d4ed8,#3b82f6)'
   const catLabel = CAT_LABELS[listing.category] || listing.category
@@ -133,26 +156,29 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           )}
 
           {/* Footer */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
-            {/* Author */}
+          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {/* Author + rating */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <div style={{ width: 24, height: 24, borderRadius: '50%', background: catGradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#fff' }}>
+              <div style={{ width: 26, height: 26, borderRadius: '50%', background: catGradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
                 {listing.user?.name?.[0]?.toUpperCase() || 'У'}
               </div>
-              <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>{listing.user?.name || 'Пользователь'}</span>
+              <span style={{ fontSize: 12, color: '#334155', fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {listing.user?.name || 'Пользователь'}
+              </span>
               {listing.user?.rating && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 3, background: '#fffbeb', borderRadius: 8, padding: '2px 7px' }}>
                   <Star size={11} fill="#f59e0b" color="#f59e0b" />
-                  <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 600 }}>{listing.user.rating}</span>
+                  <span style={{ fontSize: 11, color: '#d97706', fontWeight: 700 }}>{listing.user.rating}</span>
                 </div>
               )}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#94a3b8' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            {/* Views + time */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#94a3b8' }}>
                 <Eye size={12} />
-                <span>{listing.views}</span>
+                <span style={{ fontSize: 11 }}>{listing.views ?? 0} просмотров</span>
               </div>
-              <span>{timeAgo}</span>
+              <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>{timeAgo}</span>
             </div>
           </div>
         </div>

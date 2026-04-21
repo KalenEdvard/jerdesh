@@ -69,7 +69,7 @@ export default function HomeClient({ stats }: { stats?: Stats }) {
           </motion.div>
 
           {loading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} style={{ borderRadius: 16, overflow: 'hidden', background: '#f1f5f9', height: 280, animation: 'pulse 1.5s ease-in-out infinite' }} />
               ))}
@@ -93,7 +93,7 @@ export default function HomeClient({ stats }: { stats?: Stats }) {
                   <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
                 </div>
               )}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
                 {listings.map(l => <ListingCard key={l.id} listing={l} />)}
               </div>
             </div>
