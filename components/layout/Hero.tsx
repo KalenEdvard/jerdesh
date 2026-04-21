@@ -3,6 +3,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { CATEGORIES, METRO_STATIONS, CITIES, DEFAULT_CITY } from '@/types'
 import { useFilters } from '@/hooks/useFilters'
+import { useGeoCity } from '@/hooks/useGeoCity'
+import { useStore } from '@/store'
 
 function Counter({ target, suffix = '' }: { target: number; suffix?: string }) {
   const [count, setCount] = useState(0)
@@ -31,6 +33,8 @@ type HeroStats = { listings: number; users: number; cities: number }
 export default function Hero({ stats }: { stats?: HeroStats }) {
   const router = useRouter()
   const { query, category, metro, city, setFilter } = useFilters()
+  const { detect: detectCity, loading: geoLoading } = useGeoCity()
+  const { showToast } = useStore()
   const [metroOpen, setMetroOpen] = useState(false)
   const [catOpen, setCatOpen] = useState(false)
   const [cityOpen, setCityOpen] = useState(false)
@@ -87,7 +91,8 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
         {/* Search box */}
         <div style={{ maxWidth: 780, margin: '0 auto 32px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', borderRadius: 20, padding: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }} className="hero-searchbox">
           {/* City picker — hidden on mobile (MobileFilterBar handles it) */}
-          <div className="hero-pickers" style={{ position: 'relative' }} ref={cityRef}>
+          <div className="hero-pickers" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ position: 'relative' }} ref={cityRef}>
             <button
               onClick={() => setCityOpen(!cityOpen)}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }}
@@ -107,6 +112,20 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Geo button next to city picker */}
+          <button
+            onClick={() => detectCity(
+              (detected) => { setFilter('city', detected); setFilter('metro', ''); showToast(`📍 Определён город: ${detected}`, 'ok') },
+              () => showToast('Не удалось определить город', 'error')
+            )}
+            disabled={geoLoading}
+            title="Определить мой город"
+            style={{ padding: '10px 12px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 16, border: '1.5px solid rgba(255,255,255,0.2)', cursor: geoLoading ? 'default' : 'pointer', opacity: geoLoading ? 0.6 : 1 }}
+          >
+            {geoLoading ? '⏳' : '📍'}
+          </button>
           </div>
 
           {/* Category picker — hidden on mobile */}
