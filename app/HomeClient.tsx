@@ -7,7 +7,6 @@ import FilterSidebar from '@/components/listings/FilterSidebar'
 import ListingCard from '@/components/listings/ListingCard'
 import { motion } from 'framer-motion'
 import { useFilters } from '@/hooks/useFilters'
-import { createClient } from '@/lib/supabase-client'
 
 type Stats = { listings: number; users: number; cities: number }
 
@@ -19,39 +18,23 @@ export default function HomeClient({ stats }: { stats?: Stats }) {
 
   useEffect(() => {
     let cancelled = false
-    const supabase = createClient()
 
     const fetchListings = async () => {
-      // Первая загрузка — показываем скелетон
-      // При смене фильтра — просто тихий re-fetch, старые карточки остаются
       if (listings.length === 0) setLoading(true)
       else setFetching(true)
 
-      let q = supabase
-        .from('listings')
-        .select('id,title,description,category,price,metro,city,photos,views,is_urgent,is_premium,status,created_at,user:users(id,name,avatar_url,rating)')
-        .eq('status', 'active')
+      const params = new URLSearchParams()
+      if (category && category !== 'all') params.set('category', category)
+      if (query) params.set('query', query)
+      if (metro) params.set('metro', metro)
+      if (city) params.set('city', city)
+      if (sort) params.set('sort', sort)
 
-      if (category && category !== 'all') q = q.eq('category', category)
-      if (query) q = q.or(`title.ilike.%${query}%,description.ilike.%${query}%`)
-      if (metro) q = q.eq('metro', metro)
-      if (city) q = q.eq('city', city)
+      const res = await fetch(`/api/listings/search?${params.toString()}`)
+      const data = res.ok ? await res.json() : []
 
-      // Сортировка
-      if (sort === 'pa')  q = q.order('price', { ascending: true })
-      else if (sort === 'pd')  q = q.order('price', { ascending: false })
-      else if (sort === 'pop') q = q.order('views', { ascending: false })
-      else if (sort === 'old') q = q.order('created_at', { ascending: true })
-      else {
-        // new (default) — премиум сверху, потом по дате
-        q = q.order('is_premium', { ascending: false }).order('created_at', { ascending: false })
-      }
-
-      q = q.limit(48)
-
-      const { data } = await q
       if (!cancelled) {
-        setListings((data || []) as unknown as Listing[])
+        setListings(data as Listing[])
         setLoading(false)
         setFetching(false)
       }
