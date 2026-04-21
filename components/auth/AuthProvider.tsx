@@ -1,5 +1,6 @@
 'use client'
 import { useEffect } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase-client'
 import { useStore } from '@/store'
 
@@ -18,14 +19,14 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
     // getSession() читает куку локально — не требует сетевого запроса к Supabase
     // Безопасность: middleware и серверные компоненты проверяют сессию на сервере
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }: { data: { session: Session | null } }) => {
       if (session?.user) {
         const { data: profile } = await supabase.from('users').select('*').eq('id', session.user.id).single()
         if (profile) setUser(profile)
       }
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: string, session: Session | null) => {
       if (session?.user) {
         const { data: profile } = await supabase.from('users').select('*').eq('id', session.user.id).single()
         if (profile) setUser(profile)

@@ -41,7 +41,7 @@ export default function ChatModal({ listingId, receiverId }: { listingId: string
         schema: 'public',
         table: 'messages',
         filter: `listing_id=eq.${listingId}`,
-      }, (payload) => {
+      }, (payload: { new: unknown }) => {
         const message = payload.new as Message
         const isConversationMessage =
           (message.sender_id === user.id && message.receiver_id === receiverId) ||
