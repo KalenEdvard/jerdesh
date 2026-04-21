@@ -4,7 +4,7 @@ import { CITIES } from '@/types'
 
 const GEO_CITY_KEY = 'mekendesh_geo_city'
 const GEO_DENIED_KEY = 'mekendesh_geo_denied'
-const GEO_TTL = 24 * 60 * 60 * 1000 // 24 hours
+const GEO_TTL = 6 * 30 * 24 * 60 * 60 * 1000 // 6 months
 
 async function reverseGeocode(lat: number, lon: number): Promise<string | null> {
   try {
