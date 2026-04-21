@@ -8,14 +8,29 @@ import MobileFilterBar from '@/components/listings/MobileFilterBar'
 import ListingCard from '@/components/listings/ListingCard'
 import { motion } from 'framer-motion'
 import { useFilters } from '@/hooks/useFilters'
+import { autoDetectCity } from '@/hooks/useGeoCity'
+import { useStore } from '@/store'
 
 type Stats = { listings: number; users: number; cities: number }
 
 export default function HomeClient({ stats }: { stats?: Stats }) {
-  const { category, query, metro, city, sort } = useFilters()
+  const { category, query, metro, city, sort, setFilter } = useFilters()
+  const { showToast } = useStore()
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
   const [fetching, setFetching] = useState(false)
+
+  // Auto-detect city on first visit (silent — no button needed)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    // Don't override if user already chose a city manually via URL
+    if (params.has('city')) return
+
+    autoDetectCity((detected) => {
+      setFilter('city', detected)
+      showToast(`📍 ${detected}`, 'ok')
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let cancelled = false
