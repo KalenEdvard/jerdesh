@@ -35,7 +35,7 @@ export default function CreatePage() {
   const [form, setForm] = useState({
     title: '',
     description: '',
-    category: 'housing',
+    category: '',
     price: '',
     metro: '',
     city: DEFAULT_CITY,
@@ -45,6 +45,7 @@ export default function CreatePage() {
   const [photos, setPhotos] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
+  const [categoryError, setCategoryError] = useState(false)
 
   const set = (k: keyof typeof form, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }))
 
@@ -77,6 +78,7 @@ export default function CreatePage() {
 
   const handleSubmit = async () => {
     if (!user) { setAuthOpen(true); return }
+    if (!form.category) { setCategoryError(true); showToast('Выберите категорию', 'error'); return }
     if (!form.title.trim()) { showToast('Введите заголовок', 'error'); return }
 
     setLoading(true)
@@ -148,7 +150,7 @@ export default function CreatePage() {
       </motion.div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <Section icon={<Tag size={17} color="#fff" />} title="Категория">
+        <Section icon={<Tag size={17} color="#fff" />} title="Категория *">
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {CATEGORIES.map((c) => {
               const color = CAT_COLORS[c.id] || '#1d4ed8'
@@ -158,14 +160,17 @@ export default function CreatePage() {
                   key={c.id}
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.96 }}
-                  onClick={() => set('category', c.id)}
-                  style={{ padding: '9px 16px', borderRadius: 50, border: `2px solid ${isActive ? color : '#e2e8f0'}`, background: isActive ? `${color}14` : '#f8fafc', color: isActive ? color : '#334155', fontSize: 13, fontWeight: isActive ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s' }}
+                  onClick={() => { set('category', c.id); setCategoryError(false) }}
+                  style={{ padding: '9px 16px', borderRadius: 50, border: `2px solid ${isActive ? color : categoryError ? '#ef4444' : '#e2e8f0'}`, background: isActive ? `${color}14` : categoryError ? '#fef2f2' : '#f8fafc', color: isActive ? color : categoryError ? '#ef4444' : '#334155', fontSize: 13, fontWeight: isActive ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s' }}
                 >
                   {c.icon} {c.label}
                 </motion.button>
               )
             })}
           </div>
+          {categoryError && (
+            <p style={{ color: '#ef4444', fontSize: 12, marginTop: 8, fontWeight: 600 }}>⚠ Выберите категорию объявления</p>
+          )}
         </Section>
 
         <Section icon={<Upload size={17} color="#fff" />} title="Фотографии">
