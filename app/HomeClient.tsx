@@ -4,6 +4,7 @@ import type { Listing } from '@/types'
 import Hero from '@/components/layout/Hero'
 import CategoryGrid from '@/components/listings/CategoryGrid'
 import FilterSidebar from '@/components/listings/FilterSidebar'
+import MobileFilterBar from '@/components/listings/MobileFilterBar'
 import ListingCard from '@/components/listings/ListingCard'
 import { motion } from 'framer-motion'
 import { useFilters } from '@/hooks/useFilters'
@@ -44,15 +45,31 @@ export default function HomeClient({ stats }: { stats?: Stats }) {
     return () => { cancelled = true }
   }, [category, query, metro, city, sort])
 
+  const skeletons = Array.from({ length: 6 })
+
   return (
     <>
       <Hero stats={stats} />
-      <CategoryGrid />
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 20px 60px', display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-        <FilterSidebar />
+      {/* Mobile filter bar — visible only on mobile */}
+      <div className="mobile-only">
+        <MobileFilterBar />
+      </div>
 
-        <div style={{ flex: 1 }}>
+      {/* Category grid — hidden on mobile (covered by MobileFilterBar) */}
+      <div className="category-grid-section desktop-only">
+        <CategoryGrid />
+      </div>
+
+      <div
+        className="listing-layout"
+        style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 20px 60px', display: 'flex', gap: 24, alignItems: 'flex-start' }}
+      >
+        <div className="listing-sidebar desktop-only">
+          <FilterSidebar />
+        </div>
+
+        <div className="listing-main" style={{ flex: 1 }}>
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -69,8 +86,8 @@ export default function HomeClient({ stats }: { stats?: Stats }) {
           </motion.div>
 
           {loading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
-              {Array.from({ length: 8 }).map((_, i) => (
+            <div className="listing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
+              {skeletons.map((_, i) => (
                 <div key={i} style={{ borderRadius: 16, overflow: 'hidden', background: '#f1f5f9', height: 280, animation: 'pulse 1.5s ease-in-out infinite' }} />
               ))}
               <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}`}</style>
@@ -93,7 +110,7 @@ export default function HomeClient({ stats }: { stats?: Stats }) {
                   <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
                 </div>
               )}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
+              <div className="listing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
                 {listings.map(l => <ListingCard key={l.id} listing={l} />)}
               </div>
             </div>

@@ -69,14 +69,14 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
   }
 
   return (
-    <section style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%)', padding: '56px 20px 64px', position: 'relative', zIndex: 10 }}>
+    <section className="hero-section" style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%)', padding: '56px 20px 64px', position: 'relative', zIndex: 10 }}>
       {/* Background ornament */}
       <div style={{ position: 'absolute', inset: 0, opacity: 0.06, backgroundImage: 'radial-gradient(circle at 20% 50%, #fff 1px, transparent 1px), radial-gradient(circle at 80% 50%, #fff 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
 
       <div style={{ maxWidth: 1200, margin: '0 auto', position: 'relative' }}>
         {/* Title */}
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <h1 style={{ fontFamily: "'Unbounded',sans-serif", fontWeight: 900, fontSize: 'clamp(24px,5vw,48px)', color: '#fff', lineHeight: 1.15, marginBottom: 12 }}>
+          <h1 className="hero-title" style={{ fontFamily: "'Unbounded',sans-serif", fontWeight: 900, fontSize: 'clamp(24px,5vw,48px)', color: '#fff', lineHeight: 1.15, marginBottom: 12 }}>
             Мекендеш — Объявления<br />кыргызов в России
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 16, maxWidth: 520, margin: '0 auto' }}>
@@ -85,9 +85,9 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
         </div>
 
         {/* Search box */}
-        <div style={{ maxWidth: 780, margin: '0 auto 32px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', borderRadius: 20, padding: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          {/* City picker */}
-          <div style={{ position: 'relative' }} ref={cityRef}>
+        <div style={{ maxWidth: 780, margin: '0 auto 32px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', borderRadius: 20, padding: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }} className="hero-searchbox">
+          {/* City picker — hidden on mobile (MobileFilterBar handles it) */}
+          <div className="hero-pickers" style={{ position: 'relative' }} ref={cityRef}>
             <button
               onClick={() => setCityOpen(!cityOpen)}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }}
@@ -109,8 +109,8 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
             )}
           </div>
 
-          {/* Category picker */}
-          <div style={{ position: 'relative' }} ref={catRef}>
+          {/* Category picker — hidden on mobile */}
+          <div className="hero-pickers" style={{ position: 'relative' }} ref={catRef}>
             <button
               onClick={() => setCatOpen(!catOpen)}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(255,255,255,0.2)' }}
@@ -131,8 +131,8 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
             )}
           </div>
 
-          {/* Metro picker */}
-          <div style={{ position: 'relative' }} ref={metroRef}>
+          {/* Metro picker — hidden on mobile */}
+          <div className="hero-pickers" style={{ position: 'relative' }} ref={metroRef}>
             <button
               onClick={() => { setMetroOpen(!metroOpen); setMetroSearch('') }}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }}
@@ -187,7 +187,7 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
         </div>
 
         {/* Stats */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 48, flexWrap: 'wrap' }}>
+        <div className="hero-stats" style={{ display: 'flex', justifyContent: 'center', gap: 48, flexWrap: 'wrap' }}>
           {statItems.map(s => (
             <div key={s.label} style={{ textAlign: 'center', color: '#fff' }}>
               <div style={{ fontSize: 28, fontFamily: "'Unbounded',sans-serif", fontWeight: 900 }}>
