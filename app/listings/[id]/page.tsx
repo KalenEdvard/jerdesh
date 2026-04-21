@@ -29,7 +29,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   const { data: listing } = await supabase
     .from('listings')
-    .select('id,title,description,category,price,metro,city,phone,photos,views,is_urgent,is_premium,status,created_at,user_id,user:users(id,name,avatar_url,rating,city,ads_count,created_at)')
+    .select('id,title,description,category,price,metro,city,phone,photos,views,is_urgent,is_premium,status,created_at,user_id,user:users(id,name,avatar_url,rating,city,ads_count,created_at,whatsapp,telegram,vk,max)')
     .eq('id', id)
     .eq('status', 'active')
     .single()

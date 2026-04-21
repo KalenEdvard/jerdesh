@@ -7,6 +7,7 @@ import { ru } from 'date-fns/locale'
 import ChatModal from '@/components/chat/ChatModal'
 import { toggleFavorite } from '@/lib/toggleFavorite'
 import { createClient } from '@/lib/supabase-client'
+import { FaWhatsapp, FaTelegram, FaVk, FaPhone } from 'react-icons/fa'
 
 const CAT_LABELS: Record<string, string> = {
   housing: 'Сдаю жильё', findhousing: 'Сниму жильё',
@@ -126,17 +127,53 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
               </div>
             </div>
 
-            <button
-              onClick={() => listing.phone ? window.open(`tel:${listing.phone}`) : showToast('Телефон скрыт', 'info')}
-              style={{ width: '100%', padding: '12px', borderRadius: 12, background: '#1d4ed8', color: '#fff', fontSize: 15, fontWeight: 700, marginBottom: 10, cursor: 'pointer', border: 'none' }}
-            >
-              📞 Позвонить
-            </button>
+            {/* Phone */}
+            {listing.phone && (
+              <a href={`tel:${listing.phone}`}
+                style={{ width: '100%', padding: '12px', borderRadius: 12, background: '#1d4ed8', color: '#fff', fontSize: 15, fontWeight: 700, marginBottom: 10, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none' }}>
+                <FaPhone size={16} /> {listing.phone}
+              </a>
+            )}
+
+            {/* Messengers */}
+            {((listing.user as any)?.whatsapp || (listing.user as any)?.telegram || (listing.user as any)?.vk || (listing.user as any)?.max) && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
+                {(listing.user as any)?.whatsapp && (
+                  <a href={`https://wa.me/${(listing.user as any).whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 12, background: '#dcfce7', color: '#166534', fontWeight: 600, fontSize: 14, textDecoration: 'none', border: '1px solid #bbf7d0' }}>
+                    <FaWhatsapp size={20} color="#25d366" /> WhatsApp
+                    <span style={{ marginLeft: 'auto', fontSize: 12, color: '#4ade80' }}>Написать →</span>
+                  </a>
+                )}
+                {(listing.user as any)?.telegram && (
+                  <a href={`https://t.me/${(listing.user as any).telegram.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 12, background: '#eff6ff', color: '#1e40af', fontWeight: 600, fontSize: 14, textDecoration: 'none', border: '1px solid #bfdbfe' }}>
+                    <FaTelegram size={20} color="#2aabee" /> Telegram
+                    <span style={{ marginLeft: 'auto', fontSize: 12, color: '#60a5fa' }}>Написать →</span>
+                  </a>
+                )}
+                {(listing.user as any)?.vk && (
+                  <a href={`https://vk.com/${(listing.user as any).vk}`} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 12, background: '#eff6ff', color: '#1e3a5f', fontWeight: 600, fontSize: 14, textDecoration: 'none', border: '1px solid #bfdbfe' }}>
+                    <FaVk size={20} color="#4680c2" /> ВКонтакте
+                    <span style={{ marginLeft: 'auto', fontSize: 12, color: '#4680c2' }}>Написать →</span>
+                  </a>
+                )}
+                {(listing.user as any)?.max && (
+                  <a href={`https://max.ru/${(listing.user as any).max.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 12, background: '#fff7ed', color: '#9a3412', fontWeight: 600, fontSize: 14, textDecoration: 'none', border: '1px solid #fed7aa' }}>
+                    <span style={{ width: 20, height: 20, borderRadius: 4, background: 'linear-gradient(135deg,#ff6b35,#f7c59f)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#fff', flexShrink: 0 }}>M</span> Max
+                    <span style={{ marginLeft: 'auto', fontSize: 12, color: '#fb923c' }}>Написать →</span>
+                  </a>
+                )}
+              </div>
+            )}
+
             <button
               onClick={handleChat}
               style={{ width: '100%', padding: '12px', borderRadius: 12, background: '#fff', color: '#1d4ed8', fontSize: 15, fontWeight: 700, border: '2px solid #1d4ed8', marginBottom: 10, cursor: 'pointer' }}
             >
-              💬 Написать
+              💬 Написать в чат
             </button>
             <button
               onClick={handleFav}

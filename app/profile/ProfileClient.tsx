@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase-client'
 import type { Listing } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Star, MapPin, Plus, RefreshCw, Settings, Heart, Package, Trash2, Camera, Clock, Archive, Pencil } from 'lucide-react'
+import { FaWhatsapp, FaTelegram, FaVk } from 'react-icons/fa'
 
 type Tab = 'ads' | 'drafts' | 'favs' | 'settings'
 type FavoriteRow = { listing: Listing | null }
@@ -42,6 +43,7 @@ export interface ProfileData {
   whatsapp?: string
   telegram?: string
   vk?: string
+  max?: string
   created_at: string
   ads_count?: number
 }
@@ -65,6 +67,7 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
   const [whatsapp, setWhatsapp] = useState(profile.whatsapp || '')
   const [telegram, setTelegram] = useState(profile.telegram || '')
   const [vk, setVk] = useState(profile.vk || '')
+  const [max, setMax] = useState(profile.max || '')
   const [saving, setSaving] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [currentProfile, setCurrentProfile] = useState(profile)
@@ -147,8 +150,8 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
 
   const saveSettings = async () => {
     setSaving(true)
-    await supabase.from('users').update({ name, phone, whatsapp, telegram, vk }).eq('id', profile.id)
-    setUser({ ...profile, name, phone, whatsapp, telegram, vk } as any)
+    await supabase.from('users').update({ name, phone, whatsapp, telegram, vk, max }).eq('id', profile.id)
+    setUser({ ...profile, name, phone, whatsapp, telegram, vk, max } as any)
     showToast('Профиль обновлён ✓', 'ok')
     setSaving(false)
   }
@@ -383,10 +386,10 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
                       onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
                   </div>
                   <div style={{ height: 1, background: '#f1f5f9', margin: '4px 0' }} />
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.05em' }}>СОЦСЕТИ</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.05em' }}>МЕССЕНДЖЕРЫ</div>
                   <div>
                     <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                      <span style={{ fontSize: 16 }}>💬</span> WhatsApp
+                      <FaWhatsapp size={18} color="#25d366" /> WhatsApp
                     </label>
                     <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="+7 999 123-45-67" type="tel"
                       style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
@@ -395,7 +398,7 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
                   </div>
                   <div>
                     <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                      <span style={{ fontSize: 16 }}>✈️</span> Telegram
+                      <FaTelegram size={18} color="#2aabee" /> Telegram
                     </label>
                     <input value={telegram} onChange={e => setTelegram(e.target.value)} placeholder="@username"
                       style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
@@ -404,11 +407,20 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
                   </div>
                   <div>
                     <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                      <span style={{ fontSize: 16 }}>🔵</span> ВКонтакте
+                      <FaVk size={18} color="#4680c2" /> ВКонтакте
                     </label>
-                    <input value={vk} onChange={e => setVk(e.target.value)} placeholder="vk.com/username"
+                    <input value={vk} onChange={e => setVk(e.target.value)} placeholder="username (без vk.com/)"
                       style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                       onFocus={e => e.target.style.borderColor = '#4680c2'}
+                      onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      <span style={{ width: 18, height: 18, borderRadius: 4, background: 'linear-gradient(135deg,#ff6b35,#f7c59f)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: '#fff' }}>M</span> Max
+                    </label>
+                    <input value={max} onChange={e => setMax(e.target.value)} placeholder="@username в Max"
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                      onFocus={e => e.target.style.borderColor = '#ff6b35'}
                       onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
                   </div>
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
