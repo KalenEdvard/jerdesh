@@ -69,7 +69,7 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
   }
 
   return (
-    <section style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%)', padding: '56px 20px 64px', position: 'relative' }}>
+    <section style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%)', padding: '56px 20px 64px', position: 'relative', zIndex: 10 }}>
       {/* Background ornament */}
       <div style={{ position: 'absolute', inset: 0, opacity: 0.06, backgroundImage: 'radial-gradient(circle at 20% 50%, #fff 1px, transparent 1px), radial-gradient(circle at 80% 50%, #fff 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
 
