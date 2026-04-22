@@ -16,8 +16,8 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               // Supabase storage для загрузки/показа файлов
               "img-src 'self' blob: data: https://*.supabase.co",
-              // Supabase API + realtime
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+              // Supabase API + realtime + Nominatim геолокация
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://nominatim.openstreetmap.org",
               "font-src 'self'",
               "object-src 'none'",
               "frame-ancestors 'none'",
