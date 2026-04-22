@@ -34,7 +34,7 @@ export default function MobileFilterBar() {
           }}
           style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, background: '#f8fafc', color: '#0f172a', fontWeight: 600, appearance: 'none', WebkitAppearance: 'none' }}
         >
-          {COUNTRIES.map(c => <option key={c.id} value={c.id}>{c.flag} {c.id}</option>)}
+          {COUNTRIES.map(c => <option key={c.id} value={c.id}>{c.id}</option>)}
         </select>
         <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none', fontSize: 12 }}>▾</span>
       </div>
@@ -50,7 +50,7 @@ export default function MobileFilterBar() {
             onChange={e => { setFilter('city', e.target.value); setFilter('metro', '') }}
             style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, background: '#f8fafc', color: '#0f172a', fontWeight: 600, appearance: 'none', WebkitAppearance: 'none' }}
           >
-            {citiesForCountry.map(c => <option key={c.id} value={c.id}>{c.flag} {c.id}</option>)}
+            {citiesForCountry.map(c => <option key={c.id} value={c.id}>{c.id}</option>)}
           </select>
           <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none', fontSize: 12 }}>▾</span>
         </div>
