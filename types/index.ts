@@ -90,20 +90,48 @@ export const COUNTRIES = [
 ]
 
 export const CITIES = [
-  { id: 'Москва',          flag: '🏙️', country: 'Россия',   metro: true  },
-  { id: 'Санкт-Петербург', flag: '🌉', country: 'Россия',   metro: true  },
-  { id: 'Екатеринбург',    flag: '🏙️', country: 'Россия',   metro: true  },
-  { id: 'Новосибирск',     flag: '🏙️', country: 'Россия',   metro: true  },
-  { id: 'Казань',          flag: '🏙️', country: 'Россия',   metro: true  },
-  { id: 'Краснодар',       flag: '🏙️', country: 'Россия',   metro: false },
-  { id: 'Берлин',          flag: '🏙️', country: 'Германия', metro: true  },
-  { id: 'Мюнхен',          flag: '🏙️', country: 'Германия', metro: true  },
-  { id: 'Лондон',          flag: '🏙️', country: 'Англия',   metro: true  },
-  { id: 'Нью-Йорк',        flag: '🗽', country: 'Америка',  metro: true  },
-  { id: 'Лос-Анджелес',    flag: '🏙️', country: 'Америка',  metro: false },
-  { id: 'Сеул',            flag: '🏙️', country: 'Корея',    metro: true  },
-  { id: 'Бишкек',          flag: '🏔️', country: 'Кыргызстан', metro: false },
-  { id: 'Ош',              flag: '🏙️', country: 'Кыргызстан', metro: false },
+  // Россия
+  { id: 'Москва',           flag: '🏙️', country: 'Россия',      metro: true  },
+  { id: 'Санкт-Петербург',  flag: '🌉', country: 'Россия',      metro: true  },
+  { id: 'Екатеринбург',     flag: '🏙️', country: 'Россия',      metro: true  },
+  { id: 'Новосибирск',      flag: '🏙️', country: 'Россия',      metro: true  },
+  { id: 'Казань',           flag: '🏙️', country: 'Россия',      metro: true  },
+  { id: 'Краснодар',        flag: '🏙️', country: 'Россия',      metro: false },
+  // Германия — все крупные города имеют U-Bahn
+  { id: 'Берлин',           flag: '🏙️', country: 'Германия',    metro: true  },
+  { id: 'Мюнхен',           flag: '🏙️', country: 'Германия',    metro: true  },
+  { id: 'Гамбург',          flag: '🌉', country: 'Германия',    metro: true  },
+  { id: 'Франкфурт',        flag: '🏙️', country: 'Германия',    metro: true  },
+  { id: 'Кёльн',            flag: '🏙️', country: 'Германия',    metro: true  },
+  { id: 'Дюссельдорф',      flag: '🏙️', country: 'Германия',    metro: true  },
+  // Англия
+  { id: 'Лондон',           flag: '🏙️', country: 'Англия',      metro: true  },
+  { id: 'Манчестер',        flag: '🏙️', country: 'Англия',      metro: true  },
+  { id: 'Ливерпуль',        flag: '🏙️', country: 'Англия',      metro: true  },
+  { id: 'Глазго',           flag: '🏙️', country: 'Англия',      metro: true  },
+  { id: 'Бирмингем',        flag: '🏙️', country: 'Англия',      metro: false },
+  { id: 'Лидс',             flag: '🏙️', country: 'Англия',      metro: false },
+  // Америка
+  { id: 'Нью-Йорк',         flag: '🗽', country: 'Америка',     metro: true  },
+  { id: 'Лос-Анджелес',     flag: '🌴', country: 'Америка',     metro: true  },
+  { id: 'Чикаго',           flag: '🏙️', country: 'Америка',     metro: true  },
+  { id: 'Вашингтон',        flag: '🏛️', country: 'Америка',     metro: true  },
+  { id: 'Сан-Франциско',    flag: '🌉', country: 'Америка',     metro: true  },
+  { id: 'Майами',           flag: '🌊', country: 'Америка',     metro: true  },
+  // Корея — все крупные города имеют метро
+  { id: 'Сеул',             flag: '🏙️', country: 'Корея',       metro: true  },
+  { id: 'Пусан',            flag: '🌊', country: 'Корея',       metro: true  },
+  { id: 'Инчхон',           flag: '🏙️', country: 'Корея',       metro: true  },
+  { id: 'Тэгу',             flag: '🏙️', country: 'Корея',       metro: true  },
+  { id: 'Тэджон',           flag: '🏙️', country: 'Корея',       metro: true  },
+  { id: 'Кванджу',          flag: '🏙️', country: 'Корея',       metro: true  },
+  // Кыргызстан — метро нет
+  { id: 'Бишкек',           flag: '🏔️', country: 'Кыргызстан',  metro: false },
+  { id: 'Ош',               flag: '🏙️', country: 'Кыргызстан',  metro: false },
+  { id: 'Джалал-Абад',      flag: '🏙️', country: 'Кыргызстан',  metro: false },
+  { id: 'Кант',             flag: '🏙️', country: 'Кыргызстан',  metro: false },
+  { id: 'Нарын',            flag: '🏔️', country: 'Кыргызстан',  metro: false },
+  { id: 'Токмок',           flag: '🏙️', country: 'Кыргызстан',  metro: false },
 ]
 
 export const CATEGORIES: { id: Category; label: string; icon: string; color: string }[] = [
