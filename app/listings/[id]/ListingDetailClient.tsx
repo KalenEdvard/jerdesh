@@ -43,7 +43,7 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
 
   return (
     <div style={{ maxWidth: 1100, margin: '32px auto', padding: '0 20px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, alignItems: 'start' }}>
+      <div className="listing-detail-grid">
 
         {/* Left: photos + info */}
         <div>
@@ -118,7 +118,7 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
         </div>
 
         {/* Right: seller card + actions */}
-        <div style={{ position: 'sticky', top: 80 }}>
+        <div className="listing-detail-sidebar">
           <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 16 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, color: '#64748b', marginBottom: 16 }}>ПРОДАВЕЦ</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>

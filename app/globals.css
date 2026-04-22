@@ -67,6 +67,20 @@ body {
   /* Listing card: touch-friendly */
   .listing-layout { padding-top: 0 !important; }
 }
+/* Listing detail page */
+.listing-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+}
+.listing-detail-sidebar { position: sticky; top: 80px; }
+
+@media (max-width: 860px) {
+  .listing-detail-grid { grid-template-columns: 1fr !important; }
+  .listing-detail-sidebar { position: static !important; }
+}
+
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; border: none; background: none; }
 input, select, textarea { font-family: inherit; }
