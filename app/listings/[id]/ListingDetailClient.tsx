@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStore } from '@/store'
 import type { Listing, Review } from '@/types'
 import { formatDistanceToNow } from 'date-fns'
@@ -18,6 +18,13 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
   const { user, favIds, toggleFav, showToast, setAuthOpen, openChat } = useStore()
   const [photoIdx, setPhotoIdx] = useState(0)
   const isFav = favIds.includes(listing.id)
+
+  useEffect(() => {
+    const key = `viewed_${listing.id}`
+    if (sessionStorage.getItem(key)) return
+    sessionStorage.setItem(key, '1')
+    fetch(`/api/listings/${listing.id}/view`, { method: 'POST' }).catch(() => {})
+  }, [listing.id])
 
   const handleFav = async () => {
     if (!user) { setAuthOpen(true); return }

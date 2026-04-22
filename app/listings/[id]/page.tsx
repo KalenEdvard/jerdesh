@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
-import { cookies } from 'next/headers'
 import type { Metadata } from 'next'
 import ListingDetailClient from './ListingDetailClient'
 
@@ -35,14 +34,6 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     .single()
 
   if (!listing) notFound()
-
-  // Increment views once per user per 24h via cookie
-  const cookieStore = await cookies()
-  const cookieKey = `viewed_${id}`
-  if (!cookieStore.has(cookieKey)) {
-    cookieStore.set(cookieKey, '1', { maxAge: 60 * 60 * 24, path: '/', httpOnly: true, sameSite: 'lax' })
-    supabase.from('listings').update({ views: (listing.views || 0) + 1 }).eq('id', id).then(() => {})
-  }
 
   // Get seller reviews
   const { data: reviews } = await supabase
