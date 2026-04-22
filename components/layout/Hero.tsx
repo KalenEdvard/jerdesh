@@ -195,6 +195,13 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
             )}
           </div>
           )}
+
+          <button
+            onClick={() => {}}
+            style={{ padding: '10px 24px', borderRadius: 12, background: '#f59e0b', color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
+          >
+            Найти
+          </button>
         </div>
 
         {/* Stats */}
