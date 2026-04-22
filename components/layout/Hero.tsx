@@ -72,7 +72,7 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
         {/* Title */}
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <h1 className="hero-title" style={{ fontFamily: "'Unbounded',sans-serif", fontWeight: 900, fontSize: 'clamp(24px,5vw,48px)', color: '#fff', lineHeight: 1.15, marginBottom: 12 }}>
-            Мекендеш — Объявления<br />кыргызов в России
+            MEKENDESH —<br />Оной издеп, оной тап!
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 16, maxWidth: 520, margin: '0 auto' }}>
             Жильё, работа, услуги и товары от соотечественников. Найди всё что нужно рядом с тобой.
