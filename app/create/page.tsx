@@ -39,6 +39,7 @@ export default function CreatePage() {
     price: '',
     metro: '',
     city: DEFAULT_CITY,
+    address: '',
     phone: '',
     isUrgent: false,
   })
@@ -231,7 +232,7 @@ export default function CreatePage() {
         </Section>
 
         <Section icon={<DollarSign size={17} color="#fff" />} title="Детали">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 8 }}>ЦЕНА (₽)</label>
               <input
@@ -247,20 +248,6 @@ export default function CreatePage() {
 
             <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 8 }}>
-                <MapPin size={11} style={{ display: 'inline', marginRight: 4 }} />МЕТРО
-              </label>
-              <select
-                value={form.metro}
-                onChange={(e) => set('metro', e.target.value)}
-                style={{ width: '100%', padding: '11px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
-              >
-                <option value="">Выберите...</option>
-                {METRO_STATIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 8 }}>
                 <MapPin size={11} style={{ display: 'inline', marginRight: 4 }} />ЛОКАЦИЯ
               </label>
               <select
@@ -272,7 +259,35 @@ export default function CreatePage() {
               </select>
             </div>
 
-            <div style={{ gridColumn: '1/-1' }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 8 }}>
+                <MapPin size={11} style={{ display: 'inline', marginRight: 4 }} />МЕТРО
+              </label>
+              <select
+                value={form.metro}
+                onChange={(e) => set('metro', e.target.value)}
+                style={{ width: '100%', padding: '11px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
+              >
+                <option value="">Не выбрано</option>
+                {METRO_STATIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 8 }}>
+                <MapPin size={11} style={{ display: 'inline', marginRight: 4 }} />АДРЕС
+              </label>
+              <input
+                value={form.address}
+                onChange={(e) => set('address', e.target.value)}
+                placeholder="Улица, дом, район"
+                style={{ width: '100%', padding: '11px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                onFocus={(e) => { e.target.style.borderColor = '#1d4ed8' }}
+                onBlur={(e) => { e.target.style.borderColor = '#e2e8f0' }}
+              />
+            </div>
+
+            <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 8 }}>
                 <Phone size={11} style={{ display: 'inline', marginRight: 4 }} />ТЕЛЕФОН
               </label>
