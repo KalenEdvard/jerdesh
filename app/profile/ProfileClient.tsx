@@ -224,20 +224,18 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
         </div>
 
         <div style={{ maxWidth: 900, margin: '32px auto 0', padding: '0 12px' }}>
-          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
-            <div style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', borderRadius: 14, padding: 4, display: 'flex', gap: 4, width: 'max-content', minWidth: '100%' }}>
-              {tabs.map(t => (
-                <button key={t.id} onClick={() => setTab(t.id as Tab)}
-                  style={{ padding: '10px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.2s', background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#1d4ed8' : 'rgba(255,255,255,0.8)', boxShadow: tab === t.id ? '0 2px 8px rgba(0,0,0,0.1)' : 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  {t.icon} {t.label}
-                  {t.count > 0 && (
-                    <span style={{ fontSize: 11, fontWeight: 700, background: tab === t.id ? '#1d4ed8' : 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 10, padding: '1px 6px', minWidth: 18, textAlign: 'center' }}>
-                      {t.count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
+          <div style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', borderRadius: 14, padding: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {tabs.map(t => (
+              <button key={t.id} onClick={() => setTab(t.id as Tab)}
+                style={{ padding: '12px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s', background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#1d4ed8' : 'rgba(255,255,255,0.85)', boxShadow: tab === t.id ? '0 2px 8px rgba(0,0,0,0.1)' : 'none', textAlign: 'left', width: '100%' }}>
+                {t.icon} {t.label}
+                {t.count > 0 && (
+                  <span style={{ fontSize: 11, fontWeight: 700, background: tab === t.id ? '#1d4ed8' : 'rgba(255,255,255,0.25)', color: '#fff', borderRadius: 10, padding: '1px 6px', minWidth: 18, textAlign: 'center', marginLeft: 'auto' }}>
+                    {t.count}
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
         </div>
       </div>
