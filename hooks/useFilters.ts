@@ -14,8 +14,18 @@ export interface Filters {
   sort: SortOption
 }
 
+const PARAM_MAP: Record<keyof Filters, string> = {
+  query: 'q',
+  category: 'cat',
+  metro: 'metro',
+  city: 'city',
+  country: 'country',
+  sort: 'sort',
+}
+
 export function useFilters(): Filters & {
   setFilter: (key: keyof Filters, value: string) => void
+  setFilters: (updates: Partial<Record<keyof Filters, string>>) => void
   resetFilters: () => void
 } {
   const router = useRouter()
@@ -32,22 +42,25 @@ export function useFilters(): Filters & {
 
   const setFilter = useCallback((key: keyof Filters, value: string) => {
     const params = new URLSearchParams(searchParams.toString())
-    const map: Record<keyof Filters, string> = {
-      query: 'q',
-      category: 'cat',
-      metro: 'metro',
-      city: 'city',
-      country: 'country',
-      sort: 'sort',
-    }
-
-    const paramKey = map[key]
+    const paramKey = PARAM_MAP[key]
     if (!value || value === 'all' || value === 'new' || (key === 'city' && value === DEFAULT_CITY)) {
       params.delete(paramKey)
     } else {
       params.set(paramKey, value)
     }
+    router.push(`/?${params.toString()}`, { scroll: false })
+  }, [router, searchParams])
 
+  const setFilters = useCallback((updates: Partial<Record<keyof Filters, string>>) => {
+    const params = new URLSearchParams(searchParams.toString())
+    for (const [key, value] of Object.entries(updates) as [keyof Filters, string][]) {
+      const paramKey = PARAM_MAP[key]
+      if (!value || value === 'all' || value === 'new' || (key === 'city' && value === DEFAULT_CITY)) {
+        params.delete(paramKey)
+      } else {
+        params.set(paramKey, value)
+      }
+    }
     router.push(`/?${params.toString()}`, { scroll: false })
   }, [router, searchParams])
 
@@ -55,5 +68,5 @@ export function useFilters(): Filters & {
     router.push('/')
   }, [router])
 
-  return { ...filters, setFilter, resetFilters }
+  return { ...filters, setFilter, setFilters, resetFilters }
 }

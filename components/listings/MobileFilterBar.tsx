@@ -11,7 +11,7 @@ const CAT_BG: Record<string, string> = {
 }
 
 export default function MobileFilterBar() {
-  const { city, metro, category, country, setFilter } = useFilters()
+  const { city, metro, category, country, setFilter, setFilters } = useFilters()
   const citiesForCountry = CITIES.filter(c => c.country === country)
   const hasMetro = CITIES.find(c => c.id === city)?.metro ?? false
 
@@ -27,10 +27,8 @@ export default function MobileFilterBar() {
           value={country}
           onChange={e => {
             const newCountry = e.target.value
-            setFilter('country', newCountry)
             const firstCity = CITIES.find(c => c.country === newCountry)
-            if (firstCity) setFilter('city', firstCity.id)
-            setFilter('metro', '')
+            setFilters({ country: newCountry, city: firstCity?.id ?? '', metro: '' })
           }}
           style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, background: '#f8fafc', color: '#0f172a', fontWeight: 600, appearance: 'none', WebkitAppearance: 'none' }}
         >

@@ -28,7 +28,7 @@ function Counter({ target, suffix = '' }: { target: number; suffix?: string }) {
 type HeroStats = { listings: number; users: number; cities: number }
 
 export default function Hero({ stats }: { stats?: HeroStats }) {
-  const { category, metro, city, country, setFilter } = useFilters()
+  const { category, metro, city, country, setFilter, setFilters } = useFilters()
   const [metroOpen, setMetroOpen] = useState(false)
   const [catOpen, setCatOpen] = useState(false)
   const [cityOpen, setCityOpen] = useState(false)
@@ -97,10 +97,8 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
                   <button
                     key={c.id}
                     onClick={() => {
-                      setFilter('country', c.id)
                       const firstCity = CITIES.find(ci => ci.country === c.id)
-                      if (firstCity) setFilter('city', firstCity.id)
-                      setFilter('metro', '')
+                      setFilters({ country: c.id, city: firstCity?.id ?? '', metro: '' })
                       setCountryOpen(false)
                     }}
                     style={{ width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, fontSize: 13, color: '#334155', background: country === c.id ? '#eff6ff' : 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
