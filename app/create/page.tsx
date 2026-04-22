@@ -5,7 +5,7 @@ import { useDropzone } from 'react-dropzone'
 import { motion } from 'framer-motion'
 import { Upload, X, Send, Tag, FileText, Phone, MapPin, DollarSign, AlertCircle } from 'lucide-react'
 import { useStore } from '@/store'
-import { CATEGORIES, METRO_STATIONS, CITIES } from '@/types'
+import { CATEGORIES, METRO_STATIONS, CITIES, COUNTRIES } from '@/types'
 
 const DEFAULT_CITY = 'Москва'
 const MAX_FILE_SIZE = 4 * 1024 * 1024
@@ -32,6 +32,7 @@ function Section({ icon, title, children }: { icon: React.ReactNode; title: stri
 export default function CreatePage() {
   const router = useRouter()
   const { user, showToast, setAuthOpen } = useStore()
+  const [country, setCountry] = useState('Россия')
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -132,6 +133,9 @@ export default function CreatePage() {
       showToast(e instanceof Error ? e.message : 'Ошибка публикации', 'error')
     }
   }
+
+  const citiesForCountry = CITIES.filter(c => c.country === country)
+  const hasMetro = CITIES.find(c => c.id === form.city)?.metro ?? false
 
   const CAT_COLORS: Record<string, string> = {
     housing: '#1d4ed8',
@@ -248,20 +252,39 @@ export default function CreatePage() {
 
             <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 8 }}>
-                <MapPin size={11} style={{ display: 'inline', marginRight: 4 }} />ЛОКАЦИЯ
+                🌍 СТРАНА
               </label>
               <select
-                value={form.city}
-                onChange={(e) => set('city', e.target.value)}
+                value={country}
+                onChange={(e) => {
+                  const newCountry = e.target.value
+                  const firstCity = CITIES.find(c => c.country === newCountry)
+                  setCountry(newCountry)
+                  setForm(f => ({ ...f, city: firstCity?.id ?? '', metro: '' }))
+                }}
                 style={{ width: '100%', padding: '11px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
               >
-                {CITIES.map((c) => <option key={c.id} value={c.id}>{c.flag} {c.id}</option>)}
+                {COUNTRIES.map((c) => <option key={c.id} value={c.id}>{c.flag} {c.id}</option>)}
               </select>
             </div>
 
             <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 8 }}>
-                <MapPin size={11} style={{ display: 'inline', marginRight: 4 }} />МЕТРО
+                <MapPin size={11} style={{ display: 'inline', marginRight: 4 }} />ГОРОД
+              </label>
+              <select
+                value={form.city}
+                onChange={(e) => setForm(f => ({ ...f, city: e.target.value, metro: '' }))}
+                style={{ width: '100%', padding: '11px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
+              >
+                {citiesForCountry.map((c) => <option key={c.id} value={c.id}>{c.flag} {c.id}</option>)}
+              </select>
+            </div>
+
+            {hasMetro && (
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 8 }}>
+                🚇 МЕТРО
               </label>
               <select
                 value={form.metro}
@@ -272,6 +295,7 @@ export default function CreatePage() {
                 {METRO_STATIONS.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
+            )}
 
             <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 8 }}>
