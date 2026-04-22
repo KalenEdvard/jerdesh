@@ -141,7 +141,7 @@ export default function Header() {
               style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 12, background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', color: '#fff', fontSize: 13, fontWeight: 700, textDecoration: 'none', boxShadow: '0 4px 12px rgba(29,78,216,0.3)' }}
             >
               <Plus size={15} strokeWidth={2.5} />
-              Подать объявление
+              <span className="header-create-text">Подать объявление</span>
             </Link>
           </motion.div>
         </div>

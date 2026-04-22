@@ -62,6 +62,7 @@ body {
   /* Header: compact on mobile */
   .header-inner { padding: 0 12px !important; }
   .header-logo-text { display: none !important; }
+  .header-create-text { display: none !important; }
 
   /* Listing card: touch-friendly */
   .listing-layout { padding-top: 0 !important; }
