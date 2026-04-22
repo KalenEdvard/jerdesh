@@ -60,7 +60,7 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
   const statItems = [
     { label: 'Объявлений', target: stats?.listings ?? 0, suffix: stats?.listings ? '+' : '' },
     { label: 'Пользователей', target: stats?.users ?? 0, suffix: stats?.users ? '+' : '' },
-    { label: 'Городов', target: stats?.cities ?? 0, suffix: '' },
+    { label: 'Стран', target: COUNTRIES.length, suffix: '' },
   ]
 
   return (
@@ -80,7 +80,7 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
         </div>
 
         {/* Search box */}
-        <div style={{ width: 'fit-content', margin: '0 auto 32px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', borderRadius: 20, padding: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }} className="hero-searchbox">
+        <div style={{ width: 'fit-content', margin: '0 auto 32px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', borderRadius: 20, padding: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }} className="hero-searchbox desktop-only">
           {/* Country + City pickers — hidden on mobile (MobileFilterBar handles it) */}
           <div className="hero-pickers" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {/* Country picker */}
