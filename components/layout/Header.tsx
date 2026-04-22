@@ -63,7 +63,7 @@ export default function Header() {
           >
             М
           </motion.div>
-          <span style={{ fontFamily: "'Unbounded',sans-serif", fontWeight: 800, fontSize: 16, color: '#0f172a', letterSpacing: '-0.5px' }}>
+          <span className="header-logo-text" style={{ fontFamily: "'Unbounded',sans-serif", fontWeight: 800, fontSize: 16, color: '#0f172a', letterSpacing: '-0.5px' }}>
             Мекендеш
           </span>
         </Link>
@@ -76,12 +76,12 @@ export default function Header() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '6px 14px 6px 7px', borderRadius: 50, border: '2px solid #e2e8f0', background: '#f8fafc', fontSize: 13, cursor: 'pointer', fontWeight: 600, color: '#0f172a' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '6px 14px 6px 7px', borderRadius: 50, border: '2px solid #e2e8f0', background: '#f8fafc', fontSize: 13, cursor: 'pointer', fontWeight: 600, color: '#0f172a', maxWidth: 160, overflow: 'hidden' }}
               >
-                <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13 }}>
+                <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
                   {user.name?.[0]?.toUpperCase() || 'У'}
                 </div>
-                {user.name}
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</span>
               </motion.button>
 
               <AnimatePresence>
