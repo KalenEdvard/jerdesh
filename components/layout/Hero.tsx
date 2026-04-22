@@ -1,10 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import { CATEGORIES, METRO_STATIONS, CITIES, DEFAULT_CITY } from '@/types'
+import { CATEGORIES, METRO_STATIONS, CITIES, COUNTRIES, DEFAULT_CITY } from '@/types'
 import { useFilters } from '@/hooks/useFilters'
-import { useGeoCity } from '@/hooks/useGeoCity'
-import { useStore } from '@/store'
 
 function Counter({ target, suffix = '' }: { target: number; suffix?: string }) {
   const [count, setCount] = useState(0)
@@ -31,17 +28,19 @@ function Counter({ target, suffix = '' }: { target: number; suffix?: string }) {
 type HeroStats = { listings: number; users: number; cities: number }
 
 export default function Hero({ stats }: { stats?: HeroStats }) {
-  const router = useRouter()
-  const { query, category, metro, city, setFilter } = useFilters()
-  const { detect: detectCity, loading: geoLoading } = useGeoCity()
-  const { showToast } = useStore()
+  const { category, metro, city, country, setFilter } = useFilters()
   const [metroOpen, setMetroOpen] = useState(false)
   const [catOpen, setCatOpen] = useState(false)
   const [cityOpen, setCityOpen] = useState(false)
+  const [countryOpen, setCountryOpen] = useState(false)
   const [metroSearch, setMetroSearch] = useState('')
   const metroRef = useRef<HTMLDivElement>(null)
   const catRef = useRef<HTMLDivElement>(null)
   const cityRef = useRef<HTMLDivElement>(null)
+  const countryRef = useRef<HTMLDivElement>(null)
+
+  const citiesForCountry = CITIES.filter(c => c.country === country)
+  const hasMetro = CITIES.find(c => c.id === city)?.metro ?? false
 
   const filteredMetro = METRO_STATIONS.filter(s =>
     s.toLowerCase().includes(metroSearch.toLowerCase())
@@ -52,6 +51,7 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
       if (metroRef.current && !metroRef.current.contains(e.target as Node)) setMetroOpen(false)
       if (catRef.current && !catRef.current.contains(e.target as Node)) setCatOpen(false)
       if (cityRef.current && !cityRef.current.contains(e.target as Node)) setCityOpen(false)
+      if (countryRef.current && !countryRef.current.contains(e.target as Node)) setCountryOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -62,15 +62,6 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
     { label: 'Пользователей', target: stats?.users ?? 0, suffix: stats?.users ? '+' : '' },
     { label: 'Городов', target: stats?.cities ?? 0, suffix: '' },
   ]
-
-  const handleSearch = () => {
-    const params = new URLSearchParams()
-    if (query)             params.set('q', query)
-    if (metro)             params.set('metro', metro)
-    if (category !== 'all') params.set('cat', category)
-    if (city && city !== DEFAULT_CITY) params.set('city', city)
-    router.push(`/?${params.toString()}`)
-  }
 
   return (
     <section className="hero-section" style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%)', padding: '56px 20px 64px', position: 'relative', zIndex: 10 }}>
@@ -90,8 +81,38 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
 
         {/* Search box */}
         <div style={{ maxWidth: 780, margin: '0 auto 32px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', borderRadius: 20, padding: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }} className="hero-searchbox">
-          {/* City picker — hidden on mobile (MobileFilterBar handles it) */}
+          {/* Country + City pickers — hidden on mobile (MobileFilterBar handles it) */}
           <div className="hero-pickers" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {/* Country picker */}
+          <div style={{ position: 'relative' }} ref={countryRef}>
+            <button
+              onClick={() => setCountryOpen(!countryOpen)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }}
+            >
+              {COUNTRIES.find(c => c.id === country)?.flag || '🌍'} {country || 'Страна'} ▾
+            </button>
+            {countryOpen && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', minWidth: 200, zIndex: 9999, padding: 6 }}>
+                {COUNTRIES.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => {
+                      setFilter('country', c.id)
+                      const firstCity = CITIES.find(ci => ci.country === c.id)
+                      if (firstCity) setFilter('city', firstCity.id)
+                      setFilter('metro', '')
+                      setCountryOpen(false)
+                    }}
+                    style={{ width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, fontSize: 13, color: '#334155', background: country === c.id ? '#eff6ff' : 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+                  >
+                    <span style={{ fontSize: 18 }}>{c.flag}</span> {c.id}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* City picker */}
           <div style={{ position: 'relative' }} ref={cityRef}>
             <button
               onClick={() => setCityOpen(!cityOpen)}
@@ -101,10 +122,10 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
             </button>
             {cityOpen && (
               <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', minWidth: 200, zIndex: 9999, padding: 6 }}>
-                {CITIES.map(c => (
+                {citiesForCountry.map(c => (
                   <button
                     key={c.id}
-                    onClick={() => { setFilter('city', c.id); setCityOpen(false) }}
+                    onClick={() => { setFilter('city', c.id); setFilter('metro', ''); setCityOpen(false) }}
                     style={{ width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, fontSize: 13, color: '#334155', background: city === c.id ? '#eff6ff' : 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
                   >
                     <span style={{ fontSize: 18 }}>{c.flag}</span> {c.id}
@@ -113,19 +134,6 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
               </div>
             )}
           </div>
-
-          {/* Geo button next to city picker */}
-          <button
-            onClick={() => detectCity(
-              (detected) => { setFilter('city', detected); setFilter('metro', ''); showToast(`📍 Определён город: ${detected}`, 'ok') },
-              () => showToast('Не удалось определить город', 'error')
-            )}
-            disabled={geoLoading}
-            title="Определить мой город"
-            style={{ padding: '10px 12px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 16, border: '1.5px solid rgba(255,255,255,0.2)', cursor: geoLoading ? 'default' : 'pointer', opacity: geoLoading ? 0.6 : 1 }}
-          >
-            {geoLoading ? '⏳' : '📍'}
-          </button>
           </div>
 
           {/* Category picker — hidden on mobile */}
@@ -150,7 +158,8 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
             )}
           </div>
 
-          {/* Metro picker — hidden on mobile */}
+          {/* Metro picker — hidden on mobile, only if city has metro */}
+          {hasMetro && (
           <div className="hero-pickers" style={{ position: 'relative' }} ref={metroRef}>
             <button
               onClick={() => { setMetroOpen(!metroOpen); setMetroSearch('') }}
@@ -160,7 +169,6 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
             </button>
             {metroOpen && (
               <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: '#fff', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', width: 240, zIndex: 9999 }}>
-                {/* Search input */}
                 <div style={{ padding: '10px 10px 6px' }}>
                   <input
                     autoFocus
@@ -170,7 +178,6 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
                     style={{ width: '100%', padding: '7px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
-                {/* List — shows 10 items, scrollable */}
                 <div style={{ maxHeight: 340, overflowY: 'auto', padding: '0 6px 6px' }}>
                   <button onClick={() => { setFilter('metro', ''); setMetroOpen(false) }} style={{ width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, fontSize: 13, color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
                     — Любое —
@@ -187,22 +194,7 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
               </div>
             )}
           </div>
-
-          {/* Search input */}
-          <input
-            value={query}
-            onChange={e => setFilter('query', e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            placeholder="Что ищете? Комнату, работу, услуги..."
-            style={{ flex: 1, minWidth: 180, border: 'none', outline: 'none', padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 14, backdropFilter: 'blur(8px)' }}
-          />
-
-          <button
-            onClick={handleSearch}
-            style={{ padding: '10px 24px', borderRadius: 12, background: '#f59e0b', color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}
-          >
-            Найти
-          </button>
+          )}
         </div>
 
         {/* Stats */}

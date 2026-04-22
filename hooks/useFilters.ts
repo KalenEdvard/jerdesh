@@ -10,6 +10,7 @@ export interface Filters {
   category: string
   metro: string
   city: string
+  country: string
   sort: SortOption
 }
 
@@ -25,6 +26,7 @@ export function useFilters(): Filters & {
     category: searchParams.get('cat') ?? 'all',
     metro: searchParams.get('metro') ?? '',
     city: searchParams.get('city') ?? DEFAULT_CITY,
+    country: searchParams.get('country') ?? 'Россия',
     sort: (searchParams.get('sort') ?? 'new') as SortOption,
   }
 
@@ -35,6 +37,7 @@ export function useFilters(): Filters & {
       category: 'cat',
       metro: 'metro',
       city: 'city',
+      country: 'country',
       sort: 'sort',
     }
 
