@@ -217,7 +217,7 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
           <motion.button
             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
             onClick={() => router.push('/create')}
-            style={{ padding: '12px 28px', borderRadius: 14, background: '#fff', color: '#1d4ed8', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
+            style={{ padding: '12px 28px', borderRadius: 14, background: '#f59e0b', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 20px rgba(245,158,11,0.4)' }}
           >
             <Plus size={18} /> Подать объявление
           </motion.button>
