@@ -75,11 +75,10 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
 
           {/* Main content card */}
           <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 16 }}>
-            {/* Badges */}
+            {/* Badges — только категория и метро */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
               <span style={{ background: '#eff6ff', color: '#1d4ed8', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>{CAT_LABELS[listing.category]}</span>
-              {listing.metro && <span style={{ background: '#f8fafc', color: '#334155', fontSize: 11, padding: '3px 10px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 4 }}>🚇 {listing.metro}</span>}
-              {listing.city && <span style={{ background: '#f8fafc', color: '#334155', fontSize: 11, padding: '3px 10px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 4 }}>📍 {listing.city}</span>}
+              {listing.metro && <span style={{ background: '#f8fafc', color: '#334155', fontSize: 11, padding: '3px 10px', borderRadius: 20 }}>🚇 {listing.metro}</span>}
             </div>
 
             {/* 1. Заголовок */}
@@ -90,10 +89,21 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
               <p style={{ fontSize: 15, color: '#334155', lineHeight: 1.75, whiteSpace: 'pre-wrap', marginBottom: 20 }}>{listing.description}</p>
             )}
 
-            {/* Разделитель */}
             <div style={{ height: 1, background: '#f1f5f9', marginBottom: 20 }} />
 
-            {/* 3. Цена */}
+            {/* 3. Местоположение */}
+            {listing.city && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.06em', marginBottom: 6 }}>МЕСТОПОЛОЖЕНИЕ</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  📍 {listing.city}
+                </div>
+              </div>
+            )}
+
+            <div style={{ height: 1, background: '#f1f5f9', marginBottom: 20 }} />
+
+            {/* 4. Цена */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.06em', marginBottom: 6 }}>СТОИМОСТЬ</div>
               {listing.price ? (
