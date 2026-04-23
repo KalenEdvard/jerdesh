@@ -79,9 +79,9 @@ export default function ListingCard({ listing }: { listing: Listing }) {
 
   return (
     <motion.div
-      whileHover={{ y: -4, boxShadow: '0 20px 48px rgba(0,0,0,0.1)' }}
+      whileHover={{ y: -4, boxShadow: '0 16px 40px rgba(0,0,0,0.14)' }}
       transition={{ duration: 0.2 }}
-      style={{ borderRadius: 18, overflow: 'hidden', background: '#fff', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+      style={{ borderRadius: 18, overflow: 'hidden', background: '#fff', border: '1.5px solid #d1d9e6', boxShadow: '0 4px 16px rgba(0,0,0,0.10)' }}
     >
       <Link href={`/listings/${listing.id}`} style={{ display: 'block', textDecoration: 'none', position: 'relative' }}>
         {/* Photo */}
