@@ -40,11 +40,11 @@ const CAT_COLORS: Record<string, string> = {
   services:    '#7c3aed',
 }
 const CAT_GRADIENTS: Record<string, string> = {
-  housing:     'linear-gradient(135deg,#1d4ed8,#3b82f6)',
-  findhousing: 'linear-gradient(135deg,#6366f1,#818cf8)',
-  jobs:        'linear-gradient(135deg,#059669,#34d399)',
-  sell:        'linear-gradient(135deg,#d97706,#fbbf24)',
-  services:    'linear-gradient(135deg,#7c3aed,#a78bfa)',
+  housing:     'linear-gradient(135deg,#f59e0b,#fbbf24)',
+  findhousing: 'linear-gradient(135deg,#f59e0b,#fbbf24)',
+  jobs:        'linear-gradient(135deg,#f59e0b,#fbbf24)',
+  sell:        'linear-gradient(135deg,#f59e0b,#fbbf24)',
+  services:    'linear-gradient(135deg,#f59e0b,#fbbf24)',
 }
 const CAT_LABELS: Record<string, string> = {
   housing:     'Сдаю жильё',

@@ -22,6 +22,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 }
 
+const CAT_LABELS: Record<string, string> = {
+  housing: 'Сдаю жильё', findhousing: 'Сниму жильё',
+  jobs: 'Работа', sell: 'Продаю', services: 'Услуга',
+}
+
 export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
@@ -35,7 +40,6 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   if (!listing) notFound()
 
-  // Get seller reviews
   const { data: reviews } = await supabase
     .from('reviews')
     .select('*, reviewer:users(name,avatar_url)')
@@ -43,5 +47,37 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     .order('created_at', { ascending: false })
     .limit(5)
 
-  return <ListingDetailClient listing={listing as any} reviews={reviews || []} />
+  const l = listing as any
+  const jsonLd: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemPage',
+    name: l.title,
+    description: l.description?.slice(0, 300),
+    url: `https://mekendesh.site/listings/${id}`,
+    datePublished: l.created_at,
+    image: l.photos?.[0] || 'https://mekendesh.site/og-image.png',
+    inLanguage: 'ru-RU',
+    isPartOf: { '@type': 'WebSite', name: 'Мекендеш', url: 'https://mekendesh.site' },
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Мекендеш', item: 'https://mekendesh.site' },
+        { '@type': 'ListItem', position: 2, name: CAT_LABELS[l.category] || l.category, item: `https://mekendesh.site/?cat=${l.category}` },
+        { '@type': 'ListItem', position: 3, name: l.title },
+      ],
+    },
+  }
+  if (l.price) {
+    jsonLd.offers = { '@type': 'Offer', price: l.price, priceCurrency: 'RUB', availability: 'https://schema.org/InStock' }
+  }
+  if (l.user?.name) {
+    jsonLd.author = { '@type': 'Person', name: l.user.name }
+  }
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <ListingDetailClient listing={listing as any} reviews={reviews || []} />
+    </>
+  )
 }

@@ -12,8 +12,9 @@ import { autoDetectCity } from '@/hooks/useGeoCity'
 import { useStore } from '@/store'
 
 type Stats = { listings: number; users: number; cities: number }
+type MetroStat = { name: string; count: number }
 
-export default function HomeClient({ stats }: { stats?: Stats }) {
+export default function HomeClient({ stats, metroStats }: { stats?: Stats; metroStats?: MetroStat[] }) {
   const { category, query, metro, city, sort, setFilter } = useFilters()
   const { showToast } = useStore()
   const [listings, setListings] = useState<Listing[]>([])
@@ -132,6 +133,34 @@ export default function HomeClient({ stats }: { stats?: Stats }) {
           )}
         </div>
       </div>
+
+      {/* Metro section */}
+      {metroStats && metroStats.length > 0 && (
+        <div style={{ maxWidth: 1200, margin: '0 auto 60px', padding: '0 20px' }}>
+          <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: '28px 24px' }}>
+            <h2 style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', marginBottom: 20 }}>
+              Объявления по станциям метро
+            </h2>
+            <div style={{ columns: 'auto 200px', columnGap: 0 }}>
+              {metroStats.map(({ name, count }) => (
+                <button
+                  key={name}
+                  onClick={() => setFilter('metro', name)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '7px 10px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', textAlign: 'left', borderRadius: 0 }}
+                >
+                  {/* Metro M icon */}
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="10" cy="10" r="10" fill="#E4002B"/>
+                    <path d="M3.5 14.5V6.5L10 12.5L16.5 6.5V14.5" stroke="#fff" strokeWidth="2" strokeLinejoin="round" fill="none"/>
+                  </svg>
+                  <span style={{ fontSize: 13, color: '#1d4ed8', fontWeight: 500, flex: 1 }}>{name}</span>
+                  <span style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic', flexShrink: 0 }}>{count}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

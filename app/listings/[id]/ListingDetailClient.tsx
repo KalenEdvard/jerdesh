@@ -17,7 +17,20 @@ const CAT_LABELS: Record<string, string> = {
 export default function ListingDetailClient({ listing, reviews }: { listing: Listing; reviews: Review[] }) {
   const { user, favIds, toggleFav, showToast, setAuthOpen, openChat } = useStore()
   const [photoIdx, setPhotoIdx] = useState(0)
+  const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const isFav = favIds.includes(listing.id)
+
+  const photoCount = listing.photos?.length ?? 0
+  const prevPhoto = () => setPhotoIdx(i => (i - 1 + photoCount) % photoCount)
+  const nextPhoto = () => setPhotoIdx(i => (i + 1) % photoCount)
+
+  const handleTouchStart = (e: React.TouchEvent) => setTouchStartX(e.touches[0].clientX)
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null || photoCount < 2) return
+    const diff = touchStartX - e.changedTouches[0].clientX
+    if (Math.abs(diff) > 40) diff > 0 ? nextPhoto() : prevPhoto()
+    setTouchStartX(null)
+  }
 
   useEffect(() => {
     const key = `viewed_${listing.id}`
@@ -51,12 +64,33 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
           <div style={{ background: '#f1f5f9', borderRadius: 20, overflow: 'hidden', marginBottom: 20 }}>
             {listing.photos?.length ? (
               <>
-                <div style={{ height: 420, position: 'relative' }}>
-                  <img src={listing.photos[photoIdx]} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div
+                  style={{ height: 420, position: 'relative', userSelect: 'none' }}
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                >
+                  <img src={listing.photos[photoIdx]} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+
+                  {/* Badges */}
                   <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6 }}>
                     {listing.is_urgent && <span style={{ background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20 }}>🔴 Срочно</span>}
                     {listing.is_premium && <span style={{ background: '#f59e0b', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20 }}>⭐ Топ</span>}
                   </div>
+
+                  {/* Counter */}
+                  {photoCount > 1 && (
+                    <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 20, backdropFilter: 'blur(4px)' }}>
+                      {photoIdx + 1} / {photoCount}
+                    </div>
+                  )}
+
+                  {/* Arrows */}
+                  {photoCount > 1 && (
+                    <>
+                      <button onClick={prevPhoto} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.88)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, backdropFilter: 'blur(4px)', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', color: '#0f172a' }}>‹</button>
+                      <button onClick={nextPhoto} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.88)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, backdropFilter: 'blur(4px)', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', color: '#0f172a' }}>›</button>
+                    </>
+                  )}
                 </div>
                 {listing.photos.length > 1 && (
                   <div style={{ display: 'flex', gap: 8, padding: 12, overflowX: 'auto' }}>

@@ -30,9 +30,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
+  const categories = ['housing', 'findhousing', 'jobs', 'sell', 'services']
+  const categoryUrls = categories.map(cat => ({
+    url: `https://mekendesh.site/?cat=${cat}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.9,
+  }))
+
   return [
-    { url: 'https://mekendesh.site', lastModified: new Date(), changeFrequency: 'hourly', priority: 1 },
-    { url: 'https://mekendesh.site/profile', lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
+    { url: 'https://mekendesh.site', lastModified: new Date(), changeFrequency: 'hourly' as const, priority: 1 },
+    ...categoryUrls,
     ...listingUrls,
   ]
 }
