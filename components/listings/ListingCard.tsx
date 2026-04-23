@@ -4,7 +4,7 @@ import { useStore } from '@/store'
 import { createClient } from '@/lib/supabase-client'
 import type { Listing } from '@/types'
 import { motion } from 'framer-motion'
-import { MapPin, Eye, Star, Heart } from 'lucide-react'
+import { MapPin, Eye, Star, Heart, Clock } from 'lucide-react'
 import { toggleFavorite } from '@/lib/toggleFavorite'
 
 function plural(n: number, one: string, few: string, many: string) {
@@ -133,20 +133,24 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           )}
 
           {/* Footer */}
-          <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6, borderTop: '1px solid #f1f5f9' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 22, height: 22, borderRadius: '50%', background: catGradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+          <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 0, paddingTop: 6, borderTop: '1px solid #f1f5f9' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 }}>
+              <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>
                 {listing.user?.name?.[0]?.toUpperCase() || 'У'}
               </div>
-              <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {listing.user?.name || 'Пользователь'}
+              <span style={{ fontSize: 11, color: '#94a3b8', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {listing.user?.name || 'Аноним'}
               </span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 2, color: '#94a3b8' }}>
-                <Eye size={11} /><span style={{ fontSize: 10 }}>{listing.views ?? 0}</span>
-              </div>
-              <span style={{ fontSize: 10, color: '#94a3b8' }}>{timeAgo}</span>
+            <div style={{ width: 1, height: 12, background: '#e2e8f0', flexShrink: 0 }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#94a3b8', padding: '0 8px' }}>
+              <Eye size={11} />
+              <span style={{ fontSize: 11 }}>{listing.views ?? 0}</span>
+            </div>
+            <div style={{ width: 1, height: 12, background: '#e2e8f0', flexShrink: 0 }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#94a3b8', paddingLeft: 8 }}>
+              <Clock size={11} />
+              <span style={{ fontSize: 11 }}>{timeAgo}</span>
             </div>
           </div>
         </div>
