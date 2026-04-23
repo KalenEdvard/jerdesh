@@ -73,26 +73,60 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
             )}
           </div>
 
-          {/* Title + meta */}
+          {/* Main content card */}
           <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 16 }}>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            {/* Badges */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
               <span style={{ background: '#eff6ff', color: '#1d4ed8', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>{CAT_LABELS[listing.category]}</span>
-              {listing.metro && <span style={{ background: '#f8fafc', color: '#334155', fontSize: 11, padding: '3px 10px', borderRadius: 20 }}>🚇 {listing.metro}</span>}
+              {listing.metro && <span style={{ background: '#f8fafc', color: '#334155', fontSize: 11, padding: '3px 10px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 4 }}>🚇 {listing.metro}</span>}
+              {listing.city && <span style={{ background: '#f8fafc', color: '#334155', fontSize: 11, padding: '3px 10px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 4 }}>📍 {listing.city}</span>}
             </div>
-            <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>{listing.title}</h1>
-            {listing.price ? (
-              <div style={{ fontSize: 28, fontWeight: 900, color: '#1d4ed8', marginBottom: 12 }}>
-                {listing.price.toLocaleString('ru')} ₽<span style={{ fontSize: 16, fontWeight: 500, color: '#64748b' }}>/мес</span>
-              </div>
-            ) : (
-              <div style={{ fontSize: 18, fontWeight: 600, color: '#64748b', marginBottom: 12 }}>Договорная</div>
+
+            {/* 1. Заголовок */}
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, marginBottom: 14 }}>{listing.title}</h1>
+
+            {/* 2. Описание */}
+            {listing.description && (
+              <p style={{ fontSize: 15, color: '#334155', lineHeight: 1.75, whiteSpace: 'pre-wrap', marginBottom: 20 }}>{listing.description}</p>
             )}
-            <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#94a3b8', marginBottom: 16 }}>
-              <span>👁 {listing.views} просмотров</span>
-              <span>🕐 {timeAgo}</span>
-              <span>📍 {listing.city}</span>
+
+            {/* Разделитель */}
+            <div style={{ height: 1, background: '#f1f5f9', marginBottom: 20 }} />
+
+            {/* 3. Цена */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.06em', marginBottom: 6 }}>СТОИМОСТЬ</div>
+              {listing.price ? (
+                <div style={{ fontSize: 30, fontWeight: 900, color: '#1d4ed8', letterSpacing: '-0.5px' }}>
+                  {listing.price.toLocaleString('ru')} ₽
+                  <span style={{ fontSize: 15, fontWeight: 500, color: '#94a3b8', marginLeft: 6 }}>/мес</span>
+                </div>
+              ) : (
+                <div style={{ fontSize: 20, fontWeight: 700, color: '#64748b' }}>Договорная</div>
+              )}
             </div>
-            <p style={{ fontSize: 15, color: '#334155', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{listing.description}</p>
+
+            {/* Разделитель */}
+            <div style={{ height: 1, background: '#f1f5f9', marginBottom: 16 }} />
+
+            {/* 4. Мета: просмотры + дата */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
+                <span style={{ fontSize: 16 }}>👁</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>{listing.views}</div>
+                  <div style={{ fontSize: 11, color: '#94a3b8' }}>просмотров</div>
+                </div>
+              </div>
+              <div style={{ width: 1, height: 36, background: '#f1f5f9' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, paddingLeft: 16 }}>
+                <span style={{ fontSize: 16 }}>🕐</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>{timeAgo}</div>
+                  <div style={{ fontSize: 11, color: '#94a3b8' }}>публикация</div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Reviews */}
