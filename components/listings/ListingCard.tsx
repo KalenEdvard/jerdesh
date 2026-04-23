@@ -79,11 +79,13 @@ export default function ListingCard({ listing }: { listing: Listing }) {
 
   return (
     <motion.div
-      whileHover={{ y: -4, boxShadow: '0 16px 40px rgba(0,0,0,0.14)' }}
+      whileHover={{ y: -5, boxShadow: '0 20px 48px rgba(15,23,42,0.18)' }}
       transition={{ duration: 0.2 }}
-      style={{ borderRadius: 18, overflow: 'hidden', background: '#fff', border: '1.5px solid #d1d9e6', boxShadow: '0 4px 16px rgba(0,0,0,0.10)' }}
+      style={{ borderRadius: 18, overflow: 'hidden', background: '#fff', border: '1px solid #c8d4e6', boxShadow: '0 4px 20px rgba(15,23,42,0.13)' }}
     >
       <Link href={`/listings/${listing.id}`} style={{ display: 'block', textDecoration: 'none', position: 'relative' }}>
+        {/* Category accent bar */}
+        <div style={{ height: 4, background: catGradient }} />
         {/* Photo */}
         <div style={{ height: 186, background: '#f1f5f9', position: 'relative', overflow: 'hidden' }}>
           {photo ? (
