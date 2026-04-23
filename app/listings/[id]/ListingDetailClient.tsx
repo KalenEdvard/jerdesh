@@ -180,7 +180,7 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>{listing.user?.name || 'Пользователь'}</div>
                 {listing.user?.rating && (
-                  <div style={{ fontSize: 13, color: '#f59e0b' }}>★ {listing.user.rating} · {listing.user.ads_count} объявлений</div>
+                  <div style={{ fontSize: 13, color: '#f59e0b' }}>★ {listing.user.rating}</div>
                 )}
                 <div style={{ fontSize: 11, color: '#94a3b8' }}>На сайте с {new Date(listing.user?.created_at || '').toLocaleDateString('ru', { month: 'long', year: 'numeric' })}</div>
               </div>
