@@ -87,7 +87,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         {/* Category accent bar */}
         <div style={{ height: 4, background: catGradient }} />
         {/* Photo */}
-        <div style={{ height: 186, background: '#f1f5f9', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ height: 160, background: '#f1f5f9', position: 'relative', overflow: 'hidden' }}>
           {photo ? (
             <img src={photo} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (

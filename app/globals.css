@@ -46,8 +46,8 @@ body {
   /* Listing layout: no sidebar on mobile */
   .listing-layout { flex-direction: column !important; gap: 0 !important; padding: 0 !important; }
   .listing-sidebar { display: none !important; }
-  .listing-main { padding: 16px 12px 40px !important; }
-  .listing-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .listing-main { padding: 16px 8px 40px !important; }
+  .listing-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
 
   /* Hero: hide city/metro/category pickers, keep title + search input */
   .hero-pickers { display: none !important; }
