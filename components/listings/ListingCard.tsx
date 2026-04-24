@@ -14,22 +14,22 @@ function plural(n: number, one: string, few: string, many: string) {
   return many
 }
 
-function getTimeAgo(dateStr: string): string {
+function getTimeAgo(dateStr: string): { value: string; label: string } {
   const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
   if (diff < 3600) {
     const m = Math.max(1, Math.floor(diff / 60))
-    return `${m} ${plural(m, 'минуту', 'минуты', 'минут')} назад`
+    return { value: `${m} ${plural(m, 'минуту', 'минуты', 'минут')}`, label: 'назад' }
   }
   if (diff < 86400) {
     const h = Math.floor(diff / 3600)
-    return `${h} ${plural(h, 'час', 'часа', 'часов')} назад`
+    return { value: `${h} ${plural(h, 'час', 'часа', 'часов')}`, label: 'назад' }
   }
   if (diff < 86400 * 30) {
     const d = Math.floor(diff / 86400)
-    return `${d} ${plural(d, 'день', 'дня', 'дней')} назад`
+    return { value: `${d} ${plural(d, 'день', 'дня', 'дней')}`, label: 'назад' }
   }
   const mo = Math.floor(diff / (86400 * 30))
-  return `${mo} ${plural(mo, 'месяц', 'месяца', 'месяцев')} назад`
+  return { value: `${mo} ${plural(mo, 'месяц', 'месяца', 'месяцев')}`, label: 'назад' }
 }
 
 const CAT_COLORS: Record<string, string> = {
@@ -150,7 +150,10 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             <div style={{ width: 1, height: 12, background: '#e2e8f0', flexShrink: 0 }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#94a3b8', paddingLeft: 8 }}>
               <Clock size={11} />
-              <span style={{ fontSize: 11 }}>{timeAgo}</span>
+              <span style={{ fontSize: 11, display: 'flex', flexDirection: 'column', lineHeight: 1.2, textAlign: 'center' }}>
+                <span>{timeAgo.value}</span>
+                <span>{timeAgo.label}</span>
+              </span>
             </div>
           </div>
         </div>
