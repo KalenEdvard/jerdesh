@@ -1,5 +1,5 @@
 'use client'
-import { METRO_STATIONS, CATEGORIES } from '@/types'
+import { METRO_BY_CITY, CATEGORIES } from '@/types'
 import { motion } from 'framer-motion'
 import { SlidersHorizontal, RotateCcw, MapPin, Tag, ArrowUpDown } from 'lucide-react'
 import { useFilters } from '@/hooks/useFilters'
@@ -14,7 +14,8 @@ const CAT_COLORS: Record<string, string> = {
 }
 
 export default function FilterSidebar() {
-  const { category, metro, sort, setFilter, resetFilters } = useFilters()
+  const { category, metro, sort, city, setFilter, resetFilters } = useFilters()
+  const cityMetroStations = METRO_BY_CITY[city] ?? []
 
   return (
     <aside style={{ width: 260, flexShrink: 0 }}>
@@ -72,21 +73,23 @@ export default function FilterSidebar() {
           </div>
         </div>
 
-        {/* Metro */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-            <MapPin size={13} color="#94a3b8" />
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.5px' }}>СТАНЦИЯ МЕТРО</label>
+        {/* Metro — показывается только если у города есть метро */}
+        {cityMetroStations.length > 0 && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+              <MapPin size={13} color="#94a3b8" />
+              <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.5px' }}>СТАНЦИЯ МЕТРО</label>
+            </div>
+            <select
+              value={metro}
+              onChange={e => setFilter('metro', e.target.value)}
+              style={{ width: '100%', padding: '9px 12px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', background: '#f8fafc', color: '#334155', cursor: 'pointer' }}
+            >
+              <option value="">Все станции</option>
+              {cityMetroStations.map(s => <option key={s} value={s}>🚇 {s}</option>)}
+            </select>
           </div>
-          <select
-            value={metro}
-            onChange={e => setFilter('metro', e.target.value)}
-            style={{ width: '100%', padding: '9px 12px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', background: '#f8fafc', color: '#334155', cursor: 'pointer' }}
-          >
-            <option value="">Все станции</option>
-            {METRO_STATIONS.map(s => <option key={s} value={s}>🚇 {s}</option>)}
-          </select>
-        </div>
+        )}
 
         {/* Sort */}
         <div>

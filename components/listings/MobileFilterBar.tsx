@@ -1,12 +1,13 @@
 'use client'
-import { CITIES, COUNTRIES, METRO_STATIONS, CATEGORIES } from '@/types'
+import { CITIES, COUNTRIES, METRO_BY_CITY, CATEGORIES } from '@/types'
 import { useFilters } from '@/hooks/useFilters'
 
 
 export default function MobileFilterBar() {
   const { city, metro, category, country, setFilter, setFilters } = useFilters()
   const citiesForCountry = CITIES.filter(c => c.country === country)
-  const hasMetro = CITIES.find(c => c.id === city)?.metro ?? false
+  const cityMetroStations = METRO_BY_CITY[city] ?? []
+  const hasMetro = cityMetroStations.length > 0
 
   return (
     <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -54,8 +55,8 @@ export default function MobileFilterBar() {
               onChange={e => setFilter('metro', e.target.value)}
               style={{ width: '100%', padding: '10px 10px 10px 32px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 13, background: '#f8fafc', color: metro ? '#0f172a' : '#94a3b8', appearance: 'none', WebkitAppearance: 'none' }}
             >
-              <option value="">Все метро</option>
-              {METRO_STATIONS.map(s => <option key={s} value={s}>{s}</option>)}
+              <option value="">Все станции</option>
+              {cityMetroStations.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none', fontSize: 12 }}>▾</span>
           </div>
