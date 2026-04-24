@@ -23,7 +23,7 @@ const onest = Onest({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://mekendesh.site'),
+  metadataBase: new URL('https://mekendesh.online'),
   title: { default: 'Мекендеш — Объявления кыргызов в России', template: '%s | Мекендеш' },
   description: 'Мекендеш (Mekendesh) — сайт объявлений в России на кыргызском и русском. Батир ижарага, жумуш, сатуу, кызматтар. Оной издеп, оной тап! Москва, СПб и другие города.',
   keywords: [
@@ -43,15 +43,15 @@ export const metadata: Metadata = {
     // Смешанные
     'кыргыз жумуш Москва', 'кыргыз батир Москва', 'оной издеп оной тап',
   ],
-  authors: [{ name: 'Мекендеш', url: 'https://mekendesh.site' }],
+  authors: [{ name: 'Мекендеш', url: 'https://mekendesh.online' }],
   creator: 'Мекендеш',
   publisher: 'Мекендеш',
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
-  alternates: { canonical: 'https://mekendesh.site', languages: { 'ru-RU': 'https://mekendesh.site' } },
+  alternates: { canonical: 'https://mekendesh.online', languages: { 'ru-RU': 'https://mekendesh.online' } },
   openGraph: {
     type: 'website',
     locale: 'ru_RU',
-    url: 'https://mekendesh.site',
+    url: 'https://mekendesh.online',
     siteName: 'Мекендеш',
     title: 'Мекендеш — Объявления кыргызов в России',
     description: 'Сайт объявлений для кыргызской диаспоры. Жильё, работа, услуги, продажа.',
@@ -67,25 +67,25 @@ const jsonLd = {
   '@graph': [
     {
       '@type': 'Organization',
-      '@id': 'https://mekendesh.site/#organization',
+      '@id': 'https://mekendesh.online/#organization',
       name: 'Мекендеш',
       alternateName: 'Mekendesh',
-      url: 'https://mekendesh.site',
-      logo: { '@type': 'ImageObject', url: 'https://mekendesh.site/og-image.png' },
+      url: 'https://mekendesh.online',
+      logo: { '@type': 'ImageObject', url: 'https://mekendesh.online/og-image.png' },
       description: 'Сайт объявлений для кыргызской диаспоры в России',
       foundingLocation: { '@type': 'Country', name: 'Россия' },
       areaServed: { '@type': 'Country', name: 'Россия' },
     },
     {
       '@type': 'WebSite',
-      '@id': 'https://mekendesh.site/#website',
-      url: 'https://mekendesh.site',
+      '@id': 'https://mekendesh.online/#website',
+      url: 'https://mekendesh.online',
       name: 'Мекендеш',
       inLanguage: 'ru-RU',
-      publisher: { '@id': 'https://mekendesh.site/#organization' },
+      publisher: { '@id': 'https://mekendesh.online/#organization' },
       potentialAction: {
         '@type': 'SearchAction',
-        target: { '@type': 'EntryPoint', urlTemplate: 'https://mekendesh.site/?q={search_term_string}' },
+        target: { '@type': 'EntryPoint', urlTemplate: 'https://mekendesh.online/?q={search_term_string}' },
         'query-input': 'required name=search_term_string',
       },
     },

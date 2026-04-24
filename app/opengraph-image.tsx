@@ -52,7 +52,7 @@ export default function OGImage() {
         {/* URL */}
         <div style={{ position: 'absolute', bottom: 36, display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80' }} />
-          <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)' }}>mekendesh.site</span>
+          <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)' }}>mekendesh.online</span>
         </div>
       </div>
     ),

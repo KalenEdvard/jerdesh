@@ -24,11 +24,11 @@ export const metadata: Metadata = {
     'оной издеп оной тап', 'кыргыз объявление', 'батир сатуу Москва',
     'кызматтар Москва', 'сатуу Москва',
   ],
-  alternates: { canonical: 'https://mekendesh.site' },
+  alternates: { canonical: 'https://mekendesh.online' },
   openGraph: {
     title: 'Мекендеш — Объявления для кыргызов в России',
     description: 'Бесплатные объявления: жильё, работа, услуги, продажа товаров для кыргызской диаспоры в России.',
-    url: 'https://mekendesh.site',
+    url: 'https://mekendesh.online',
     siteName: 'Мекендеш',
     locale: 'ru_RU',
     type: 'website',

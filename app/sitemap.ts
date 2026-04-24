@@ -24,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const listingUrls = listings.map(l => ({
-    url: `https://mekendesh.site/listings/${l.id}`,
+    url: `https://mekendesh.online/listings/${l.id}`,
     lastModified: new Date(l.created_at || Date.now()),
     changeFrequency: 'daily' as const,
     priority: 0.8,
@@ -32,14 +32,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const categories = ['housing', 'findhousing', 'jobs', 'sell', 'services']
   const categoryUrls = categories.map(cat => ({
-    url: `https://mekendesh.site/?cat=${cat}`,
+    url: `https://mekendesh.online/?cat=${cat}`,
     lastModified: new Date(),
     changeFrequency: 'daily' as const,
     priority: 0.9,
   }))
 
   return [
-    { url: 'https://mekendesh.site', lastModified: new Date(), changeFrequency: 'hourly' as const, priority: 1 },
+    { url: 'https://mekendesh.online', lastModified: new Date(), changeFrequency: 'hourly' as const, priority: 1 },
     ...categoryUrls,
     ...listingUrls,
   ]
