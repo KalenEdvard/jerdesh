@@ -38,7 +38,7 @@ export default function MobileFilterBar() {
           </span>
           <select
             value={city}
-            onChange={e => { setFilter('city', e.target.value); setFilter('metro', '') }}
+            onChange={e => setFilters({ city: e.target.value, metro: '' })}
             style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, background: '#f8fafc', color: '#0f172a', fontWeight: 600, appearance: 'none', WebkitAppearance: 'none' }}
           >
             {citiesForCountry.map(c => <option key={c.id} value={c.id}>{c.id}</option>)}
@@ -73,7 +73,7 @@ export default function MobileFilterBar() {
           style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, background: '#f8fafc', color: '#0f172a', fontWeight: 600, appearance: 'none', WebkitAppearance: 'none' }}
         >
           <option value="all">Все категории</option>
-          {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}
+          {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
         </select>
         <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none', fontSize: 12 }}>▾</span>
       </div>
