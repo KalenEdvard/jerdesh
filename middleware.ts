@@ -23,9 +23,14 @@ export async function middleware(request: NextRequest) {
           )
           // Пересоздаём response с обновлённым request
           supabaseResponse = NextResponse.next({ request })
-          // Пишем в response (браузер получит обновлённые cookies)
+          // Пишем в response с принудительным maxAge 1 год
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, {
+              ...options,
+              maxAge: 60 * 60 * 24 * 365,
+              sameSite: 'lax',
+              secure: process.env.NODE_ENV === 'production',
+            })
           )
         },
       },
