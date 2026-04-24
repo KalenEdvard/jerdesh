@@ -144,21 +144,21 @@ export default function ListingCard({ listing }: { listing: Listing }) {
               </div>
             </div>
             <div style={{ height: 1, background: '#f1f5f9' }} />
-            {/* Row 2: views | metro */}
-            <div style={{ height: 18, display: 'flex', alignItems: 'center', gap: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 2, color: '#94a3b8', flex: 1, overflow: 'hidden' }}>
+            {/* Row 2: views | metro — 50/50 */}
+            <div style={{ display: 'flex', alignItems: 'stretch', height: 18 }}>
+              <div style={{ width: '50%', display: 'flex', alignItems: 'center', gap: 2, paddingRight: 4, overflow: 'hidden', color: '#94a3b8' }}>
                 <Eye size={8} style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: 8, whiteSpace: 'nowrap' }}>{(listing.views ?? 0).toLocaleString('ru')} просм.</span>
+                <span style={{ fontSize: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{(listing.views ?? 0).toLocaleString('ru')} просм.</span>
               </div>
-              {listing.metro && (
-                <>
-                  <div style={{ width: 1, height: 10, background: '#e2e8f0', flexShrink: 0, margin: '0 4px' }} />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 2, color: '#64748b', overflow: 'hidden', maxWidth: '55%' }}>
+              <div style={{ width: 1, background: '#f1f5f9', flexShrink: 0 }} />
+              <div style={{ width: '50%', display: 'flex', alignItems: 'center', gap: 2, paddingLeft: 4, overflow: 'hidden', color: '#64748b' }}>
+                {listing.metro ? (
+                  <>
                     <MapPin size={8} color="#64748b" style={{ flexShrink: 0 }} />
                     <span style={{ fontSize: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>м. {listing.metro}</span>
-                  </div>
-                </>
-              )}
+                  </>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
