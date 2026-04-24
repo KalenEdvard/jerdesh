@@ -5,7 +5,7 @@ import { useDropzone } from 'react-dropzone'
 import { motion } from 'framer-motion'
 import { Upload, X, Send, Tag, FileText, Phone, MapPin, DollarSign, AlertCircle } from 'lucide-react'
 import { useStore } from '@/store'
-import { CATEGORIES, METRO_STATIONS, CITIES, COUNTRIES } from '@/types'
+import { CATEGORIES, METRO_BY_CITY, CITIES, COUNTRIES } from '@/types'
 
 const DEFAULT_CITY = 'Москва'
 const MAX_FILE_SIZE = 4 * 1024 * 1024
@@ -135,7 +135,8 @@ export default function CreatePage() {
   }
 
   const citiesForCountry = CITIES.filter(c => c.country === country)
-  const hasMetro = CITIES.find(c => c.id === form.city)?.metro ?? false
+  const cityMetroStations = METRO_BY_CITY[form.city] ?? []
+  const hasMetro = cityMetroStations.length > 0
 
   const CAT_COLORS: Record<string, string> = {
     housing: '#1d4ed8',
@@ -292,7 +293,7 @@ export default function CreatePage() {
                 style={{ width: '100%', padding: '11px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
               >
                 <option value="">Не выбрано</option>
-                {METRO_STATIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                {cityMetroStations.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             )}
