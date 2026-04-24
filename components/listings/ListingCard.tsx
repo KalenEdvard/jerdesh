@@ -83,7 +83,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
       transition={{ duration: 0.15 }}
       style={{ borderRadius: 16, overflow: 'hidden', background: '#fff', border: '1px solid #c8d4e6', boxShadow: '0 2px 12px rgba(15,23,42,0.09)' }}
     >
-      <Link href={`/listings/${listing.id}`} style={{ display: 'flex', textDecoration: 'none', position: 'relative', minHeight: 110 }}>
+      <Link href={`/listings/${listing.id}`} style={{ display: 'flex', textDecoration: 'none', position: 'relative', height: 160 }}>
 
         {/* Left: photo */}
         <div style={{ width: 120, minWidth: 120, position: 'relative', overflow: 'hidden', background: '#f1f5f9', flexShrink: 0 }}>
@@ -106,7 +106,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         </div>
 
         {/* Right: content */}
-        <div style={{ flex: 1, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+        <div style={{ flex: 1, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, overflow: 'hidden' }}>
           {/* Category + metro */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <span style={{ background: catGradient, color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>{catLabel}</span>
