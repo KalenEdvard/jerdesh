@@ -133,27 +133,26 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           )}
 
           {/* Footer */}
-          <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 0, paddingTop: 6, borderTop: '1px solid #f1f5f9' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 }}>
-              <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>
-                {listing.user?.name?.[0]?.toUpperCase() || 'У'}
+          <div style={{ marginTop: 'auto', paddingTop: 6, borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {/* Row 1: profile + time */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>
+                  {listing.user?.name?.[0]?.toUpperCase() || 'У'}
+                </div>
+                <span style={{ fontSize: 11, color: '#94a3b8', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {listing.user?.name || 'Аноним'}
+                </span>
               </div>
-              <span style={{ fontSize: 11, color: '#94a3b8', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {listing.user?.name || 'Аноним'}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#94a3b8' }}>
+                <Clock size={11} />
+                <span style={{ fontSize: 11 }}>{timeAgo.value} {timeAgo.label}</span>
+              </div>
             </div>
-            <div style={{ width: 1, height: 12, background: '#e2e8f0', flexShrink: 0 }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#94a3b8', padding: '0 8px' }}>
+            {/* Row 2: views */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#94a3b8' }}>
               <Eye size={11} />
-              <span style={{ fontSize: 11 }}>{listing.views ?? 0}</span>
-            </div>
-            <div style={{ width: 1, height: 12, background: '#e2e8f0', flexShrink: 0 }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#94a3b8', paddingLeft: 8 }}>
-              <Clock size={11} />
-              <span style={{ fontSize: 11, display: 'flex', flexDirection: 'column', lineHeight: 1.2, textAlign: 'center' }}>
-                <span>{timeAgo.value}</span>
-                <span>{timeAgo.label}</span>
-              </span>
+              <span style={{ fontSize: 11 }}>{listing.views ?? 0} просмотров</span>
             </div>
           </div>
         </div>
