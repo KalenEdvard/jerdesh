@@ -83,80 +83,78 @@ export default function ListingCard({ listing }: { listing: Listing }) {
       transition={{ duration: 0.15 }}
       style={{ borderRadius: 16, overflow: 'hidden', background: '#fff', border: '1px solid #c8d4e6', boxShadow: '0 2px 12px rgba(15,23,42,0.09)' }}
     >
-      <Link href={`/listings/${listing.id}`} style={{ display: 'flex', textDecoration: 'none', position: 'relative', height: 160 }}>
+      <Link href={`/listings/${listing.id}`} style={{ display: 'flex', textDecoration: 'none', position: 'relative', height: 130 }}>
 
         {/* Left: photo */}
-        <div style={{ width: 120, minWidth: 120, position: 'relative', overflow: 'hidden', background: '#f1f5f9', flexShrink: 0 }}>
-          {/* Category accent bar */}
+        <div style={{ width: 100, minWidth: 100, position: 'relative', overflow: 'hidden', background: '#f1f5f9', flexShrink: 0 }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: catGradient, zIndex: 2 }} />
           {photo ? (
             <img src={photo} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: catGradient + '22' }}>
-              <span style={{ fontSize: 36 }}>{catIcon}</span>
+              <span style={{ fontSize: 28 }}>{catIcon}</span>
             </div>
           )}
-          {/* Badges */}
           {(listing.is_premium || listing.is_urgent) && (
-            <div style={{ position: 'absolute', bottom: 6, left: 6, display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {listing.is_premium && <span style={{ background: '#f59e0b', color: '#fff', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 10 }}>⭐ Топ</span>}
-              {listing.is_urgent && <span style={{ background: '#ef4444', color: '#fff', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 10 }}>🔴 Срочно</span>}
+            <div style={{ position: 'absolute', bottom: 4, left: 4, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {listing.is_premium && <span style={{ background: '#f59e0b', color: '#fff', fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 8 }}>⭐ Топ</span>}
+              {listing.is_urgent && <span style={{ background: '#ef4444', color: '#fff', fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 8 }}>🔴 Срочно</span>}
             </div>
           )}
         </div>
 
         {/* Right: content */}
-        <div style={{ flex: 1, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, overflow: 'hidden' }}>
+        <div style={{ flex: 1, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, overflow: 'hidden' }}>
           {/* Category + metro */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <span style={{ background: catGradient, color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>{catLabel}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ background: catGradient, color: '#fff', fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 20, whiteSpace: 'nowrap' }}>{catLabel}</span>
             {listing.metro && (
-              <span style={{ fontSize: 11, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 2 }}>
-                <MapPin size={10} /> м. {listing.metro}
+              <span style={{ fontSize: 9, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <MapPin size={8} /> м. {listing.metro}
               </span>
             )}
           </div>
 
           {/* Title */}
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>
+          <h3 style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>
             {listing.title}
           </h3>
 
           {/* Price */}
           {listing.price ? (
-            <div style={{ fontSize: 17, fontWeight: 800, color: catColor, letterSpacing: '-0.3px' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: catColor, letterSpacing: '-0.3px' }}>
               {listing.price.toLocaleString('ru')} ₽
-              <span style={{ fontSize: 11, fontWeight: 400, color: '#94a3b8', marginLeft: 3 }}>/мес</span>
+              <span style={{ fontSize: 10, fontWeight: 400, color: '#94a3b8', marginLeft: 2 }}>/мес</span>
             </div>
           ) : (
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>Договорная</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Договорная</div>
           )}
 
-          {/* Footer — fixed height so cards stay aligned */}
+          {/* Footer */}
           <div style={{ marginTop: 'auto', borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column' }}>
-            {/* Row 1: profile | time — each 50% */}
-            <div style={{ display: 'flex', alignItems: 'stretch', height: 28 }}>
-              <div style={{ width: '50%', display: 'flex', alignItems: 'center', gap: 3, paddingRight: 6, overflow: 'hidden' }}>
-                <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>
+            {/* Row 1: profile | time */}
+            <div style={{ display: 'flex', alignItems: 'stretch', height: 22 }}>
+              <div style={{ width: '50%', display: 'flex', alignItems: 'center', gap: 3, paddingRight: 4, overflow: 'hidden' }}>
+                <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7, fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>
                   {listing.user?.name?.[0]?.toUpperCase() || 'У'}
                 </div>
-                <span style={{ fontSize: 10, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 9, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {listing.user?.name || 'Аноним'}
                 </span>
               </div>
               <div style={{ width: 1, background: '#f1f5f9', flexShrink: 0 }} />
-              <div style={{ width: '50%', display: 'flex', alignItems: 'center', gap: 3, paddingLeft: 6, overflow: 'hidden' }}>
-                <Clock size={10} color="#94a3b8" style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: 10, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ width: '50%', display: 'flex', alignItems: 'center', gap: 2, paddingLeft: 4, overflow: 'hidden' }}>
+                <Clock size={9} color="#94a3b8" style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 9, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {timeAgo.value} {timeAgo.label}
                 </span>
               </div>
             </div>
             <div style={{ height: 1, background: '#f1f5f9' }} />
             {/* Row 2: views */}
-            <div style={{ height: 24, display: 'flex', alignItems: 'center', gap: 3, color: '#94a3b8' }}>
-              <Eye size={10} style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: 10 }}>{(listing.views ?? 0).toLocaleString('ru')} просмотров</span>
+            <div style={{ height: 20, display: 'flex', alignItems: 'center', gap: 2, color: '#94a3b8' }}>
+              <Eye size={9} style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 9 }}>{(listing.views ?? 0).toLocaleString('ru')} просмотров</span>
             </div>
           </div>
         </div>
