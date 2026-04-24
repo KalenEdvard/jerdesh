@@ -58,9 +58,9 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
   }, [])
 
   const statItems = [
-    { label: 'Объявлений', target: stats?.listings ?? 0, suffix: stats?.listings ? '+' : '' },
-    { label: 'Пользователей', target: stats?.users ?? 0, suffix: stats?.users ? '+' : '' },
-    { label: 'Стран', target: COUNTRIES.length, suffix: '' },
+    { label: 'Билдирүү', target: stats?.listings ?? 0, suffix: stats?.listings ? '+' : '' },
+    { label: 'Колдонуучу', target: stats?.users ?? 0, suffix: stats?.users ? '+' : '' },
+    { label: 'Өлкө', target: COUNTRIES.length, suffix: '' },
   ]
 
   return (
@@ -75,7 +75,7 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
             MEKENDESH —<br />Оной издеп, оной тап!
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 16, maxWidth: 520, margin: '0 auto' }}>
-            Жильё, работа, услуги и товары от соотечественников. Найди всё что нужно рядом с тобой.
+            Батир, жумуш, кызматтар жана товарлар. Жаныңдан керегиңди оңой тап!
           </p>
         </div>
 

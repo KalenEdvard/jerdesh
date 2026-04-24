@@ -115,8 +115,8 @@ export default function HomeClient({ stats, metroStats }: { stats?: Stats; metro
               style={{ textAlign: 'center', padding: '60px 20px', background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
             >
               <div style={{ fontSize: 56, marginBottom: 16 }}>🔍</div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Ничего не найдено</h3>
-              <p style={{ color: '#64748b' }}>Попробуйте изменить фильтры или поисковый запрос</p>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Эч нерсе табылган жок</h3>
+              <p style={{ color: '#64748b' }}>Фильтрлерди же издөө сурамын өзгөртүп көрүңүз</p>
             </motion.div>
           ) : (
             <div style={{ position: 'relative' }}>
