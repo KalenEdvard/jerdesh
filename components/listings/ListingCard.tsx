@@ -105,15 +105,8 @@ export default function ListingCard({ listing }: { listing: Listing }) {
 
         {/* Right: content */}
         <div style={{ flex: 1, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, overflow: 'hidden' }}>
-          {/* Category + metro */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ background: catGradient, color: '#fff', fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 20, whiteSpace: 'nowrap' }}>{catLabel}</span>
-            {listing.metro && (
-              <span style={{ fontSize: 9, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                <MapPin size={8} /> м. {listing.metro}
-              </span>
-            )}
-          </div>
+          {/* Category */}
+          <span style={{ background: catGradient, color: '#fff', fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 20, whiteSpace: 'nowrap', alignSelf: 'flex-start' }}>{catLabel}</span>
 
           {/* Title */}
           <h3 style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>
@@ -128,6 +121,14 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             </div>
           ) : (
             <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Договорная</div>
+          )}
+
+          {/* Metro */}
+          {listing.metro && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#64748b', fontSize: 10 }}>
+              <MapPin size={9} color="#64748b" />
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>м. {listing.metro}</span>
+            </div>
           )}
 
           {/* Footer */}
