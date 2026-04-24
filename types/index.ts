@@ -135,11 +135,11 @@ export const CITIES = [
 ]
 
 export const CATEGORIES: { id: Category; label: string; icon: string; color: string }[] = [
-  { id: 'housing',     label: 'Сдаю жильё',    icon: '🏠', color: 'blue'   },
-  { id: 'findhousing', label: 'Сниму жильё',   icon: '🔍', color: 'indigo' },
-  { id: 'jobs',        label: 'Работа',         icon: '💼', color: 'green'  },
-  { id: 'sell',        label: 'Продаю/Куплю',  icon: '🛍️', color: 'amber'  },
-  { id: 'services',    label: 'Услуги',         icon: '🔧', color: 'purple' },
+  { id: 'housing',     label: 'Батир берем',   icon: '🏠', color: 'blue'   },
+  { id: 'findhousing', label: 'Батир издейм',  icon: '🔍', color: 'indigo' },
+  { id: 'jobs',        label: 'Жумуш',         icon: '💼', color: 'green'  },
+  { id: 'sell',        label: 'Сатам/Алам',    icon: '🛍️', color: 'amber'  },
+  { id: 'services',    label: 'Кызматтар',     icon: '🔧', color: 'purple' },
 ]
 
 export const METRO_STATIONS = [
