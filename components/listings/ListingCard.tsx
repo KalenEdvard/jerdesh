@@ -132,28 +132,31 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>Договорная</div>
           )}
 
-          {/* Footer */}
-          <div style={{ marginTop: 'auto', paddingTop: 6, borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {/* Row 1: profile + time */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
-                <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>
+          {/* Footer — fixed height so cards stay aligned */}
+          <div style={{ marginTop: 'auto', borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column' }}>
+            {/* Row 1: profile | time — each 50% */}
+            <div style={{ display: 'flex', alignItems: 'stretch', height: 28 }}>
+              <div style={{ width: '50%', display: 'flex', alignItems: 'center', gap: 3, paddingRight: 6, overflow: 'hidden' }}>
+                <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>
                   {listing.user?.name?.[0]?.toUpperCase() || 'У'}
                 </div>
-                <span style={{ fontSize: 11, color: '#94a3b8', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 10, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {listing.user?.name || 'Аноним'}
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#94a3b8' }}>
-                <Clock size={11} />
-                <span style={{ fontSize: 11 }}>{timeAgo.value} {timeAgo.label}</span>
+              <div style={{ width: 1, background: '#f1f5f9', flexShrink: 0 }} />
+              <div style={{ width: '50%', display: 'flex', alignItems: 'center', gap: 3, paddingLeft: 6, overflow: 'hidden' }}>
+                <Clock size={10} color="#94a3b8" style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 10, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {timeAgo.value} {timeAgo.label}
+                </span>
               </div>
             </div>
             <div style={{ height: 1, background: '#f1f5f9' }} />
             {/* Row 2: views */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#94a3b8' }}>
-              <Eye size={11} />
-              <span style={{ fontSize: 11 }}>{listing.views ?? 0} просмотров</span>
+            <div style={{ height: 24, display: 'flex', alignItems: 'center', gap: 3, color: '#94a3b8' }}>
+              <Eye size={10} style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 10 }}>{(listing.views ?? 0).toLocaleString('ru')} просмотров</span>
             </div>
           </div>
         </div>
