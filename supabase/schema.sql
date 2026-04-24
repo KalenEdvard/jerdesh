@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS public.listings (
   phone        TEXT,
   photos       TEXT[] DEFAULT '{}',
   views        INT DEFAULT 0,
-  is_active    BOOLEAN DEFAULT TRUE,
+  status       TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','draft','archived')),
   is_urgent    BOOLEAN DEFAULT FALSE,
   is_premium   BOOLEAN DEFAULT FALSE,
   created_at   TIMESTAMPTZ DEFAULT NOW(),
@@ -72,12 +72,11 @@ CREATE TABLE IF NOT EXISTS public.reviews (
 -- ============================================================
 -- ИНДЕКСЫ — для быстрого поиска
 -- ============================================================
-CREATE INDEX IF NOT EXISTS idx_listings_category   ON public.listings(category);
-CREATE INDEX IF NOT EXISTS idx_listings_metro       ON public.listings(metro);
-CREATE INDEX IF NOT EXISTS idx_listings_user_id     ON public.listings(user_id);
-CREATE INDEX IF NOT EXISTS idx_listings_is_active   ON public.listings(is_active);
-CREATE INDEX IF NOT EXISTS idx_listings_created_at  ON public.listings(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_listings_premium     ON public.listings(is_premium);
+CREATE INDEX IF NOT EXISTS idx_listings_category        ON public.listings(category);
+CREATE INDEX IF NOT EXISTS idx_listings_metro           ON public.listings(metro);
+CREATE INDEX IF NOT EXISTS idx_listings_user_id         ON public.listings(user_id);
+CREATE INDEX IF NOT EXISTS idx_listings_status_created  ON public.listings(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_listings_premium         ON public.listings(is_premium);
 CREATE INDEX IF NOT EXISTS idx_messages_listing_id  ON public.messages(listing_id);
 CREATE INDEX IF NOT EXISTS idx_messages_sender      ON public.messages(sender_id);
 CREATE INDEX IF NOT EXISTS idx_favorites_user_id    ON public.favorites(user_id);

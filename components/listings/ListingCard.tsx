@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useStore } from '@/store'
 import { createClient } from '@/lib/supabase-client'
 import type { Listing } from '@/types'
@@ -89,7 +90,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         <div style={{ width: 100, minWidth: 100, position: 'relative', overflow: 'hidden', background: '#f1f5f9', flexShrink: 0 }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: catGradient, zIndex: 2 }} />
           {photo ? (
-            <img src={photo} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <Image src={photo} alt={listing.title} fill sizes="100px" style={{ objectFit: 'cover' }} />
           ) : (
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: catGradient + '22' }}>
               <span style={{ fontSize: 28 }}>{catIcon}</span>

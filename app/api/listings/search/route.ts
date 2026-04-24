@@ -18,10 +18,12 @@ export async function GET(request: NextRequest) {
     .from('listings')
     .select('id,title,description,category,price,metro,city,photos,views,is_urgent,is_premium,status,created_at,user:users(id,name,avatar_url,rating)')
     .eq('status', 'active')
-    .eq('is_active', true)
 
   if (category && category !== 'all') q = q.eq('category', category)
-  if (query) q = q.or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+  if (query) {
+    const safe = query.replace(/[%_(),"']/g, ' ').trim()
+    if (safe) q = q.or(`title.ilike.%${safe}%,description.ilike.%${safe}%`)
+  }
   if (metro) q = q.eq('metro', metro)
   if (city) q = q.eq('city', city)
 
