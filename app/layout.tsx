@@ -58,13 +58,6 @@ export const metadata: Metadata = {
     images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Мекендеш — объявления кыргызов в России' }],
   },
   twitter: { card: 'summary_large_image', title: 'Мекендеш', description: 'Объявления для кыргызской диаспоры в России', images: ['/og-image.png'] },
-  icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico' },
-    ],
-    apple: '/favicon.svg',
-  },
   verification: { google: 'GOOGLE_VERIFICATION_CODE', yandex: 'YANDEX_VERIFICATION_CODE' },
 }
 
