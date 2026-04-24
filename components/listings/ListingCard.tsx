@@ -106,56 +106,59 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         {/* Right: content */}
         <div style={{ flex: 1, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, overflow: 'hidden' }}>
           {/* Category */}
-          <span style={{ background: catGradient, color: '#fff', fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 20, whiteSpace: 'nowrap', alignSelf: 'flex-start' }}>{catLabel}</span>
+          <span style={{ background: catGradient, color: '#fff', fontSize: 8, fontWeight: 700, padding: '1px 6px', borderRadius: 20, whiteSpace: 'nowrap', alignSelf: 'flex-start' }}>{catLabel}</span>
 
           {/* Title */}
-          <h3 style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>
+          <h3 style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>
             {listing.title}
           </h3>
 
           {/* Price */}
           {listing.price ? (
-            <div style={{ fontSize: 14, fontWeight: 800, color: catColor, letterSpacing: '-0.3px' }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: catColor, letterSpacing: '-0.3px' }}>
               {listing.price.toLocaleString('ru')} ₽
-              <span style={{ fontSize: 10, fontWeight: 400, color: '#94a3b8', marginLeft: 2 }}>/мес</span>
+              <span style={{ fontSize: 9, fontWeight: 400, color: '#94a3b8', marginLeft: 2 }}>/мес</span>
             </div>
           ) : (
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Договорная</div>
-          )}
-
-          {/* Metro */}
-          {listing.metro && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#64748b', fontSize: 10 }}>
-              <MapPin size={9} color="#64748b" />
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>м. {listing.metro}</span>
-            </div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8' }}>Договорная</div>
           )}
 
           {/* Footer */}
           <div style={{ marginTop: 'auto', borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column' }}>
             {/* Row 1: profile | time */}
-            <div style={{ display: 'flex', alignItems: 'stretch', height: 22 }}>
+            <div style={{ display: 'flex', alignItems: 'stretch', height: 20 }}>
               <div style={{ width: '50%', display: 'flex', alignItems: 'center', gap: 3, paddingRight: 4, overflow: 'hidden' }}>
-                <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7, fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>
+                <div style={{ width: 13, height: 13, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6, fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>
                   {listing.user?.name?.[0]?.toUpperCase() || 'У'}
                 </div>
-                <span style={{ fontSize: 9, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 8, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {listing.user?.name || 'Аноним'}
                 </span>
               </div>
               <div style={{ width: 1, background: '#f1f5f9', flexShrink: 0 }} />
               <div style={{ width: '50%', display: 'flex', alignItems: 'center', gap: 2, paddingLeft: 4, overflow: 'hidden' }}>
-                <Clock size={9} color="#94a3b8" style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: 9, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <Clock size={8} color="#94a3b8" style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 8, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {timeAgo.value} {timeAgo.label}
                 </span>
               </div>
             </div>
             <div style={{ height: 1, background: '#f1f5f9' }} />
-            {/* Row 2: views */}
-            <div style={{ height: 20, display: 'flex', alignItems: 'center', gap: 2, color: '#94a3b8' }}>
-              <Eye size={9} style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: 9 }}>{(listing.views ?? 0).toLocaleString('ru')} просмотров</span>
+            {/* Row 2: views | metro */}
+            <div style={{ height: 18, display: 'flex', alignItems: 'center', gap: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 2, color: '#94a3b8', flex: 1, overflow: 'hidden' }}>
+                <Eye size={8} style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 8, whiteSpace: 'nowrap' }}>{(listing.views ?? 0).toLocaleString('ru')} просм.</span>
+              </div>
+              {listing.metro && (
+                <>
+                  <div style={{ width: 1, height: 10, background: '#e2e8f0', flexShrink: 0, margin: '0 4px' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 2, color: '#64748b', overflow: 'hidden', maxWidth: '55%' }}>
+                    <MapPin size={8} color="#64748b" style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>м. {listing.metro}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
