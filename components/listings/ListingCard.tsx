@@ -149,6 +149,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                 <span style={{ fontSize: 11 }}>{timeAgo.value} {timeAgo.label}</span>
               </div>
             </div>
+            <div style={{ height: 1, background: '#f1f5f9' }} />
             {/* Row 2: views */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#94a3b8' }}>
               <Eye size={11} />
