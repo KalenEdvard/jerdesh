@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useStore } from '@/store'
 import type { Listing, Review } from '@/types'
+import { motion } from 'framer-motion'
 import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import ChatModal from '@/components/chat/ChatModal'
@@ -16,10 +17,16 @@ const CAT_LABELS: Record<string, string> = {
   jobs: 'Работа', sell: 'Продаю', services: 'Услуга',
 }
 
-export default function ListingDetailClient({ listing, reviews }: { listing: Listing; reviews: Review[] }) {
+export default function ListingDetailClient({ listing, reviews: initialReviews }: { listing: Listing; reviews: Review[] }) {
   const { user, favIds, toggleFav, showToast, setAuthOpen, openChat } = useStore()
   const [photoIdx, setPhotoIdx] = useState(0)
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
+  const [reviews, setReviews] = useState<Review[]>(initialReviews)
+  const [reviewRating, setReviewRating] = useState(0)
+  const [reviewHover, setReviewHover] = useState(0)
+  const [reviewComment, setReviewComment] = useState('')
+  const [reviewLoading, setReviewLoading] = useState(false)
+  const [reviewDone, setReviewDone] = useState(false)
   const isFav = favIds.includes(listing.id)
 
   const hasMetroCard = !!(listing.metro && getMetroCardData(listing.metro, listing.city))
@@ -191,25 +198,95 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
           </div>
 
           {/* Reviews */}
-          {reviews.length > 0 && (
-            <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Отзывы о продавце</h3>
-              {reviews.map(r => (
-                <div key={r.id} style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: 14, marginBottom: 14 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, color: '#1d4ed8' }}>
-                      {(r.reviewer as any)?.name?.[0]?.toUpperCase() || 'У'}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600 }}>{(r.reviewer as any)?.name || 'Пользователь'}</div>
-                      <div style={{ fontSize: 12, color: '#f59e0b' }}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</div>
-                    </div>
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Баа берүү ({reviews.length})</h3>
+
+            {reviews.map(r => (
+              <div key={r.id} style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: 14, marginBottom: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, color: '#1d4ed8' }}>
+                    {(r.reviewer as any)?.name?.[0]?.toUpperCase() || 'У'}
                   </div>
-                  <p style={{ fontSize: 13, color: '#334155' }}>{r.comment}</p>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{(r.reviewer as any)?.name || 'Пользователь'}</div>
+                    <div style={{ fontSize: 14, color: '#f59e0b', letterSpacing: 2 }}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</div>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
+                {r.comment && <p style={{ fontSize: 13, color: '#334155', margin: 0 }}>{r.comment}</p>}
+              </div>
+            ))}
+
+            {/* Review form */}
+            {listing.user_id !== user?.id && (
+              reviewDone ? (
+                <div style={{ textAlign: 'center', padding: '16px 0', color: '#059669', fontWeight: 600, fontSize: 14 }}>
+                  ✓ Баа берилди, рахмат!
+                </div>
+              ) : (
+                <div style={{ borderTop: reviews.length > 0 ? '1px solid #f1f5f9' : 'none', paddingTop: reviews.length > 0 ? 16 : 0 }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 10 }}>Баа бер:</p>
+                  {/* Stars */}
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                    {[1,2,3,4,5].map(star => (
+                      <motion.button
+                        key={star}
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => {
+                          if (!user) { setAuthOpen(true); return }
+                          setReviewRating(star)
+                        }}
+                        onMouseEnter={() => setReviewHover(star)}
+                        onMouseLeave={() => setReviewHover(0)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 28, color: star <= (reviewHover || reviewRating) ? '#f59e0b' : '#e2e8f0', padding: 0, lineHeight: 1 }}
+                      >
+                        ★
+                      </motion.button>
+                    ))}
+                    {reviewRating > 0 && (
+                      <span style={{ fontSize: 12, color: '#64748b', alignSelf: 'center', marginLeft: 4 }}>
+                        {['','Начар','Жаман эмес','Жакшы','Абдан жакшы','Мыкты!'][reviewRating]}
+                      </span>
+                    )}
+                  </div>
+                  {/* Comment */}
+                  {reviewRating > 0 && (
+                    <>
+                      <textarea
+                        value={reviewComment}
+                        onChange={e => setReviewComment(e.target.value)}
+                        placeholder="Комментарий (милдетсиз)..."
+                        rows={3}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 10 }}
+                      />
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        disabled={reviewLoading}
+                        onClick={async () => {
+                          if (!user) { setAuthOpen(true); return }
+                          setReviewLoading(true)
+                          const res = await fetch('/api/reviews', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ reviewed_id: listing.user_id, listing_id: listing.id, rating: reviewRating, comment: reviewComment }),
+                          })
+                          const json = await res.json()
+                          setReviewLoading(false)
+                          if (!res.ok) { showToast(json.error || 'Ката', 'error'); return }
+                          setReviews(prev => [json, ...prev])
+                          setReviewDone(true)
+                        }}
+                        style={{ width: '100%', padding: '11px', borderRadius: 12, background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', cursor: reviewLoading ? 'default' : 'pointer' }}
+                      >
+                        {reviewLoading ? 'Жөнөтүлүүдө...' : 'Баа жөнөт'}
+                      </motion.button>
+                    </>
+                  )}
+                </div>
+              )
+            )}
+          </div>
         </div>
 
         {/* Right: seller card + actions */}
