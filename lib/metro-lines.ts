@@ -53,8 +53,8 @@ export const MOSCOW_LINES: MetroLineData[] = [
 
 export type MetroCardData = {
   station: string
-  prev: string | null
-  next: string | null
+  before: (string | null)[]  // 2 stations above [farther, closer]
+  after: (string | null)[]   // 2 stations below [closer, farther]
   color: string
   lineName: string
 }
@@ -63,10 +63,17 @@ export function getMetroCardData(stationName: string): MetroCardData | null {
   for (const line of MOSCOW_LINES) {
     const idx = line.stations.indexOf(stationName)
     if (idx === -1) continue
+    const s = line.stations
     return {
       station: stationName,
-      prev: idx > 0 ? line.stations[idx - 1] : null,
-      next: idx < line.stations.length - 1 ? line.stations[idx + 1] : null,
+      before: [
+        idx >= 2 ? s[idx - 2] : null,
+        idx >= 1 ? s[idx - 1] : null,
+      ],
+      after: [
+        idx < s.length - 1 ? s[idx + 1] : null,
+        idx < s.length - 2 ? s[idx + 2] : null,
+      ],
       color: line.color,
       lineName: line.name,
     }

@@ -93,7 +93,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: catGradient, zIndex: 2 }} />
           {listing.metro && getMetroCardData(listing.metro) ? (
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MetroCard station={listing.metro} width={100} height={127} />
+              <MetroCard station={listing.metro} width={100} height={130} />
             </div>
           ) : photo ? (
             <Image src={photo} alt={listing.title} fill sizes="100px" style={{ objectFit: 'cover' }} />

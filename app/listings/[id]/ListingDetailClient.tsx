@@ -75,7 +75,7 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
                   onTouchEnd={handleTouchEnd}
                 >
                   {hasMetroCard && photoIdx === 0 ? (
-                    <MetroCard station={listing.metro!} width={260} height={380} />
+                    <MetroCard station={listing.metro!} width={280} height={300} />
                   ) : (
                     <img src={userPhotos[hasMetroCard ? photoIdx - 1 : photoIdx]} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                   )}
