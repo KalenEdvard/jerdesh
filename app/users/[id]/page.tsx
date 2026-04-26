@@ -40,7 +40,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
     <UserProfileClient
       profileUser={profileUser as any}
       listings={listings || []}
-      reviews={reviews || []}
+      reviews={(reviews || []) as any}
     />
   )
 }
