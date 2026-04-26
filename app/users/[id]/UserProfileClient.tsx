@@ -178,8 +178,8 @@ export default function UserProfileClient({
                         style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 32, color: s <= (hover || rating || (myExisting?.rating ?? 0)) ? '#f59e0b' : '#e2e8f0', padding: 0, lineHeight: 1 }}
                       >★</motion.button>
                     ))}
-                    {(rating || myExisting?.rating) > 0 && (
-                      <span style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>{RATING_LABELS[rating || myExisting!.rating]}</span>
+                    {(rating || (myExisting?.rating ?? 0)) > 0 && (
+                      <span style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>{RATING_LABELS[rating || (myExisting?.rating ?? 0)]}</span>
                     )}
                   </div>
                   {(rating > 0 || myExisting) && (
