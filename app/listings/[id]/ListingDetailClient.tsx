@@ -8,6 +8,8 @@ import ChatModal from '@/components/chat/ChatModal'
 import { toggleFavorite } from '@/lib/toggleFavorite'
 import { createClient } from '@/lib/supabase-client'
 import { FaWhatsapp, FaTelegram, FaVk, FaPhone } from 'react-icons/fa'
+import MetroCard from '@/components/ui/MetroCard'
+import { getMetroCardData } from '@/lib/metro-lines'
 
 const CAT_LABELS: Record<string, string> = {
   housing: 'Сдаю жильё', findhousing: 'Сниму жильё',
@@ -20,7 +22,9 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const isFav = favIds.includes(listing.id)
 
-  const photoCount = listing.photos?.length ?? 0
+  const hasMetroCard = !!(listing.metro && getMetroCardData(listing.metro))
+  const userPhotos = listing.photos ?? []
+  const photoCount = userPhotos.length + (hasMetroCard ? 1 : 0)
   const prevPhoto = () => setPhotoIdx(i => (i - 1 + photoCount) % photoCount)
   const nextPhoto = () => setPhotoIdx(i => (i + 1) % photoCount)
 
@@ -63,14 +67,18 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
         <div>
           {/* Photos */}
           <div style={{ background: '#f1f5f9', borderRadius: 20, overflow: 'hidden', marginBottom: 20 }}>
-            {listing.photos?.length ? (
+            {photoCount > 0 ? (
               <>
                 <div
-                  style={{ height: 420, position: 'relative', userSelect: 'none' }}
+                  style={{ height: 420, position: 'relative', userSelect: 'none', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   onTouchStart={handleTouchStart}
                   onTouchEnd={handleTouchEnd}
                 >
-                  <img src={listing.photos[photoIdx]} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  {hasMetroCard && photoIdx === 0 ? (
+                    <MetroCard station={listing.metro!} width={260} height={380} />
+                  ) : (
+                    <img src={userPhotos[hasMetroCard ? photoIdx - 1 : photoIdx]} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  )}
 
                   {/* Badges */}
                   <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6 }}>

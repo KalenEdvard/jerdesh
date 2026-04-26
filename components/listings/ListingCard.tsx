@@ -7,6 +7,8 @@ import type { Listing } from '@/types'
 import { motion } from 'framer-motion'
 import { MapPin, Eye, Heart, Clock } from 'lucide-react'
 import { toggleFavorite } from '@/lib/toggleFavorite'
+import MetroCard from '@/components/ui/MetroCard'
+import { getMetroCardData } from '@/lib/metro-lines'
 
 function plural(n: number, one: string, few: string, many: string) {
   const mod10 = n % 10, mod100 = n % 100
@@ -86,10 +88,14 @@ export default function ListingCard({ listing }: { listing: Listing }) {
     >
       <Link href={`/listings/${listing.id}`} style={{ display: 'flex', textDecoration: 'none', position: 'relative', height: 130 }}>
 
-        {/* Left: photo */}
-        <div style={{ width: 100, minWidth: 100, position: 'relative', overflow: 'hidden', background: '#f1f5f9', flexShrink: 0 }}>
+        {/* Left: metro card or photo */}
+        <div style={{ width: 100, minWidth: 100, position: 'relative', overflow: 'hidden', background: '#f8fafc', flexShrink: 0 }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: catGradient, zIndex: 2 }} />
-          {photo ? (
+          {listing.metro && getMetroCardData(listing.metro) ? (
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <MetroCard station={listing.metro} width={100} height={127} />
+            </div>
+          ) : photo ? (
             <Image src={photo} alt={listing.title} fill sizes="100px" style={{ objectFit: 'cover' }} />
           ) : (
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: catGradient + '22' }}>
