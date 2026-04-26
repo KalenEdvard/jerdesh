@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useStore } from '@/store'
 import type { Listing, Review } from '@/types'
 import { motion } from 'framer-motion'
@@ -292,19 +293,19 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
         {/* Right: seller card + actions */}
         <div className="listing-detail-sidebar">
           <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 16 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#64748b', marginBottom: 16 }}>ПРОДАВЕЦ</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#64748b', marginBottom: 16 }}>АВТОР</h3>
+            <Link href={`/users/${listing.user_id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
               <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20, fontWeight: 700 }}>
                 {listing.user?.name?.[0]?.toUpperCase() || 'У'}
               </div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>{listing.user?.name || 'Пользователь'}</div>
-                {listing.user?.rating && (
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{listing.user?.name || 'Пользователь'}</div>
+                {listing.user?.rating ? (
                   <div style={{ fontSize: 13, color: '#f59e0b' }}>★ {listing.user.rating}</div>
-                )}
-                <div style={{ fontSize: 11, color: '#94a3b8' }}>На сайте с {new Date(listing.user?.created_at || '').toLocaleDateString('ru', { month: 'long', year: 'numeric' })}</div>
+                ) : null}
+                <div style={{ fontSize: 11, color: '#1d4ed8', fontWeight: 600 }}>Профилди көрүү →</div>
               </div>
-            </div>
+            </Link>
 
             {/* Phone */}
             {listing.phone && (
