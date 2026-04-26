@@ -86,6 +86,7 @@ export const COUNTRIES = [
   { id: 'Англия',      flag: '🇬🇧' },
   { id: 'Америка',     flag: '🇺🇸' },
   { id: 'Корея',       flag: '🇰🇷' },
+  { id: 'Турция',      flag: '🇹🇷' },
   { id: 'Кыргызстан',  flag: '🇰🇬' },
 ]
 
@@ -125,6 +126,13 @@ export const CITIES = [
   { id: 'Тэгу',             flag: '🏙️', country: 'Корея',       metro: true  },
   { id: 'Тэджон',           flag: '🏙️', country: 'Корея',       metro: true  },
   { id: 'Кванджу',          flag: '🏙️', country: 'Корея',       metro: true  },
+  // Турция
+  { id: 'Стамбул',     flag: '🕌', country: 'Турция',      metro: true  },
+  { id: 'Анкара',      flag: '🏛️', country: 'Турция',      metro: true  },
+  { id: 'Бурса',       flag: '🏙️', country: 'Турция',      metro: true  },
+  { id: 'Измир',       flag: '🌊', country: 'Турция',      metro: true  },
+  { id: 'Анталья',     flag: '⛱️', country: 'Турция',      metro: false },
+  { id: 'Конья',       flag: '🏙️', country: 'Турция',      metro: false },
   // Кыргызстан — метро нет
   { id: 'Бишкек',           flag: '🏔️', country: 'Кыргызстан',  metro: false },
   { id: 'Ош',               flag: '🏙️', country: 'Кыргызстан',  metro: false },
@@ -822,5 +830,34 @@ export const METRO_BY_CITY: Record<string, string[]> = {
     'Culture Complex','Gwangju Station','Nongseong','Sonjeong',
     'Dorim','Geumnamno 4-ga','Gyerim','Hanam','Sangmu',
     'Sinchang','Unnam',
+  ].sort(),
+  'Стамбул': [
+    'Yenikapı','Vezneciler','Haliç','Şişhane','Taksim','Osmanbey',
+    'Şişli-Mecidiyeköy','Gayrettepe','Levent','4. Levent','Sanayi Mahallesi','Hacıosman',
+    'Kadıköy','Ayrılık Çeşmesi','Acıbadem','Ünalan','Göztepe','Yenisahra',
+    'Kozyatağı','Bostancı','Küçükyalı','Maltepe','Huzurevi','Gülsuyu',
+    'Esenkent','İçerenköy','Kayışdağı','Yukarı Dudullu','Sabiha Gökçen Havalimanı',
+    'Üsküdar','Fıstıkağacı','Bağlarbaşı','Altunizade','Kısıklı','Bulgurlu',
+    'Ümraniye','Çarşı','Yamanevler','Çakmak','Ihlamurkuyu','Altınşehir',
+    'Dudullu','Necip Fazıl','Çekmeköy',
+    'Aksaray','Emniyet-Fatih','Topkapı-Ulubatlı','Bayrampaşa-Maltepe','Kirazlı',
+    'Mecidiyeköy','Çağlayan','Kağıthane','Nurtepe','Alibeyköy',
+  ].sort(),
+  'Анкара': [
+    'AŞTİ','Emek','Bahçelievler','Beşevler','Anadolu','Maltepe','Akköprü',
+    'İncesu','Demetevler','Hastane','Macunköy','Portakal Çiçeği','Yenimahalle','Batıkent',
+    'Kızılay','Kolej','Kurtuluş','Dikimevi',
+    'Atatürk','Dışkapı','Meteoroloji','Belediye','Ulus','Sıhhiye',
+    'Necatibey','Demirtepe','Keçiören','OSB-Törekent',
+  ].sort(),
+  'Бурса': [
+    'Emek','Beşevler-Üniversite','Atatürk Stadyumu','Şehreküstü',
+    'Santral Garaj','Heykel','Terminal','Acemler','Balat','Kestel',
+  ].sort(),
+  'Измир': [
+    'Evka 3','Evka 2','Evka 1','Atatürk','Meles','Kazımdirik',
+    'Bornova','Halkapınar','Basmane','Çankaya','Konak',
+    'Alsancak','Garnizon','Üçyol','Üçkuyular','Fahrettin Altay',
+    'Alaybey','Narlıdere','Mithatpaşa','Hatay','Hilal','Buca',
   ].sort(),
 }

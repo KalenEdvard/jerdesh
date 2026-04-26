@@ -22,7 +22,7 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const isFav = favIds.includes(listing.id)
 
-  const hasMetroCard = !!(listing.metro && getMetroCardData(listing.metro))
+  const hasMetroCard = !!(listing.metro && getMetroCardData(listing.metro, listing.city))
   const userPhotos = listing.photos ?? []
   const photoCount = userPhotos.length + (hasMetroCard ? 1 : 0)
   const prevPhoto = () => setPhotoIdx(i => (i - 1 + photoCount) % photoCount)
@@ -75,7 +75,7 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
                   onTouchEnd={handleTouchEnd}
                 >
                   {hasMetroCard && photoIdx === 0 ? (
-                    <MetroCard station={listing.metro!} width={280} height={300} />
+                    <MetroCard station={listing.metro!} city={listing.city} width={280} height={300} />
                   ) : (
                     <img src={userPhotos[hasMetroCard ? photoIdx - 1 : photoIdx]} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                   )}
