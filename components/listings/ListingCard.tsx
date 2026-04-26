@@ -5,7 +5,7 @@ import { useStore } from '@/store'
 import { createClient } from '@/lib/supabase-client'
 import type { Listing } from '@/types'
 import { motion } from 'framer-motion'
-import { MapPin, Eye, Star, Heart, Clock } from 'lucide-react'
+import { MapPin, Eye, Heart, Clock } from 'lucide-react'
 import { toggleFavorite } from '@/lib/toggleFavorite'
 
 function plural(n: number, one: string, few: string, many: string) {

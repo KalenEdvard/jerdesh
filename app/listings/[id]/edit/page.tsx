@@ -10,17 +10,6 @@ export default function EditListingPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Try sessionStorage first (instant, no server round trip)
-    const cached = sessionStorage.getItem(`listing_edit_${id}`)
-    if (cached) {
-      try {
-        setListing(JSON.parse(cached))
-        setLoading(false)
-        return
-      } catch {}
-    }
-
-    // Fallback: fetch from server
     fetch(`/api/listings/${id}/own`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
@@ -28,7 +17,7 @@ export default function EditListingPage() {
         setListing(data)
         setLoading(false)
       })
-  }, [id])
+  }, [id, router])
 
   if (loading) {
     return (

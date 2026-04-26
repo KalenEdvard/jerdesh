@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
     created_at: new Date().toISOString(),
   }
 
-  // Устанавливаем куки на Response — единственный надёжный способ в Route Handler
   const response = NextResponse.json({ profile: userProfile })
   cookiesToSet.forEach(({ name, value, options }) => {
     response.cookies.set(name, value, {
@@ -58,7 +57,7 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 365,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
-      httpOnly: false, // браузерный клиент читает куки через document.cookie
+      httpOnly: true,
     })
   })
 

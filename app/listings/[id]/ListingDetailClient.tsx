@@ -34,8 +34,9 @@ export default function ListingDetailClient({ listing, reviews }: { listing: Lis
 
   useEffect(() => {
     const key = `viewed_${listing.id}`
-    if (sessionStorage.getItem(key)) return
-    sessionStorage.setItem(key, '1')
+    const last = localStorage.getItem(key)
+    if (last && Date.now() - Number(last) < 86400_000) return
+    localStorage.setItem(key, String(Date.now()))
     fetch(`/api/listings/${listing.id}/view`, { method: 'POST' }).catch(() => {})
   }, [listing.id])
 

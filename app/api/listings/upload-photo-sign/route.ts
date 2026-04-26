@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Неподдерживаемый формат' }, { status: 400 })
     }
 
-    const ext = (fileName as string).split('.').pop() || 'jpg'
+    const ext = fileType === 'image/png' ? 'png' : fileType === 'image/webp' ? 'webp' : 'jpg'
     const path = `${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
 
     const supabaseAdmin = createClient(

@@ -20,9 +20,9 @@ export async function GET(request: NextRequest) {
     .eq('status', 'active')
 
   if (category && category !== 'all') q = q.eq('category', category)
-  if (query) {
-    const safe = query.replace(/[%_(),"']/g, ' ').trim()
-    if (safe) q = q.or(`title.ilike.%${safe}%,description.ilike.%${safe}%`)
+  if (query?.trim()) {
+    const safe = query.trim().slice(0, 100)
+    q = q.or(`title.ilike.%${safe}%,description.ilike.%${safe}%`)
   }
   if (metro) q = q.eq('metro', metro)
   if (city) q = q.eq('city', city)
