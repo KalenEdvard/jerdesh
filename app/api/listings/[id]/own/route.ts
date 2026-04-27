@@ -1,40 +1,17 @@
-import { createServerClient } from '@supabase/ssr'
-import { createClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { queryOne } from '@/lib/db'
+import { verifyToken, COOKIE_NAME } from '@/lib/auth'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const cookieStore = await cookies()
+  const token = cookieStore.get(COOKIE_NAME)?.value
+  if (!token) return NextResponse.json(null, { status: 401 })
+  const payload = verifyToken(token)
+  if (!payload) return NextResponse.json(null, { status: 401 })
 
-  const supabaseAuth = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabaseAuth.auth.getUser()
-  if (!user) return NextResponse.json(null, { status: 401 })
-
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-
-  const { data } = await supabaseAdmin
-    .from('listings')
-    .select('id,title,description,category,price,metro,city,phone,photos,is_urgent,user_id')
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .single()
-
-  if (!data) return NextResponse.json(null, { status: 404 })
-  return NextResponse.json(data)
+  const listing = await queryOne('SELECT * FROM listings WHERE id=$1 AND user_id=$2', [id, payload.userId])
+  if (!listing) return NextResponse.json(null, { status: 404 })
+  return NextResponse.json(listing)
 }

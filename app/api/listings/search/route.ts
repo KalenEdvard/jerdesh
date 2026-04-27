@@ -1,46 +1,48 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { query } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const category = searchParams.get('category') || ''
-  const query = searchParams.get('query') || ''
+  const q = searchParams.get('query') || ''
   const metro = searchParams.get('metro') || ''
   const city = searchParams.get('city') || 'Москва'
   const sort = searchParams.get('sort') || 'new'
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const conditions = ["l.status = 'active'"]
+  const params: any[] = []
 
-  let q = supabase
-    .from('listings')
-    .select('id,title,description,category,price,metro,city,photos,views,is_urgent,is_premium,status,created_at,user:users(id,name,avatar_url,rating)')
-    .eq('status', 'active')
-
-  if (category && category !== 'all') q = q.eq('category', category)
-  if (query?.trim()) {
-    const safe = query.trim().slice(0, 100)
-    q = q.or(`title.ilike.%${safe}%,description.ilike.%${safe}%`)
-  }
-  if (metro) q = q.eq('metro', metro)
-  if (city) q = q.eq('city', city)
-
-  if (sort === 'pa') q = q.order('price', { ascending: true })
-  else if (sort === 'pd') q = q.order('price', { ascending: false })
-  else if (sort === 'pop') q = q.order('views', { ascending: false })
-  else if (sort === 'old') q = q.order('created_at', { ascending: true })
-  else q = q.order('is_premium', { ascending: false }).order('created_at', { ascending: false })
-
-  q = q.limit(48)
-
-  const { data, error } = await q
-
-  if (error) {
-    console.error('[listings/search] error:', error.message)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  if (city) { params.push(city); conditions.push(`l.city = $${params.length}`) }
+  if (category && category !== 'all') { params.push(category); conditions.push(`l.category = $${params.length}`) }
+  if (metro) { params.push(metro); conditions.push(`l.metro = $${params.length}`) }
+  if (q?.trim()) {
+    const safe = q.trim().slice(0, 100)
+    params.push(`%${safe}%`)
+    conditions.push(`(l.title ILIKE $${params.length} OR l.description ILIKE $${params.length})`)
   }
 
-  return NextResponse.json(data || [])
+  const where = conditions.join(' AND ')
+  const orderBy = sort === 'pa' ? 'l.price ASC NULLS LAST'
+    : sort === 'pd' ? 'l.price DESC NULLS LAST'
+    : sort === 'pop' ? 'l.views DESC'
+    : sort === 'old' ? 'l.created_at ASC'
+    : 'l.is_premium DESC, l.created_at DESC'
+
+  try {
+    const rows = await query(
+      `SELECT l.id, l.title, l.description, l.category, l.price, l.metro, l.city,
+              l.photos, l.views, l.is_urgent, l.is_premium, l.status, l.created_at,
+              json_build_object('id', u.id, 'name', u.name, 'avatar_url', u.avatar_url, 'rating', u.rating) as user
+       FROM listings l
+       LEFT JOIN users u ON u.id = l.user_id
+       WHERE ${where}
+       ORDER BY ${orderBy}
+       LIMIT 48`,
+      params
+    )
+    return NextResponse.json(rows)
+  } catch (e: any) {
+    console.error('[search]', e.message)
+    return NextResponse.json({ error: e.message }, { status: 500 })
+  }
 }

@@ -1,60 +1,35 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase-server'
+import { cookies } from 'next/headers'
+import { verifyToken, COOKIE_NAME } from '@/lib/auth'
+import { queryOne, query } from '@/lib/db'
 import type { Listing } from '@/types'
-import { DEFAULT_CITY } from '@/types'
 import ProfileClient from './ProfileClient'
 
-type FavoriteRow = { listing: Listing | null }
-
 export default async function ProfilePage() {
-  const supabase = await createClient()
+  const cookieStore = await cookies()
+  const token = cookieStore.get(COOKIE_NAME)?.value
+  if (!token) redirect('/?auth=1')
+  const payload = verifyToken(token)
+  if (!payload) redirect('/?auth=1')
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await queryOne<any>('SELECT * FROM users WHERE id=$1', [payload.userId])
   if (!user) redirect('/?auth=1')
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+  const listings = await query<any>(
+    "SELECT * FROM listings WHERE user_id=$1 AND status IN ('active','draft') ORDER BY status ASC, created_at DESC",
+    [payload.userId]
+  )
 
-  const resolvedProfile = profile ?? {
-    id: user.id,
-    name: user.user_metadata?.name || user.email?.split('@')[0] || 'Пользователь',
-    email: user.email ?? '',
-    city: DEFAULT_CITY,
-    rating: 5,
-    avatar_url: null,
-    phone: null,
-    whatsapp: null,
-    telegram: null,
-    vk: null,
-    created_at: user.created_at,
-    ads_count: 0,
-  }
-
-  const { data: listings } = await supabase
-    .from('listings')
-    .select('*')
-    .eq('user_id', user.id)
-    .in('status', ['active', 'draft'])
-    .order('status', { ascending: true })
-    .order('created_at', { ascending: false })
-
-  const { data: favRows } = await supabase
-    .from('favorites')
-    .select('listing:listings(*)')
-    .eq('user_id', user.id)
-
-  const favListings = (favRows as FavoriteRow[] | null)
-    ?.map((f) => f.listing)
-    .filter(Boolean) as Listing[] ?? []
+  const favRows = await query<any>(
+    'SELECT l.* FROM favorites f JOIN listings l ON l.id=f.listing_id WHERE f.user_id=$1',
+    [payload.userId]
+  )
 
   return (
     <ProfileClient
-      profile={resolvedProfile}
-      initialListings={(listings ?? []) as Listing[]}
-      initialFavs={favListings}
+      profile={{ ...user, email: user.email }}
+      initialListings={listings as Listing[]}
+      initialFavs={favRows as Listing[]}
     />
   )
 }

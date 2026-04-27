@@ -1,83 +1,58 @@
-import { createClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import { queryOne, query } from '@/lib/db'
 import ListingDetailClient from './ListingDetailClient'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const supabase = await createClient()
-  const { data } = await supabase.from('listings').select('title,description,photos').eq('id', id).single()
-  if (!data) return { title: 'Объявление не найдено' }
+  const listing = await queryOne<any>('SELECT title, description, photos FROM listings WHERE id=$1', [id])
+  if (!listing) return { title: 'Объявление не найдено' }
   return {
-    title: `${data.title} | Мекендеш`,
-    description: data.description?.slice(0, 160),
+    title: `${listing.title} | Мекендеш`,
+    description: listing.description?.slice(0, 160),
     alternates: { canonical: `https://mekendesh.online/listings/${id}` },
-    openGraph: {
-      title: data.title,
-      description: data.description?.slice(0, 160),
-      url: `https://mekendesh.online/listings/${id}`,
-      siteName: 'Мекендеш',
-      images: data.photos?.[0] ? [{ url: data.photos[0] }] : [],
-    },
+    openGraph: { title: listing.title, description: listing.description?.slice(0, 160), images: listing.photos?.[0] ? [{ url: listing.photos[0] }] : [] },
   }
 }
 
 const CAT_LABELS: Record<string, string> = {
-  housing: 'Сдаю жильё', findhousing: 'Сниму жильё',
-  jobs: 'Работа', sell: 'Продаю', services: 'Услуга',
+  housing: 'Батир берем', findhousing: 'Батир издейм', jobs: 'Жумуш', sell: 'Сатам/Алам', services: 'Кызматтар',
 }
 
 export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
 
-  const { data: listing } = await supabase
-    .from('listings')
-    .select('id,title,description,category,price,metro,city,phone,photos,views,is_urgent,is_premium,status,created_at,user_id,user:users(id,name,avatar_url,rating,city,ads_count,created_at,whatsapp,telegram,vk,max)')
-    .eq('id', id)
-    .eq('status', 'active')
-    .single()
-
+  const listing = await queryOne<any>(
+    `SELECT l.*, json_build_object('id',u.id,'name',u.name,'avatar_url',u.avatar_url,'rating',u.rating,'city',u.city,'ads_count',u.ads_count,'created_at',u.created_at,'whatsapp',u.whatsapp,'telegram',u.telegram,'vk',u.vk) as user
+     FROM listings l LEFT JOIN users u ON u.id=l.user_id
+     WHERE l.id=$1 AND l.status='active'`,
+    [id]
+  )
   if (!listing) notFound()
 
-  const { data: reviews } = await supabase
-    .from('reviews')
-    .select('*, reviewer:users(name,avatar_url)')
-    .eq('reviewed_id', listing.user_id)
-    .order('created_at', { ascending: false })
-    .limit(5)
+  const reviews = await query<any>(
+    `SELECT r.*, json_build_object('id',u.id,'name',u.name,'avatar_url',u.avatar_url) as reviewer
+     FROM reviews r LEFT JOIN users u ON u.id=r.reviewer_id
+     WHERE r.reviewed_id=$1 ORDER BY r.created_at DESC LIMIT 10`,
+    [listing.user_id]
+  )
 
-  const l = listing as any
-  const jsonLd: Record<string, unknown> = {
-    '@context': 'https://schema.org',
-    '@type': 'ItemPage',
-    name: l.title,
-    description: l.description?.slice(0, 300),
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'ItemPage',
+    name: listing.title, description: listing.description?.slice(0, 300),
     url: `https://mekendesh.online/listings/${id}`,
-    datePublished: l.created_at,
-    image: l.photos?.[0] || 'https://mekendesh.online/og-image.png',
-    inLanguage: 'ru-RU',
-    isPartOf: { '@type': 'WebSite', name: 'Мекендеш', url: 'https://mekendesh.online' },
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Мекендеш', item: 'https://mekendesh.online' },
-        { '@type': 'ListItem', position: 2, name: CAT_LABELS[l.category] || l.category, item: `https://mekendesh.online/?cat=${l.category}` },
-        { '@type': 'ListItem', position: 3, name: l.title },
-      ],
-    },
-  }
-  if (l.price) {
-    jsonLd.offers = { '@type': 'Offer', price: l.price, priceCurrency: 'RUB', availability: 'https://schema.org/InStock' }
-  }
-  if (l.user?.name) {
-    jsonLd.author = { '@type': 'Person', name: l.user.name }
+    breadcrumb: { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Мекендеш', item: 'https://mekendesh.online' },
+      { '@type': 'ListItem', position: 2, name: CAT_LABELS[listing.category] || listing.category },
+      { '@type': 'ListItem', position: 3, name: listing.title },
+    ]},
+    ...(listing.price ? { offers: { '@type': 'Offer', price: listing.price, priceCurrency: 'RUB' } } : {}),
   }
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <ListingDetailClient listing={listing as any} reviews={reviews || []} />
+      <ListingDetailClient listing={listing} reviews={reviews} />
     </>
   )
 }
