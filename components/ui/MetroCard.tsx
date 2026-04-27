@@ -23,24 +23,24 @@ export default function MetroCard({
   if (!data) return null
 
   const { before, after, color } = data
-  const lineX = Math.round(width * 0.3)
+  // compact: line on the left edge, text to the right with max space
+  const compactLineX = 14
 
   if (compact) {
-    // 3 slots: [prev, CURRENT, next] — current always at center
     const slots: (string | null)[] = [before[1], station, after[0]]
     const STEP = 38
     const TOP = Math.round((height - STEP * 2) / 2)
     const ys = [TOP, TOP + STEP, TOP + STEP * 2]
     const firstReal = slots.findIndex(s => s !== null)
     const lastReal = slots.length - 1 - [...slots].reverse().findIndex(s => s !== null)
+    const maxChars = Math.floor((width - compactLineX - 11) / 5.2)
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
         <rect width={width} height={height} fill="#f8fafc" />
-        <line x1={lineX} y1={ys[firstReal]} x2={lineX} y2={ys[lastReal]} stroke={color} strokeWidth={4} strokeLinecap="round" />
-        {/* terminal caps */}
-        {(slots[0] === null) && <line x1={lineX - 7} y1={ys[firstReal]} x2={lineX + 7} y2={ys[firstReal]} stroke={color} strokeWidth={4} strokeLinecap="round" />}
-        {(slots[2] === null) && <line x1={lineX - 7} y1={ys[lastReal]} x2={lineX + 7} y2={ys[lastReal]} stroke={color} strokeWidth={4} strokeLinecap="round" />}
+        <line x1={compactLineX} y1={ys[firstReal]} x2={compactLineX} y2={ys[lastReal]} stroke={color} strokeWidth={3} strokeLinecap="round" />
+        {slots[0] === null && <line x1={compactLineX - 6} y1={ys[firstReal]} x2={compactLineX + 6} y2={ys[firstReal]} stroke={color} strokeWidth={3} strokeLinecap="round" />}
+        {slots[2] === null && <line x1={compactLineX - 6} y1={ys[lastReal]} x2={compactLineX + 6} y2={ys[lastReal]} stroke={color} strokeWidth={3} strokeLinecap="round" />}
         {slots.map((name, i) => {
           if (!name) return null
           const y = ys[i]
@@ -49,15 +49,15 @@ export default function MetroCard({
             <g key={i}>
               {isCurrent ? (
                 <>
-                  <circle cx={lineX} cy={y} r={8} fill={color} />
-                  <circle cx={lineX} cy={y} r={4} fill="#fff" />
-                  <text x={lineX + 13} y={y - 2} fontSize={11} fontWeight="bold" fill="#0f172a" fontFamily="system-ui,sans-serif">{truncate(name, 16)}</text>
-                  <text x={lineX + 13} y={y + 11} fontSize={8} fill={color} fontFamily="system-ui,sans-serif" fontWeight="600">метро</text>
+                  <circle cx={compactLineX} cy={y} r={7} fill={color} />
+                  <circle cx={compactLineX} cy={y} r={3} fill="#fff" />
+                  <text x={compactLineX + 11} y={y - 2} fontSize={9} fontWeight="bold" fill="#0f172a" fontFamily="system-ui,sans-serif">{truncate(name, maxChars)}</text>
+                  <text x={compactLineX + 11} y={y + 9} fontSize={7} fill={color} fontFamily="system-ui,sans-serif" fontWeight="600">метро</text>
                 </>
               ) : (
                 <>
-                  <circle cx={lineX} cy={y} r={5} fill="#fff" stroke={color} strokeWidth={3} />
-                  <text x={lineX + 12} y={y + 4} fontSize={9} fill="#94a3b8" fontFamily="system-ui,sans-serif">{truncate(name, 16)}</text>
+                  <circle cx={compactLineX} cy={y} r={4} fill="#fff" stroke={color} strokeWidth={2.5} />
+                  <text x={compactLineX + 10} y={y + 3} fontSize={8} fill="#94a3b8" fontFamily="system-ui,sans-serif">{truncate(name, maxChars)}</text>
                 </>
               )}
             </g>
@@ -68,6 +68,7 @@ export default function MetroCard({
   }
 
   // Full mode: 5 stations
+  const lineX = Math.round(width * 0.25)
   const STEP = 52
   const TOP_PAD = 28
   const slots: (string | null)[] = [...before, station, ...after]
