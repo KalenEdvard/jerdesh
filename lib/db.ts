@@ -11,7 +11,7 @@ const sslCa = (() => {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: sslCa ? { rejectUnauthorized: true, ca: sslCa } : undefined,
+  ssl: { rejectUnauthorized: false },
   max: 10,
   idleTimeoutMillis: 30000,
 })
