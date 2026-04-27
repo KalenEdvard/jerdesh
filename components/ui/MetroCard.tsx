@@ -27,20 +27,22 @@ export default function MetroCard({
   const compactLineX = 14
 
   if (compact) {
+    const PAD = 8 // horizontal padding inside SVG
+    const lx = compactLineX + PAD
     const slots: (string | null)[] = [before[1], station, after[0]]
-    const STEP = 38
+    const STEP = 34
     const TOP = Math.round((height - STEP * 2) / 2)
     const ys = [TOP, TOP + STEP, TOP + STEP * 2]
     const firstReal = slots.findIndex(s => s !== null)
     const lastReal = slots.length - 1 - [...slots].reverse().findIndex(s => s !== null)
-    const maxChars = Math.floor((width - compactLineX - 11) / 5.2)
+    const maxChars = Math.floor((width - lx - 10 - PAD) / 4.8)
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-        <rect width={width} height={height} fill="#f8fafc" />
-        <line x1={compactLineX} y1={ys[firstReal]} x2={compactLineX} y2={ys[lastReal]} stroke={color} strokeWidth={3} strokeLinecap="round" />
-        {slots[0] === null && <line x1={compactLineX - 6} y1={ys[firstReal]} x2={compactLineX + 6} y2={ys[firstReal]} stroke={color} strokeWidth={3} strokeLinecap="round" />}
-        {slots[2] === null && <line x1={compactLineX - 6} y1={ys[lastReal]} x2={compactLineX + 6} y2={ys[lastReal]} stroke={color} strokeWidth={3} strokeLinecap="round" />}
+        <rect width={width} height={height} fill="#f8fafc" rx="0" />
+        <line x1={lx} y1={ys[firstReal]} x2={lx} y2={ys[lastReal]} stroke={color} strokeWidth={2.5} strokeLinecap="round" />
+        {slots[0] === null && <line x1={lx - 5} y1={ys[firstReal]} x2={lx + 5} y2={ys[firstReal]} stroke={color} strokeWidth={2.5} strokeLinecap="round" />}
+        {slots[2] === null && <line x1={lx - 5} y1={ys[lastReal]} x2={lx + 5} y2={ys[lastReal]} stroke={color} strokeWidth={2.5} strokeLinecap="round" />}
         {slots.map((name, i) => {
           if (!name) return null
           const y = ys[i]
@@ -49,15 +51,15 @@ export default function MetroCard({
             <g key={i}>
               {isCurrent ? (
                 <>
-                  <circle cx={compactLineX} cy={y} r={7} fill={color} />
-                  <circle cx={compactLineX} cy={y} r={3} fill="#fff" />
-                  <text x={compactLineX + 11} y={y - 2} fontSize={9} fontWeight="bold" fill="#0f172a" fontFamily="system-ui,sans-serif">{truncate(name, maxChars)}</text>
-                  <text x={compactLineX + 11} y={y + 9} fontSize={7} fill={color} fontFamily="system-ui,sans-serif" fontWeight="600">метро</text>
+                  <circle cx={lx} cy={y} r={6} fill={color} />
+                  <circle cx={lx} cy={y} r={2.5} fill="#fff" />
+                  <text x={lx + 10} y={y - 1} fontSize={8} fontWeight="bold" fill="#0f172a" fontFamily="system-ui,sans-serif">{truncate(name, maxChars)}</text>
+                  <text x={lx + 10} y={y + 9} fontSize={6.5} fill={color} fontFamily="system-ui,sans-serif" fontWeight="600">метро</text>
                 </>
               ) : (
                 <>
-                  <circle cx={compactLineX} cy={y} r={4} fill="#fff" stroke={color} strokeWidth={2.5} />
-                  <text x={compactLineX + 10} y={y + 3} fontSize={8} fill="#94a3b8" fontFamily="system-ui,sans-serif">{truncate(name, maxChars)}</text>
+                  <circle cx={lx} cy={y} r={3.5} fill="#fff" stroke={color} strokeWidth={2} />
+                  <text x={lx + 9} y={y + 3} fontSize={7} fill="#94a3b8" fontFamily="system-ui,sans-serif">{truncate(name, maxChars)}</text>
                 </>
               )}
             </g>
