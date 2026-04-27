@@ -1,37 +1,21 @@
-import { createServerClient } from '@supabase/ssr'
-import { createClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { queryOne } from '@/lib/db'
+import { verifyToken, COOKIE_NAME } from '@/lib/auth'
 
 export async function GET() {
   const cookieStore = await cookies()
+  const token = cookieStore.get(COOKIE_NAME)?.value
+  if (!token) return NextResponse.json(null, { status: 401 })
 
-  const supabaseAuth = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-        },
-      },
-    }
+  const payload = verifyToken(token)
+  if (!payload) return NextResponse.json(null, { status: 401 })
+
+  const user = await queryOne<any>(
+    'SELECT id, name, email, city, rating, ads_count, avatar_url, phone, whatsapp, telegram, vk, created_at FROM users WHERE id = $1',
+    [payload.userId]
   )
 
-  const { data: { user } } = await supabaseAuth.auth.getUser()
   if (!user) return NextResponse.json(null, { status: 401 })
-
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-
-  const { data: profile } = await supabaseAdmin
-    .from('users')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-
-  return NextResponse.json(profile || null)
+  return NextResponse.json(user)
 }
