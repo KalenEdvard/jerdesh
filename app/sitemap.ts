@@ -1,46 +1,17 @@
 import type { MetadataRoute } from 'next'
-import { createClient } from '@/lib/supabase-server'
+import { query } from '@/lib/db'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let listings: { id: string; created_at: string }[] = []
   try {
-    const supabase = await createClient()
-    let from = 0
-    const batchSize = 1000
-    while (true) {
-      const { data } = await supabase
-        .from('listings')
-        .select('id,created_at')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .range(from, from + batchSize - 1)
-      if (!data || data.length === 0) break
-      listings = listings.concat(data)
-      if (data.length < batchSize) break
-      from += batchSize
-    }
-  } catch {
-    listings = []
-  }
-
-  const listingUrls = listings.map(l => ({
-    url: `https://mekendesh.online/listings/${l.id}`,
-    lastModified: new Date(l.created_at || Date.now()),
-    changeFrequency: 'daily' as const,
-    priority: 0.8,
-  }))
+    listings = await query<any>("SELECT id, created_at FROM listings WHERE status='active' ORDER BY created_at DESC LIMIT 5000")
+  } catch {}
 
   const categories = ['housing', 'findhousing', 'jobs', 'sell', 'services']
-  const categoryUrls = categories.map(cat => ({
-    url: `https://mekendesh.online/?cat=${cat}`,
-    lastModified: new Date(),
-    changeFrequency: 'daily' as const,
-    priority: 0.9,
-  }))
 
   return [
-    { url: 'https://mekendesh.online', lastModified: new Date(), changeFrequency: 'hourly' as const, priority: 1 },
-    ...categoryUrls,
-    ...listingUrls,
+    { url: 'https://mekendesh.online', lastModified: new Date(), changeFrequency: 'hourly', priority: 1 },
+    ...categories.map(cat => ({ url: `https://mekendesh.online/?cat=${cat}`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.9 })),
+    ...listings.map(l => ({ url: `https://mekendesh.online/listings/${l.id}`, lastModified: new Date(l.created_at), changeFrequency: 'daily' as const, priority: 0.8 })),
   ]
 }
