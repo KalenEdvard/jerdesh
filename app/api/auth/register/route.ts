@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
   )
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: { data: { name } },
@@ -31,7 +31,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
-  const response = NextResponse.json({ ok: true })
+  // Если email confirmation отключён в Supabase — сразу логиним
+  // data.session будет не null
+  const confirmed = !!data.session
+
+  const response = NextResponse.json({ ok: true, confirmed })
   cookiesToSet.forEach(({ name: n, value, options }) => {
     response.cookies.set(n, value, {
       ...options,

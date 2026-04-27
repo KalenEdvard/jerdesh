@@ -99,7 +99,20 @@ export default function AuthModal() {
       })
       const json = await res.json()
       if (!res.ok) { setError(json.error || 'Ошибка регистрации'); return }
-      setScreen('confirm')
+
+      if (json.confirmed) {
+        // Email confirmation отключён — сразу логиним
+        const profileRes = await fetch('/api/profile/me')
+        if (profileRes.ok) {
+          const profile = await profileRes.json()
+          if (profile) setUser(profile)
+        }
+        setAuthOpen(false)
+        showToast('Добро пожаловать! Аккаунт создан', 'ok')
+        router.push('/profile')
+      } else {
+        setScreen('confirm')
+      }
     } catch {
       setError('Сервер не отвечает. Попробуйте ещё раз.')
     } finally {
