@@ -9,6 +9,7 @@ import type { Listing } from '@/types'
 
 type ProfileUser = { id: string; name: string; avatar_url?: string; city: string; rating: number; ads_count: number; created_at: string }
 type Review = { id: string; rating: number; comment: string; created_at: string; reviewer_id: string; reviewer?: { id: string; name: string; avatar_url?: string } }
+type ListingRating = { id: string; rating: number; comment: string; created_at: string; rater_id: string; listing_id: string; listing_title: string; rater?: { id: string; name: string; avatar_url?: string } }
 
 const RATING_LABELS = ['', 'Начар', 'Жаман эмес', 'Жакшы', 'Абдан жакшы', 'Мыкты!']
 
@@ -16,13 +17,16 @@ export default function UserProfileClient({
   profileUser,
   listings: initialListings,
   reviews: initialReviews,
+  listingRatings: initialListingRatings,
 }: {
   profileUser: ProfileUser
   listings: Listing[]
   reviews: Review[]
+  listingRatings: ListingRating[]
 }) {
   const { user, setAuthOpen, showToast } = useStore()
   const [reviews, setReviews] = useState<Review[]>(initialReviews)
+  const [listingRatings] = useState<ListingRating[]>(initialListingRatings)
   const [tab, setTab] = useState<'listings' | 'reviews'>('listings')
   const [rating, setRating] = useState(0)
   const [hover, setHover] = useState(0)
@@ -33,7 +37,9 @@ export default function UserProfileClient({
   const myExisting = user ? reviews.find(r => r.reviewer_id === user.id) : null
   const isOwn = user?.id === profileUser.id
   const memberSince = new Date(profileUser.created_at).toLocaleDateString('ru', { month: 'long', year: 'numeric' })
-  const avgRating = reviews.length ? (reviews.reduce((s, r) => s + Number(r.rating), 0) / reviews.length).toFixed(1) : Number(profileUser.rating || 0).toFixed(1)
+  const allRatings = [...reviews.map(r => Number(r.rating)), ...listingRatings.map(r => Number(r.rating))]
+  const totalRatingsCount = allRatings.length
+  const avgRating = totalRatingsCount ? (allRatings.reduce((s, v) => s + v, 0) / totalRatingsCount).toFixed(1) : Number(profileUser.rating || 0).toFixed(1)
 
   const handleSubmitReview = async () => {
     if (!user) { setAuthOpen(true); return }
@@ -81,7 +87,7 @@ export default function UserProfileClient({
           <div style={{ display: 'flex', gap: 20, marginTop: 14, flexWrap: 'wrap' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 22, fontWeight: 800, color: '#f59e0b' }}>{'★'} {avgRating}</div>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}>{reviews.length} баа</div>
+              <div style={{ fontSize: 11, color: '#94a3b8' }}>{totalRatingsCount} баа</div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 22, fontWeight: 800, color: '#1d4ed8' }}>{initialListings.length}</div>
@@ -101,7 +107,7 @@ export default function UserProfileClient({
           >
             {icon} {label}
             {key === 'listings' && <span style={{ background: '#1d4ed8', color: '#fff', borderRadius: 10, fontSize: 10, padding: '1px 6px', fontWeight: 700 }}>{initialListings.length}</span>}
-            {key === 'reviews' && <span style={{ background: '#f59e0b', color: '#fff', borderRadius: 10, fontSize: 10, padding: '1px 6px', fontWeight: 700 }}>{reviews.length}</span>}
+            {key === 'reviews' && <span style={{ background: '#f59e0b', color: '#fff', borderRadius: 10, fontSize: 10, padding: '1px 6px', fontWeight: 700 }}>{totalRatingsCount}</span>}
           </button>
         ))}
       </div>
@@ -178,17 +184,19 @@ export default function UserProfileClient({
           )}
 
           {/* Reviews list */}
-          {reviews.length === 0 && (
+          {totalRatingsCount === 0 && (
             <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>Азырынча баалар жок</div>
           )}
+
+          {/* Direct user reviews */}
           {reviews.map(r => (
             <motion.div
-              key={r.id}
+              key={`rev-${r.id}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: r.comment ? 8 : 0 }}>
                 <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, color: '#1d4ed8', flexShrink: 0 }}>
                   {r.reviewer?.name?.[0]?.toUpperCase() || 'У'}
                 </div>
@@ -200,6 +208,34 @@ export default function UserProfileClient({
                   </div>
                 </div>
                 <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                  {new Date(r.created_at).toLocaleDateString('ru', { day: 'numeric', month: 'short' })}
+                </div>
+              </div>
+              {r.comment && <p style={{ fontSize: 13, color: '#334155', margin: 0, lineHeight: 1.6 }}>{r.comment}</p>}
+            </motion.div>
+          ))}
+
+          {/* Listing ratings */}
+          {listingRatings.map(r => (
+            <motion.div
+              key={`lr-${r.id}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: r.comment ? 8 : 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, color: '#1d4ed8', flexShrink: 0 }}>
+                  {r.rater?.name?.[0]?.toUpperCase() || 'У'}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{r.rater?.name || 'Пользователь'}</div>
+                  <div style={{ fontSize: 15, color: '#f59e0b', letterSpacing: 2 }}>
+                    {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
+                    <span style={{ fontSize: 12, color: '#64748b', marginLeft: 6, letterSpacing: 0 }}>{RATING_LABELS[r.rating]}</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>📋 {r.listing_title}</div>
+                </div>
+                <div style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0 }}>
                   {new Date(r.created_at).toLocaleDateString('ru', { day: 'numeric', month: 'short' })}
                 </div>
               </div>
