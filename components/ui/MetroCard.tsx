@@ -53,8 +53,7 @@ export default function MetroCard({
                 <>
                   <circle cx={lx} cy={y} r={6} fill={color} />
                   <circle cx={lx} cy={y} r={2.5} fill="#fff" />
-                  <text x={lx + 10} y={y - 1} fontSize={8} fontWeight="bold" fill="#0f172a" fontFamily="system-ui,sans-serif">{truncate(name, maxChars)}</text>
-                  <text x={lx + 10} y={y + 9} fontSize={6.5} fill={color} fontFamily="system-ui,sans-serif" fontWeight="600">метро</text>
+                  <text x={lx + 10} y={y + 4} fontSize={8} fontWeight="bold" fill="#0f172a" fontFamily="system-ui,sans-serif">{truncate(name, maxChars)}</text>
                 </>
               ) : (
                 <>
@@ -98,8 +97,7 @@ export default function MetroCard({
               <>
                 <circle cx={lineX} cy={y} r={8} fill={color} />
                 <circle cx={lineX} cy={y} r={4} fill="#fff" />
-                <text x={lineX + 14} y={y - 4} fontSize={13} fontWeight="bold" fill="#0f172a" fontFamily="system-ui,sans-serif">{truncate(name, 18)}</text>
-                <text x={lineX + 14} y={y + 11} fontSize={9} fill={color} fontFamily="system-ui,sans-serif" fontWeight="600">метро</text>
+                <text x={lineX + 14} y={y + 4} fontSize={13} fontWeight="bold" fill="#0f172a" fontFamily="system-ui,sans-serif">{truncate(name, 18)}</text>
               </>
             ) : (
               <>

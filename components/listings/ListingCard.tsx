@@ -90,7 +90,6 @@ export default function ListingCard({ listing }: { listing: Listing }) {
 
         {/* Left: metro card or photo */}
         <div style={{ width: 100, minWidth: 100, position: 'relative', overflow: 'hidden', background: '#f8fafc', flexShrink: 0 }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: catGradient, zIndex: 2 }} />
           {listing.metro && getMetroCardData(listing.metro, listing.city) ? (
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <MetroCard station={listing.metro} city={listing.city} width={100} height={130} compact />

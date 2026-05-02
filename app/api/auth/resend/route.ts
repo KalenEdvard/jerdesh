@@ -1,36 +1,35 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'crypto'
+import { cookies } from 'next/headers'
+import { verifyToken, COOKIE_NAME } from '@/lib/auth'
+import { queryOne, query } from '@/lib/db'
+import { sendConfirmEmail } from '@/lib/mailer'
 
 export async function POST(request: NextRequest) {
-  const { email } = await request.json()
-
-  if (!email) {
-    return NextResponse.json({ error: 'Email обязателен' }, { status: 400 })
-  }
-
   const cookieStore = await cookies()
+  const token = cookieStore.get(COOKIE_NAME)?.value
+  if (!token) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+  const payload = verifyToken(token)
+  if (!payload) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-          })
-        },
-      },
-    }
+  const user = await queryOne<any>(
+    'SELECT id, name, email, email_confirmed FROM users WHERE id=$1',
+    [payload.userId]
+  )
+  if (!user) return NextResponse.json({ error: 'Пользователь не найден' }, { status: 404 })
+  if (user.email_confirmed) return NextResponse.json({ error: 'Email уже подтверждён' }, { status: 400 })
+
+  const confirmToken = randomUUID()
+  const confirmExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
+
+  await query(
+    'UPDATE users SET confirm_token=$1, confirm_expires=$2 WHERE id=$3',
+    [confirmToken, confirmExpires, user.id]
   )
 
-  const { error } = await supabase.auth.resend({ type: 'signup', email })
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 })
-  }
+  sendConfirmEmail(user.email, user.name, confirmToken).catch(e =>
+    console.error('[mailer]', e.message)
+  )
 
   return NextResponse.json({ ok: true })
 }

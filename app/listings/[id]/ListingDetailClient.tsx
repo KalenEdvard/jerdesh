@@ -30,6 +30,46 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
   const [reviewDone, setReviewDone] = useState(false)
   const isFav = favIds.includes(listing.id)
 
+  const [listingRating, setListingRating] = useState({ avg: 0, count: 0, mine: 0, hover: 0 })
+  const [ratingComments, setRatingComments] = useState<any[]>([])
+  const [myRatingComment, setMyRatingComment] = useState('')
+  const [showCommentBox, setShowCommentBox] = useState(false)
+  const [pendingStar, setPendingStar] = useState(0)
+  const [commentLoading, setCommentLoading] = useState(false)
+
+  useEffect(() => {
+    fetch(`/api/listings/rate?listing_id=${listing.id}`)
+      .then(r => r.json())
+      .then(d => {
+        setListingRating(s => ({ ...s, avg: d.avgRating, count: d.ratingCount, mine: d.myRating || 0 }))
+        setRatingComments(d.comments || [])
+        setMyRatingComment(d.myComment || '')
+      })
+      .catch(() => {})
+  }, [listing.id])
+
+  const handleListingRate = async (star: number, comment = '') => {
+    if (!user) { setAuthOpen(true); return }
+    setCommentLoading(true)
+    const res = await fetch('/api/listings/rate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listing_id: listing.id, rating: star, comment }),
+    })
+    const json = await res.json()
+    setCommentLoading(false)
+    if (res.ok) {
+      setListingRating(s => ({ ...s, avg: json.avgRating, count: json.ratingCount, mine: json.myRating }))
+      setRatingComments(json.comments || [])
+      setMyRatingComment(json.myComment || comment)
+      setShowCommentBox(false)
+      setPendingStar(0)
+      showToast('Баа берилди!', 'ok')
+    } else {
+      showToast(json.error || 'Ката', 'error')
+    }
+  }
+
   const hasMetroCard = !!(listing.metro && getMetroCardData(listing.metro, listing.city))
   const userPhotos = listing.photos ?? []
   const photoCount = userPhotos.length + (hasMetroCard ? 1 : 0)
@@ -85,7 +125,7 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
                   {hasMetroCard && photoIdx === 0 ? (
                     <MetroCard station={listing.metro!} city={listing.city} width={280} height={300} />
                   ) : (
-                    <img src={userPhotos[hasMetroCard ? photoIdx - 1 : photoIdx]} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    <img src={userPhotos[hasMetroCard ? photoIdx - 1 : photoIdx]} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', background: '#f8fafc' }} />
                   )}
 
                   {/* Badges */}
@@ -175,6 +215,19 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
               )}
             </div>
 
+            {/* Телефон объявления */}
+            {listing.phone && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.06em', marginBottom: 8 }}>БАЙЛАНЫШ НОМЕРИ</div>
+                <a href={`tel:${listing.phone}`} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, background: '#eff6ff', color: '#1d4ed8', fontWeight: 700, fontSize: 15, textDecoration: 'none', border: '1.5px solid #bfdbfe' }}>
+                  📞 {listing.phone}
+                </a>
+              </div>
+            )}
+
+            {/* Разделитель */}
+            <div style={{ height: 1, background: '#f1f5f9', margin: '4px 0 16px' }} />
+
             {/* Разделитель */}
             <div style={{ height: 1, background: '#f1f5f9', marginBottom: 16 }} />
 
@@ -198,96 +251,131 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
             </div>
           </div>
 
-          {/* Reviews */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Баа берүү ({reviews.length})</h3>
-
-            {reviews.map(r => (
-              <div key={r.id} style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: 14, marginBottom: 14 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, color: '#1d4ed8' }}>
-                    {(r.reviewer as any)?.name?.[0]?.toUpperCase() || 'У'}
+          {/* Блок рейтинга объявления */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 16 }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+              {/* Левая часть: средний рейтинг */}
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.05em', marginBottom: 8 }}>БУЛ ЖАРНАМАНЫ БААЛАҢЫЗ</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ fontSize: 40, fontWeight: 900, color: listingRating.count > 0 ? '#f59e0b' : '#e2e8f0', lineHeight: 1 }}>
+                    {listingRating.count > 0 ? listingRating.avg.toFixed(1) : '—'}
                   </div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>{(r.reviewer as any)?.name || 'Пользователь'}</div>
-                    <div style={{ fontSize: 14, color: '#f59e0b', letterSpacing: 2 }}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</div>
+                    <div style={{ display: 'flex', gap: 2, marginBottom: 2 }}>
+                      {[1,2,3,4,5].map(s => (
+                        <span key={s} style={{ fontSize: 16, color: s <= Math.round(listingRating.avg) && listingRating.count > 0 ? '#f59e0b' : '#e2e8f0' }}>★</span>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#94a3b8' }}>
+                      {listingRating.count > 0 ? `${listingRating.count} баа` : 'Баа жок'}
+                    </div>
                   </div>
                 </div>
-                {r.comment && <p style={{ fontSize: 13, color: '#334155', margin: 0 }}>{r.comment}</p>}
               </div>
-            ))}
 
-            {/* Review form */}
-            {listing.user_id !== user?.id && (
-              reviewDone ? (
-                <div style={{ textAlign: 'center', padding: '16px 0', color: '#059669', fontWeight: 600, fontSize: 14 }}>
-                  ✓ Баа берилди, рахмат!
-                </div>
-              ) : (
-                <div style={{ borderTop: reviews.length > 0 ? '1px solid #f1f5f9' : 'none', paddingTop: reviews.length > 0 ? 16 : 0 }}>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 10 }}>Баа бер:</p>
-                  {/* Stars */}
-                  <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-                    {[1,2,3,4,5].map(star => (
-                      <motion.button
-                        key={star}
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => {
-                          if (!user) { setAuthOpen(true); return }
-                          setReviewRating(star)
-                        }}
-                        onMouseEnter={() => setReviewHover(star)}
-                        onMouseLeave={() => setReviewHover(0)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 28, color: star <= (reviewHover || reviewRating) ? '#f59e0b' : '#e2e8f0', padding: 0, lineHeight: 1 }}
-                      >
-                        ★
-                      </motion.button>
-                    ))}
-                    {reviewRating > 0 && (
-                      <span style={{ fontSize: 12, color: '#64748b', alignSelf: 'center', marginLeft: 4 }}>
-                        {['','Начар','Жаман эмес','Жакшы','Абдан жакшы','Мыкты!'][reviewRating]}
-                      </span>
+              {/* Правая часть: интерактивные звёзды */}
+              <div style={{ textAlign: 'center' }}>
+                {listing.user_id === user?.id ? (
+                  <div style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>Өзүңдүн жарнамаңды баалай албайсың</div>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8, fontWeight: 600 }}>
+                      {listingRating.mine > 0 ? `Сенин баааң: ${listingRating.mine} жылдыз` : 'Жылдыз басып баала:'}
+                    </div>
+                    <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                      {[1,2,3,4,5].map(star => (
+                        <motion.button
+                          key={star}
+                          whileHover={{ scale: 1.25 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => {
+                            if (!user) { setAuthOpen(true); return }
+                            setPendingStar(star)
+                            setShowCommentBox(true)
+                          }}
+                          onMouseEnter={() => setListingRating(s => ({ ...s, hover: star }))}
+                          onMouseLeave={() => setListingRating(s => ({ ...s, hover: 0 }))}
+                          style={{
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            fontSize: 36, padding: 0, lineHeight: 1,
+                            color: star <= (listingRating.hover || pendingStar || listingRating.mine) ? '#f59e0b' : '#e2e8f0',
+                            filter: star <= (listingRating.hover || pendingStar || listingRating.mine) ? 'drop-shadow(0 0 4px #f59e0b88)' : 'none',
+                            transition: 'color 0.1s, filter 0.1s',
+                          }}
+                        >★</motion.button>
+                      ))}
+                    </div>
+                    {listingRating.mine > 0 && !showCommentBox && (
+                      <div style={{ fontSize: 11, color: '#059669', fontWeight: 700, marginTop: 6 }}>✓ Баа берилди — автордун рейтинги жаңыртылды</div>
                     )}
-                  </div>
-                  {/* Comment */}
-                  {reviewRating > 0 && (
-                    <>
-                      <textarea
-                        value={reviewComment}
-                        onChange={e => setReviewComment(e.target.value)}
-                        placeholder="Комментарий (милдетсиз)..."
-                        rows={3}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 10 }}
-                      />
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        disabled={reviewLoading}
-                        onClick={async () => {
-                          if (!user) { setAuthOpen(true); return }
-                          setReviewLoading(true)
-                          const res = await fetch('/api/reviews', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ reviewed_id: listing.user_id, listing_id: listing.id, rating: reviewRating, comment: reviewComment }),
-                          })
-                          const json = await res.json()
-                          setReviewLoading(false)
-                          if (!res.ok) { showToast(json.error || 'Ката', 'error'); return }
-                          setReviews(prev => [json, ...prev])
-                          setReviewDone(true)
-                        }}
-                        style={{ width: '100%', padding: '11px', borderRadius: 12, background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', cursor: reviewLoading ? 'default' : 'pointer' }}
-                      >
-                        {reviewLoading ? 'Жөнөтүлүүдө...' : 'Баа жөнөт'}
-                      </motion.button>
-                    </>
-                  )}
+                  </>
+                )}
+              </div>
+            </div>
+            {/* Comment box — appears after star click */}
+            {showCommentBox && (
+              <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid #f1f5f9' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8 }}>
+                  Комментарий (милдетсиз):
                 </div>
-              )
+                <textarea
+                  value={myRatingComment}
+                  onChange={e => setMyRatingComment(e.target.value)}
+                  placeholder="Кыскача пикириңизди жазыңыз..."
+                  rows={3}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, resize: 'vertical', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', color: '#334155' }}
+                />
+                <div style={{ display: 'flex', gap: 8, marginTop: 10, justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => { setShowCommentBox(false); setPendingStar(0); setMyRatingComment('') }}
+                    style={{ padding: '9px 18px', borderRadius: 10, background: '#f1f5f9', color: '#64748b', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}
+                  >
+                    Жок кылуу
+                  </button>
+                  <button
+                    disabled={commentLoading}
+                    onClick={() => handleListingRate(pendingStar, myRatingComment)}
+                    style={{ padding: '9px 22px', borderRadius: 10, background: '#1d4ed8', color: '#fff', fontSize: 13, fontWeight: 700, border: 'none', cursor: commentLoading ? 'not-allowed' : 'pointer', opacity: commentLoading ? 0.7 : 1 }}
+                  >
+                    {commentLoading ? 'Жөнөтүлүүдө...' : 'Жөнөтүү'}
+                  </button>
+                </div>
+              </div>
             )}
-          </div>
+
+            {/* Comments list */}
+            {ratingComments.length > 0 && (
+              <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid #f1f5f9' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.05em', marginBottom: 12 }}>ПИКИРЛЕР</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {ratingComments.map((c, i) => (
+                    <div key={i} style={{ background: '#f8fafc', borderRadius: 12, padding: '12px 14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                          {c.rater?.name?.[0]?.toUpperCase() || 'U'}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{c.rater?.name || 'Колдонуучу'}</div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 1, flexShrink: 0 }}>
+                          {[1,2,3,4,5].map(s => (
+                            <span key={s} style={{ fontSize: 12, color: s <= c.rating ? '#f59e0b' : '#e2e8f0' }}>★</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.6 }}>{c.comment}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.div>
+
         </div>
 
         {/* Right: seller card + actions */}
@@ -306,6 +394,9 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
                 <div style={{ fontSize: 11, color: '#1d4ed8', fontWeight: 600 }}>Профилди көрүү →</div>
               </div>
             </Link>
+
+            <div style={{ height: 1, background: '#f1f5f9', margin: '4px 0 16px' }} />
+            <h3 style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', marginBottom: 12, letterSpacing: '0.05em' }}>БАЙЛАНЫШ</h3>
 
             {/* Phone */}
             {listing.phone && (

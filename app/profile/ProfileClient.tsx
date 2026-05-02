@@ -46,6 +46,7 @@ export interface ProfileData {
   max?: string
   created_at: string
   ads_count?: number
+  email_confirmed?: boolean
 }
 
 interface Props {
@@ -72,8 +73,16 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [navigatingId, setNavigatingId] = useState<string | null>(null)
   const [currentProfile, setCurrentProfile] = useState(profile)
-
-  const supabase = createClient()
+  const [resending, setResending] = useState(false)
+  const [resent, setResent] = useState(false)
+  const emailConfirmed = currentProfile.email_confirmed !== false
+  const [currentPw, setCurrentPw] = useState('')
+  const [newPw, setNewPw] = useState('')
+  const [confirmPw, setConfirmPw] = useState('')
+  const [pwLoading, setPwLoading] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [emailPw, setEmailPw] = useState('')
+  const [emailLoading, setEmailLoading] = useState(false)
 
   // Синхронизируем профиль в Zustand для навбара и других компонентов
   useEffect(() => {
@@ -118,7 +127,7 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
       setUser({ ...profile, avatar_url: urlWithBust } as any)
       showToast('Фото обновлено ✓', 'ok')
 
-      supabase.from('users').update({ avatar_url: publicUrl }).eq('id', profile.id).then(() => {})
+      fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ avatar_url: publicUrl }) }).catch(() => {})
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Ошибка загрузки'
       showToast(message, 'error')
@@ -151,10 +160,62 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
 
   const saveSettings = async () => {
     setSaving(true)
-    await supabase.from('users').update({ name, phone, whatsapp, telegram, vk, max }).eq('id', profile.id)
-    setUser({ ...profile, name, phone, whatsapp, telegram, vk, max } as any)
-    showToast('Профиль обновлён ✓', 'ok')
+    const res = await fetch('/api/profile/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, phone, whatsapp, telegram, vk }),
+    })
+    if (res.ok) {
+      setUser({ ...profile, name, phone, whatsapp, telegram, vk } as any)
+      showToast('Профиль обновлён ✓', 'ok')
+    } else {
+      showToast('Ошибка сохранения', 'error')
+    }
     setSaving(false)
+  }
+
+  const changeEmail = async () => {
+    setEmailLoading(true)
+    const res = await fetch('/api/profile/change-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newEmail, currentPassword: emailPw }),
+    })
+    const json = await res.json()
+    setEmailLoading(false)
+    if (res.ok) {
+      setCurrentProfile(p => ({ ...p, email: newEmail, email_confirmed: false }))
+      setNewEmail(''); setEmailPw('')
+      showToast('Email өзгөртүлдү! Жаңы почтаңызга кат жөнөтүлдү ✓', 'ok')
+    } else {
+      showToast(json.error || 'Ошибка', 'error')
+    }
+  }
+
+  const changePassword = async () => {
+    if (newPw !== confirmPw) { showToast('Пароли не совпадают', 'error'); return }
+    setPwLoading(true)
+    const res = await fetch('/api/profile/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword: currentPw, newPassword: newPw }),
+    })
+    const json = await res.json()
+    setPwLoading(false)
+    if (res.ok) {
+      setCurrentPw(''); setNewPw(''); setConfirmPw('')
+      showToast('Пароль изменён ✓', 'ok')
+    } else {
+      showToast(json.error || 'Ошибка', 'error')
+    }
+  }
+
+  const resendConfirmEmail = async () => {
+    setResending(true)
+    const res = await fetch('/api/auth/resend', { method: 'POST' })
+    setResending(false)
+    if (res.ok) { setResent(true); showToast('Письмо отправлено!', 'ok') }
+    else showToast('Ошибка отправки', 'error')
   }
 
   const activeListings = myListings.filter(l => l.status === 'active')
@@ -169,6 +230,26 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+
+      {/* Email confirmation banner */}
+      {!emailConfirmed && (
+        <div style={{ background: '#fef2f2', borderBottom: '2px solid #fca5a5', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 20 }}>⚠️</span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#dc2626' }}>Email дарегиңиз тастыкталган эмес</div>
+              <div style={{ fontSize: 12, color: '#ef4444' }}>Тастыктамасаңыз жарнама жарыялай албайсыз. Кат: <b>{profile.email}</b></div>
+            </div>
+          </div>
+          <button
+            onClick={resendConfirmEmail}
+            disabled={resending || resent}
+            style={{ padding: '8px 16px', borderRadius: 10, background: resent ? '#dcfce7' : '#dc2626', color: resent ? '#16a34a' : '#fff', fontSize: 13, fontWeight: 700, border: 'none', cursor: resent ? 'default' : 'pointer', whiteSpace: 'nowrap' }}
+          >
+            {resent ? '✓ Жөнөтүлдү' : resending ? 'Жөнөтүлүүдө...' : 'Кат кайра жөнөт'}
+          </button>
+        </div>
+      )}
 
       {/* Hero Header */}
       <div style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #7c3aed 100%)', paddingBottom: 48 }}>
@@ -380,6 +461,28 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
               <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: 32, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
                 <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24 }}>Настройки профиля</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+                  {/* Email блок */}
+                  <div style={{ background: emailConfirmed ? '#f0fdf4' : '#fef2f2', borderRadius: 14, border: `1.5px solid ${emailConfirmed ? '#86efac' : '#fca5a5'}`, padding: '14px 16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: emailConfirmed ? '#16a34a' : '#dc2626', marginBottom: 2 }}>
+                          {emailConfirmed ? '✓ Email тастыкталды' : '⚠️ Email тастыкталган эмес'}
+                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{profile.email}</div>
+                      </div>
+                      {!emailConfirmed && (
+                        <button
+                          onClick={resendConfirmEmail}
+                          disabled={resending || resent}
+                          style={{ padding: '8px 14px', borderRadius: 10, background: resent ? '#dcfce7' : '#dc2626', color: resent ? '#16a34a' : '#fff', fontSize: 12, fontWeight: 700, border: 'none', cursor: resent ? 'default' : 'pointer', whiteSpace: 'nowrap' }}
+                        >
+                          {resent ? '✓ Жөнөтүлдү' : resending ? '...' : 'Кат жөнөт'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   <div>
                     <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 6 }}>Имя</label>
                     <input value={name} onChange={e => setName(e.target.value)}
@@ -436,6 +539,69 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
                     onClick={saveSettings} disabled={saving}
                     style={{ padding: '13px', borderRadius: 12, background: saving ? '#94a3b8' : '#1d4ed8', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: saving ? 'default' : 'pointer', marginTop: 4 }}>
                     {saving ? 'Сохраняем...' : 'Сохранить изменения'}
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Смена email */}
+              <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: 32, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', marginTop: 16 }}>
+                <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>✉️ Сменить email</h2>
+                <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 20 }}>После смены придёт письмо подтверждения на новый адрес</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 6 }}>Новый email</label>
+                    <input value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" placeholder="new@example.com"
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                      onFocus={e => e.target.style.borderColor = '#1d4ed8'}
+                      onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 6 }}>Текущий пароль (для подтверждения)</label>
+                    <input value={emailPw} onChange={e => setEmailPw(e.target.value)} type="password" placeholder="••••••••"
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                      onFocus={e => e.target.style.borderColor = '#1d4ed8'}
+                      onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
+                  </div>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    onClick={changeEmail} disabled={emailLoading || !newEmail || !emailPw}
+                    style={{ padding: '13px', borderRadius: 12, background: (!newEmail || !emailPw || emailLoading) ? '#94a3b8' : '#7c3aed', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer', marginTop: 4 }}>
+                    {emailLoading ? 'Сохраняем...' : 'Сменить email'}
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Смена пароля */}
+              <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: 32, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', marginTop: 16 }}>
+                <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 20 }}>🔒 Сменить пароль</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 6 }}>Текущий пароль</label>
+                    <input value={currentPw} onChange={e => setCurrentPw(e.target.value)} type="password" placeholder="••••••••"
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                      onFocus={e => e.target.style.borderColor = '#1d4ed8'}
+                      onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 6 }}>Новый пароль</label>
+                    <input value={newPw} onChange={e => setNewPw(e.target.value)} type="password" placeholder="Минимум 6 символов"
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                      onFocus={e => e.target.style.borderColor = '#1d4ed8'}
+                      onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 6 }}>Подтвердите новый пароль</label>
+                    <input value={confirmPw} onChange={e => setConfirmPw(e.target.value)} type="password" placeholder="••••••••"
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${confirmPw && confirmPw !== newPw ? '#ef4444' : '#e2e8f0'}`, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                      onFocus={e => e.target.style.borderColor = confirmPw !== newPw ? '#ef4444' : '#1d4ed8'}
+                      onBlur={e => e.target.style.borderColor = confirmPw && confirmPw !== newPw ? '#ef4444' : '#e2e8f0'} />
+                    {confirmPw && confirmPw !== newPw && (
+                      <div style={{ fontSize: 12, color: '#ef4444', marginTop: 4 }}>Пароли не совпадают</div>
+                    )}
+                  </div>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    onClick={changePassword} disabled={pwLoading || !currentPw || !newPw || newPw !== confirmPw}
+                    style={{ padding: '13px', borderRadius: 12, background: (!currentPw || !newPw || newPw !== confirmPw || pwLoading) ? '#94a3b8' : '#0f172a', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer', marginTop: 4 }}>
+                    {pwLoading ? 'Сохраняем...' : 'Изменить пароль'}
                   </motion.button>
                 </div>
               </div>

@@ -15,7 +15,10 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
   if (!profileUser) notFound()
 
   const [listings, reviews] = await Promise.all([
-    query<any>("SELECT id,title,category,price,metro,city,photos,views,created_at FROM listings WHERE user_id=$1 AND status='active' ORDER BY created_at DESC LIMIT 20", [id]),
+    query<any>(`SELECT l.id,l.title,l.category,l.price,l.metro,l.city,l.photos,l.views,l.created_at,l.is_urgent,l.is_premium,l.status,
+                json_build_object('id',u.id,'name',u.name,'avatar_url',u.avatar_url) as user
+                FROM listings l JOIN users u ON u.id=l.user_id
+                WHERE l.user_id=$1 AND l.status='active' ORDER BY l.created_at DESC LIMIT 20`, [id]),
     query<any>(`SELECT r.id,r.rating,r.comment,r.created_at,r.reviewer_id,
                 json_build_object('id',u.id,'name',u.name,'avatar_url',u.avatar_url) as reviewer
                 FROM reviews r LEFT JOIN users u ON u.id=r.reviewer_id

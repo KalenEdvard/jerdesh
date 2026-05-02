@@ -1,21 +1,13 @@
 'use client'
 import { useState } from 'react'
-import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { useStore } from '@/store'
-import { MapPin, Star, MessageSquare, Package } from 'lucide-react'
-
-const CAT_LABELS: Record<string, string> = {
-  housing: 'Батир берем', findhousing: 'Батир издейм',
-  jobs: 'Жумуш', sell: 'Сатам/Алам', services: 'Кызматтар',
-}
-const CAT_COLORS: Record<string, string> = {
-  housing: '#1d4ed8', findhousing: '#6366f1', jobs: '#059669', sell: '#d97706', services: '#7c3aed',
-}
+import { MapPin, MessageSquare, Package } from 'lucide-react'
+import ListingCard from '@/components/listings/ListingCard'
+import type { Listing } from '@/types'
 
 type ProfileUser = { id: string; name: string; avatar_url?: string; city: string; rating: number; ads_count: number; created_at: string }
-type Listing = { id: string; title: string; category: string; price?: number; metro?: string; city: string; photos: string[]; views: number; created_at: string }
 type Review = { id: string; rating: number; comment: string; created_at: string; reviewer_id: string; reviewer?: { id: string; name: string; avatar_url?: string } }
 
 const RATING_LABELS = ['', 'Начар', 'Жаман эмес', 'Жакшы', 'Абдан жакшы', 'Мыкты!']
@@ -41,7 +33,7 @@ export default function UserProfileClient({
   const myExisting = user ? reviews.find(r => r.reviewer_id === user.id) : null
   const isOwn = user?.id === profileUser.id
   const memberSince = new Date(profileUser.created_at).toLocaleDateString('ru', { month: 'long', year: 'numeric' })
-  const avgRating = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : profileUser.rating?.toFixed(1) || '0.0'
+  const avgRating = reviews.length ? (reviews.reduce((s, r) => s + Number(r.rating), 0) / reviews.length).toFixed(1) : Number(profileUser.rating || 0).toFixed(1)
 
   const handleSubmitReview = async () => {
     if (!user) { setAuthOpen(true); return }
@@ -120,31 +112,9 @@ export default function UserProfileClient({
           {initialListings.length === 0 && (
             <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>Активдүү жарнамалар жок</div>
           )}
-          {initialListings.map(l => {
-            const color = CAT_COLORS[l.category] || '#1d4ed8'
-            return (
-              <Link key={l.id} href={`/listings/${l.id}`} style={{ textDecoration: 'none' }}>
-                <motion.div
-                  whileHover={{ boxShadow: '0 4px 20px rgba(0,0,0,0.10)' }}
-                  style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', padding: '14px 16px', display: 'flex', gap: 14, alignItems: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
-                >
-                  {l.photos?.[0] ? (
-                    <div style={{ width: 64, height: 64, borderRadius: 10, overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
-                      <Image src={l.photos[0]} alt={l.title} fill sizes="64px" style={{ objectFit: 'cover' }} />
-                    </div>
-                  ) : (
-                    <div style={{ width: 64, height: 64, borderRadius: 10, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>📋</div>
-                  )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ background: color + '18', color, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>{CAT_LABELS[l.category] || l.category}</span>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.title}</div>
-                    {l.price ? <div style={{ fontSize: 15, fontWeight: 800, color }}>{l.price.toLocaleString('ru')} ₽</div> : <div style={{ fontSize: 13, color: '#94a3b8' }}>Договорная</div>}
-                  </div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap' }}>{l.views} 👁</div>
-                </motion.div>
-              </Link>
-            )
-          })}
+          {initialListings.map(l => (
+            <ListingCard key={l.id} listing={l as any} />
+          ))}
         </div>
       )}
 

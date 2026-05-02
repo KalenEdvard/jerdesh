@@ -1,5 +1,5 @@
 'use client'
-import { METRO_BY_CITY, CATEGORIES } from '@/types'
+import { METRO_BY_CITY, CATEGORIES, CITIES } from '@/types'
 import { motion } from 'framer-motion'
 import { SlidersHorizontal, RotateCcw, MapPin, Tag, ArrowUpDown } from 'lucide-react'
 import { useFilters } from '@/hooks/useFilters'
@@ -14,8 +14,11 @@ const CAT_COLORS: Record<string, string> = {
 }
 
 export default function FilterSidebar() {
-  const { category, metro, sort, city, setFilter, resetFilters } = useFilters()
-  const cityMetroStations = METRO_BY_CITY[city] ?? []
+  const { category, metro, sort, city, country, setFilter, resetFilters } = useFilters()
+  const citiesForCountry = CITIES.filter(c => c.country === country)
+  const safeCity = citiesForCountry.some(c => c.id === city) ? city : (citiesForCountry[0]?.id ?? city)
+  const cityMetroStations = METRO_BY_CITY[safeCity] ?? []
+  const validMetro = cityMetroStations.includes(metro) ? metro : ''
 
   return (
     <aside style={{ width: 260, flexShrink: 0 }}>
@@ -81,7 +84,7 @@ export default function FilterSidebar() {
               <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.5px' }}>СТАНЦИЯ МЕТРО</label>
             </div>
             <select
-              value={metro}
+              value={validMetro}
               onChange={e => setFilter('metro', e.target.value)}
               style={{ width: '100%', padding: '9px 12px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', background: '#f8fafc', color: '#334155', cursor: 'pointer' }}
             >

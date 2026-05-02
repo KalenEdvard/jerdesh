@@ -18,8 +18,13 @@ export async function POST(request: NextRequest) {
 
   let row
   if (existing) {
+    // Обновляем рейтинг всегда, комментарий — только если новый написан
     const [r] = await query<any>(
-      `UPDATE reviews SET rating=$1, comment=$2, listing_id=$3 WHERE id=$4
+      `UPDATE reviews SET
+         rating=$1,
+         comment = CASE WHEN $2 != '' THEN $2 ELSE comment END,
+         listing_id=COALESCE($3, listing_id)
+       WHERE id=$4
        RETURNING *, (SELECT json_build_object('id',id,'name',name,'avatar_url',avatar_url) FROM users WHERE id=$5) as reviewer`,
       [rating, comment?.trim() || '', listing_id || null, existing.id, payload.userId]
     )

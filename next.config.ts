@@ -1,10 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  generateBuildId: async () => `build-${Date.now()}`,
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: '*.supabase.co' },
       { protocol: 'https', hostname: 's3.timeweb.cloud' },
     ],
   },
@@ -21,9 +19,8 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               // Supabase storage для загрузки/показа файлов
-              "img-src 'self' blob: data: https://*.supabase.co",
-              // Supabase API + realtime + Nominatim геолокация
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://nominatim.openstreetmap.org",
+              "img-src 'self' blob: data: https://s3.timeweb.cloud",
+              "connect-src 'self' https://s3.timeweb.cloud https://*.resend.com",
               "font-src 'self'",
               "object-src 'none'",
               "frame-ancestors 'none'",

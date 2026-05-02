@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { query } from '@/lib/db'
+import { query, queryOne } from '@/lib/db'
 import { verifyToken, COOKIE_NAME } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
@@ -9,6 +9,10 @@ export async function POST(request: NextRequest) {
   if (!token) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
   const payload = verifyToken(token)
   if (!payload) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+
+  const userRow = await queryOne<any>('SELECT email_confirmed FROM users WHERE id=$1', [payload.userId])
+  if (userRow?.email_confirmed === false)
+    return NextResponse.json({ error: 'Email дарегиңизди тастыктаңыз' }, { status: 403 })
 
   const { title, description, category, price, metro, city, phone, photos, isUrgent } = await request.json()
   if (!title?.trim()) return NextResponse.json({ error: 'Введите заголовок' }, { status: 400 })

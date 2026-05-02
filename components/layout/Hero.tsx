@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { CATEGORIES, METRO_STATIONS, CITIES, COUNTRIES, DEFAULT_CITY } from '@/types'
+import { CATEGORIES, METRO_BY_CITY, CITIES, COUNTRIES, DEFAULT_CITY } from '@/types'
 import { useFilters } from '@/hooks/useFilters'
 
 function Counter({ target, suffix = '' }: { target: number; suffix?: string }) {
@@ -34,15 +34,22 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
   const [cityOpen, setCityOpen] = useState(false)
   const [countryOpen, setCountryOpen] = useState(false)
   const [metroSearch, setMetroSearch] = useState('')
+  const [localCity, setLocalCity] = useState(city)
+  const [localCountry, setLocalCountry] = useState(country)
   const metroRef = useRef<HTMLDivElement>(null)
   const catRef = useRef<HTMLDivElement>(null)
   const cityRef = useRef<HTMLDivElement>(null)
   const countryRef = useRef<HTMLDivElement>(null)
 
-  const citiesForCountry = CITIES.filter(c => c.country === country)
-  const hasMetro = CITIES.find(c => c.id === city)?.metro ?? false
+  useEffect(() => { setLocalCity(city) }, [city])
+  useEffect(() => { setLocalCountry(country) }, [country])
 
-  const filteredMetro = METRO_STATIONS.filter(s =>
+  const citiesForCountry = CITIES.filter(c => c.country === localCountry)
+  const safeCity = citiesForCountry.some(c => c.id === localCity) ? localCity : (citiesForCountry[0]?.id ?? localCity)
+  const cityStations = METRO_BY_CITY[safeCity] ?? []
+  const hasMetro = cityStations.length > 0
+
+  const filteredMetro = cityStations.filter(s =>
     s.toLowerCase().includes(metroSearch.toLowerCase())
   )
 
@@ -98,6 +105,8 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
                     key={c.id}
                     onClick={() => {
                       const firstCity = CITIES.find(ci => ci.country === c.id)
+                      setLocalCountry(c.id)
+                      setLocalCity(firstCity?.id ?? '')
                       setFilters({ country: c.id, city: firstCity?.id ?? '', metro: '' })
                       setCountryOpen(false)
                     }}
@@ -123,7 +132,7 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
                 {citiesForCountry.map(c => (
                   <button
                     key={c.id}
-                    onClick={() => { setFilter('city', c.id); setFilter('metro', ''); setCityOpen(false) }}
+                    onClick={() => { setLocalCity(c.id); setFilters({ city: c.id, metro: '' }); setCityOpen(false) }}
                     style={{ width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, fontSize: 13, color: '#334155', background: city === c.id ? '#eff6ff' : 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
                   >
                     <span style={{ fontSize: 18 }}>{c.flag}</span> {c.id}
