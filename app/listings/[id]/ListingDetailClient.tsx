@@ -114,51 +114,61 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
         {/* Left: photos + info */}
         <div>
           {/* Photos */}
-          <div style={{ background: '#f1f5f9', borderRadius: 20, overflow: 'hidden', marginBottom: 20 }}>
+          <div style={{ position: 'relative', borderRadius: 20, marginBottom: 20, userSelect: 'none' }}>
             {photoCount > 0 ? (
               <>
+                {/* Main photo area — overflow:hidden для border-radius, без стрелок */}
                 <div
-                  style={{ height: 420, position: 'relative', userSelect: 'none', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{ background: '#f1f5f9', borderRadius: 20, overflow: 'hidden' }}
                   onTouchStart={handleTouchStart}
                   onTouchEnd={handleTouchEnd}
                 >
-                  {hasMetroCard && photoIdx === 0 ? (
-                    <MetroCard station={listing.metro!} city={listing.city} width={280} height={300} />
-                  ) : (
-                    <img src={userPhotos[hasMetroCard ? photoIdx - 1 : photoIdx]} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', background: '#f8fafc' }} />
-                  )}
+                  <div style={{ height: 420, background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                    {hasMetroCard && photoIdx === 0 ? (
+                      <MetroCard station={listing.metro!} city={listing.city} width={280} height={300} />
+                    ) : (
+                      <img src={userPhotos[hasMetroCard ? photoIdx - 1 : photoIdx]} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', background: '#f8fafc' }} />
+                    )}
 
-                  {/* Badges */}
-                  <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6 }}>
-                    {listing.is_urgent && <span style={{ background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20 }}>🔴 Срочно</span>}
-                    {listing.is_premium && <span style={{ background: '#f59e0b', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20 }}>⭐ Топ</span>}
+                    {/* Badges */}
+                    <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6 }}>
+                      {listing.is_urgent && <span style={{ background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20 }}>🔴 Срочно</span>}
+                      {listing.is_premium && <span style={{ background: '#f59e0b', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20 }}>⭐ Топ</span>}
+                    </div>
+
+                    {/* Counter */}
+                    {photoCount > 1 && (
+                      <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 20, backdropFilter: 'blur(4px)' }}>
+                        {photoIdx + 1} / {photoCount}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Counter */}
-                  {photoCount > 1 && (
-                    <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 20, backdropFilter: 'blur(4px)' }}>
-                      {photoIdx + 1} / {photoCount}
+                  {listing.photos.length > 1 && (
+                    <div style={{ display: 'flex', gap: 8, padding: 12, overflowX: 'auto', background: '#f1f5f9' }}>
+                      {listing.photos.map((p, i) => {
+                        const thumbIdx = hasMetroCard ? i + 1 : i
+                        return (
+                          <img key={i} src={p} onClick={() => setPhotoIdx(thumbIdx)} alt=""
+                            style={{ width: 72, height: 54, objectFit: 'cover', borderRadius: 10, cursor: 'pointer', flexShrink: 0,
+                              border: thumbIdx === photoIdx ? '2px solid #1d4ed8' : '2px solid transparent',
+                              opacity: thumbIdx === photoIdx ? 1 : 0.6 }} />
+                        )
+                      })}
                     </div>
                   )}
-
-                  {/* Arrows */}
-                  {photoCount > 1 && (
-                    <>
-                      <button onClick={prevPhoto} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.88)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, backdropFilter: 'blur(4px)', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', color: '#0f172a' }}>‹</button>
-                      <button onClick={nextPhoto} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.88)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, backdropFilter: 'blur(4px)', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', color: '#0f172a' }}>›</button>
-                    </>
-                  )}
                 </div>
-                {listing.photos.length > 1 && (
-                  <div style={{ display: 'flex', gap: 8, padding: 12, overflowX: 'auto' }}>
-                    {listing.photos.map((p, i) => (
-                      <img key={i} src={p} onClick={() => setPhotoIdx(i)} alt="" style={{ width: 72, height: 54, objectFit: 'cover', borderRadius: 10, cursor: 'pointer', border: i === photoIdx ? '2px solid #1d4ed8' : '2px solid transparent', opacity: i === photoIdx ? 1 : 0.6 }} />
-                    ))}
-                  </div>
+
+                {/* Стрелки — вне overflow:hidden, позиционируются по обёртке */}
+                {photoCount > 1 && (
+                  <>
+                    <button onClick={prevPhoto} style={{ position: 'absolute', left: 10, top: 210, transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 2px 10px rgba(0,0,0,0.25)', color: '#0f172a', zIndex: 10 }}>‹</button>
+                    <button onClick={nextPhoto} style={{ position: 'absolute', right: 10, top: 210, transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 2px 10px rgba(0,0,0,0.25)', color: '#0f172a', zIndex: 10 }}>›</button>
+                  </>
                 )}
               </>
             ) : (
-              <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 64 }}>
+              <div style={{ height: 300, background: '#f1f5f9', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 64 }}>
                 {listing.category === 'housing' ? '🏠' : listing.category === 'jobs' ? '💼' : '🔧'}
               </div>
             )}
