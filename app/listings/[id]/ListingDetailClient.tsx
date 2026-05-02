@@ -114,43 +114,44 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
         {/* Left: photos + info */}
         <div>
           {/* Photos */}
-          <div style={{ position: 'relative', borderRadius: 20, marginBottom: 20, userSelect: 'none' }}>
+          <div style={{ position: 'relative', marginBottom: 20, userSelect: 'none' }}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             {photoCount > 0 ? (
               <>
-                {/* Main photo area — overflow:hidden для border-radius, без стрелок */}
-                <div
-                  style={{ background: '#f1f5f9', borderRadius: 20, overflow: 'hidden' }}
-                  onTouchStart={handleTouchStart}
-                  onTouchEnd={handleTouchEnd}
-                >
-                  <div style={{ height: 420, background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                <div style={{ background: '#f1f5f9', borderRadius: 20, overflow: 'hidden' }}>
+                  {/* Main photo */}
+                  <div style={{ height: 280, background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                     {hasMetroCard && photoIdx === 0 ? (
-                      <MetroCard station={listing.metro!} city={listing.city} width={280} height={300} />
+                      <MetroCard station={listing.metro!} city={listing.city} width={240} height={220} />
                     ) : (
-                      <img src={userPhotos[hasMetroCard ? photoIdx - 1 : photoIdx]} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', background: '#f8fafc' }} />
+                      <img src={userPhotos[hasMetroCard ? photoIdx - 1 : photoIdx]} alt={listing.title}
+                        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }} />
                     )}
 
                     {/* Badges */}
-                    <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6 }}>
+                    <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 6 }}>
                       {listing.is_urgent && <span style={{ background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20 }}>🔴 Срочно</span>}
                       {listing.is_premium && <span style={{ background: '#f59e0b', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20 }}>⭐ Топ</span>}
                     </div>
 
                     {/* Counter */}
                     {photoCount > 1 && (
-                      <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 20, backdropFilter: 'blur(4px)' }}>
+                      <div style={{ position: 'absolute', bottom: 10, right: 10, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 20 }}>
                         {photoIdx + 1} / {photoCount}
                       </div>
                     )}
                   </div>
 
+                  {/* Thumbnails */}
                   {listing.photos.length > 1 && (
-                    <div style={{ display: 'flex', gap: 8, padding: 12, overflowX: 'auto', background: '#f1f5f9' }}>
+                    <div style={{ display: 'flex', gap: 8, padding: 10, overflowX: 'auto' }}>
                       {listing.photos.map((p, i) => {
                         const thumbIdx = hasMetroCard ? i + 1 : i
                         return (
                           <img key={i} src={p} onClick={() => setPhotoIdx(thumbIdx)} alt=""
-                            style={{ width: 72, height: 54, objectFit: 'cover', borderRadius: 10, cursor: 'pointer', flexShrink: 0,
+                            style={{ width: 64, height: 48, objectFit: 'cover', borderRadius: 8, cursor: 'pointer', flexShrink: 0,
                               border: thumbIdx === photoIdx ? '2px solid #1d4ed8' : '2px solid transparent',
                               opacity: thumbIdx === photoIdx ? 1 : 0.6 }} />
                         )
@@ -159,16 +160,18 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
                   )}
                 </div>
 
-                {/* Стрелки — вне overflow:hidden, позиционируются по обёртке */}
+                {/* Стрелки — overlay поверх фото с явными left:0 right:0 */}
                 {photoCount > 1 && (
-                  <>
-                    <button onClick={prevPhoto} style={{ position: 'absolute', left: 10, top: 210, transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 2px 10px rgba(0,0,0,0.25)', color: '#0f172a', zIndex: 10 }}>‹</button>
-                    <button onClick={nextPhoto} style={{ position: 'absolute', right: 10, top: 210, transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 2px 10px rgba(0,0,0,0.25)', color: '#0f172a', zIndex: 10 }}>›</button>
-                  </>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 280, pointerEvents: 'none', zIndex: 10 }}>
+                    <button onClick={prevPhoto}
+                      style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 2px 10px rgba(0,0,0,0.25)', color: '#0f172a', pointerEvents: 'all' }}>‹</button>
+                    <button onClick={nextPhoto}
+                      style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 2px 10px rgba(0,0,0,0.25)', color: '#0f172a', pointerEvents: 'all' }}>›</button>
+                  </div>
                 )}
               </>
             ) : (
-              <div style={{ height: 300, background: '#f1f5f9', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 64 }}>
+              <div style={{ height: 260, background: '#f1f5f9', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 64 }}>
                 {listing.category === 'housing' ? '🏠' : listing.category === 'jobs' ? '💼' : '🔧'}
               </div>
             )}
