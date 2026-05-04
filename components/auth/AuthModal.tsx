@@ -261,6 +261,15 @@ export default function AuthModal() {
                 {loading ? '...' : tab === 'login' ? 'Войти' : 'Зарегистрироваться'}
               </button>
 
+              {tab === 'register' && (
+                <p style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center', lineHeight: 1.6, margin: '2px 0 0' }}>
+                  Регистрируясь, вы принимаете{' '}
+                  <a href="/terms" target="_blank" style={{ color: '#1d4ed8', textDecoration: 'underline' }}>Пользовательское соглашение</a>
+                  {' '}и даёте согласие на{' '}
+                  <a href="/privacy" target="_blank" style={{ color: '#1d4ed8', textDecoration: 'underline' }}>обработку персональных данных</a>
+                </p>
+              )}
+
               {tab === 'login' && !error && (
                 <button onClick={() => { setForgotEmail(form.email); setScreen('forgot') }}
                   style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: 13, cursor: 'pointer', textAlign: 'center', padding: '4px 0' }}>

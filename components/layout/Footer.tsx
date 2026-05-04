@@ -65,8 +65,10 @@ export default function Footer() {
         </div>
       </div>
 
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '20px', textAlign: 'center', fontSize: 12 }}>
-        © {new Date().getFullYear()} Мекендеш — Объявления кыргызов в России
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '20px', textAlign: 'center', fontSize: 12, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '8px 20px' }}>
+        <span>© {new Date().getFullYear()} Мекендеш — Объявления кыргызов в России</span>
+        <Link href="/privacy" style={{ color: '#64748b', textDecoration: 'underline' }}>Политика конфиденциальности</Link>
+        <Link href="/terms" style={{ color: '#64748b', textDecoration: 'underline' }}>Пользовательское соглашение</Link>
       </div>
     </footer>
   )
