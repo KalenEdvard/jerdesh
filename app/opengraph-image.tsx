@@ -27,32 +27,32 @@ export default function OGImage() {
           ))}
         </div>
 
-        {/* Logo area */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
-          <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>
-            🏠
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 40 }}>
+          <div style={{ width: 96, height: 96, borderRadius: 24, background: 'rgba(255,255,255,0.15)', border: '2px solid rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 56, fontWeight: 900, color: '#f59e0b' }}>
+            М
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: 52, fontWeight: 900, color: '#fff', letterSpacing: '-1px' }}>MEKENDESH</span>
-            <span style={{ fontSize: 20, color: 'rgba(255,255,255,0.7)', letterSpacing: 1 }}>Оной издеп, оной тап!</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 64, fontWeight: 900, color: '#fff', letterSpacing: '-2px', lineHeight: 1 }}>MEKENDESH</span>
+            <span style={{ fontSize: 22, color: '#f59e0b', letterSpacing: 2, fontWeight: 600 }}>MEKENDESH.ONLINE</span>
           </div>
         </div>
 
         {/* Divider */}
-        <div style={{ width: 120, height: 3, background: '#f59e0b', borderRadius: 2, marginBottom: 28 }} />
+        <div style={{ width: 160, height: 3, background: '#f59e0b', borderRadius: 2, marginBottom: 36 }} />
 
-        {/* Tagline */}
-        <p style={{ fontSize: 28, color: 'rgba(255,255,255,0.9)', textAlign: 'center', margin: 0, fontWeight: 500 }}>
-          Объявления для кыргызской диаспоры в России
+        {/* Kyrgyz tagline only */}
+        <p style={{ fontSize: 32, color: 'rgba(255,255,255,0.95)', textAlign: 'center', margin: 0, fontWeight: 700 }}>
+          Оной издеп, оной тап!
         </p>
-        <p style={{ fontSize: 20, color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginTop: 12 }}>
-          Жильё · Работа · Услуги · Продажа
+        <p style={{ fontSize: 22, color: 'rgba(255,255,255,0.55)', textAlign: 'center', marginTop: 14, fontWeight: 400 }}>
+          Батир · Жумуш · Кызматтар · Сатуу
         </p>
 
         {/* URL */}
-        <div style={{ position: 'absolute', bottom: 36, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80' }} />
-          <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)' }}>mekendesh.online</span>
+        <div style={{ position: 'absolute', bottom: 40, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#4ade80' }} />
+          <span style={{ fontSize: 20, color: 'rgba(255,255,255,0.45)', letterSpacing: 1 }}>mekendesh.online</span>
         </div>
       </div>
     ),
