@@ -31,8 +31,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://mekendesh.online'),
-  title: { default: 'Мекендеш — Объявления кыргызов в России', template: '%s | Мекендеш' },
-  description: 'Мекендеш (Mekendesh) — сайт объявлений в России на кыргызском и русском. Батир ижарага, жумуш, сатуу, кызматтар. Оной издеп, оной тап! Москва, СПб и другие города.',
+  title: { default: 'Мекендеш — Батир, жумуш, кызматтар | Mekendesh', template: '%s | Мекендеш' },
+  description: 'Мекендеш — оной издеп, оной тап! Батир ижарага, жумуш, кызматтар, сатуу. Россиядагы кыргыздар үчүн акысыз жарнамалар. Москва, СПб жана башка шаарлар.',
   keywords: [
     // Бренд
     'Мекендеш', 'Mekendesh', 'мекендеш сайт',
@@ -60,11 +60,11 @@ export const metadata: Metadata = {
     locale: 'ru_RU',
     url: 'https://mekendesh.online',
     siteName: 'Мекендеш',
-    title: 'Мекендеш — Объявления кыргызов в России',
-    description: 'Сайт объявлений для кыргызской диаспоры. Жильё, работа, услуги, продажа.',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Мекендеш — объявления кыргызов в России' }],
+    title: 'Мекендеш — Батир, жумуш, кызматтар | Mekendesh',
+    description: 'Мекендеш — оной издеп, оной тап! Батир ижарага, жумуш, кызматтар, сатуу. Россиядагы кыргыздар үчүн акысыз жарнамалар.',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Mekendesh — оной издеп, оной тап!' }],
   },
-  twitter: { card: 'summary_large_image', title: 'Мекендеш', description: 'Объявления для кыргызской диаспоры в России', images: ['/og-image.png'] },
+  twitter: { card: 'summary_large_image', title: 'Мекендеш — Батир, жумуш, кызматтар', description: 'Оной издеп, оной тап! Батир ижарага, жумуш, кызматтар, сатуу.', images: ['/opengraph-image'] },
   verification: { google: 'GOOGLE_VERIFICATION_CODE', yandex: 'YANDEX_VERIFICATION_CODE' },
 }
 
