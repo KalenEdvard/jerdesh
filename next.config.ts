@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 's3.timeweb.cloud' },
@@ -15,12 +19,10 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              // framer-motion требует unsafe-eval
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+              "script-src 'self' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
-              // Supabase storage для загрузки/показа файлов
               "img-src 'self' blob: data: https://s3.timeweb.cloud",
-              "connect-src 'self' https://s3.timeweb.cloud https://*.resend.com",
+              "connect-src 'self' https://s3.timeweb.cloud",
               "font-src 'self'",
               "object-src 'none'",
               "frame-ancestors 'none'",

@@ -204,7 +204,7 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
           )}
 
           <button
-            onClick={() => {}}
+            onClick={() => document.querySelector('.listing-layout')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             style={{ padding: '10px 24px', borderRadius: 12, background: '#f59e0b', color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
           >
             Найти

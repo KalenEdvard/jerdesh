@@ -3,8 +3,13 @@ import { randomUUID } from 'crypto'
 import { queryOne, query } from '@/lib/db'
 import { hashPassword, createToken, COOKIE_NAME, COOKIE_OPTS } from '@/lib/auth'
 import { sendConfirmEmail } from '@/lib/mailer'
+import { rateLimit } from '@/lib/rateLimit'
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for') ?? 'unknown'
+  if (!rateLimit(`register:${ip}`, 5, 60_000))
+    return NextResponse.json({ error: 'Слишком много попыток. Попробуйте позже.' }, { status: 429 })
+
   const { email, password, name } = await request.json()
 
   if (!email || !password || !name)

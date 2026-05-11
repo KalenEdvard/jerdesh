@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { queryOne, query } from '@/lib/db'
 import { sendResetEmail } from '@/lib/mailer'
+import { rateLimit } from '@/lib/rateLimit'
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for') ?? 'unknown'
+  if (!rateLimit(`forgot:${ip}`, 3, 60_000))
+    return NextResponse.json({ error: 'Слишком много попыток.' }, { status: 429 })
+
   const { email } = await request.json()
   if (!email) return NextResponse.json({ error: 'Введите email' }, { status: 400 })
 

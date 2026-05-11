@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { queryOne } from '@/lib/db'
 import { verifyPassword, createToken, COOKIE_NAME, COOKIE_OPTS } from '@/lib/auth'
+import { rateLimit } from '@/lib/rateLimit'
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for') ?? 'unknown'
+  if (!rateLimit(`login:${ip}`, 10, 60_000))
+    return NextResponse.json({ error: 'Слишком много попыток. Попробуйте позже.' }, { status: 429 })
+
   const { email, password } = await request.json()
 
   if (!email || !password) {
@@ -10,7 +15,7 @@ export async function POST(request: NextRequest) {
   }
 
   const user = await queryOne<any>(
-    'SELECT * FROM users WHERE email = $1',
+    'SELECT id, name, email, password, city, rating, ads_count, avatar_url, phone, whatsapp, telegram, vk, created_at FROM users WHERE email = $1',
     [email.toLowerCase().trim()]
   )
 

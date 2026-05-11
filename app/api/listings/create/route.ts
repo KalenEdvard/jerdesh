@@ -17,18 +17,23 @@ export async function POST(request: NextRequest) {
   const { title, description, category, price, metro, city, phone, photos, isUrgent } = await request.json()
   if (!title?.trim()) return NextResponse.json({ error: 'Введите заголовок' }, { status: 400 })
 
+  const S3_BASE = process.env.S3_PUBLIC_URL ?? 'https://s3.timeweb.cloud/mekendesh-photo'
+  const safePhotos = Array.isArray(photos)
+    ? photos.filter((u: unknown) => typeof u === 'string' && u.startsWith(S3_BASE)).slice(0, 10)
+    : []
+
   try {
     const [listing] = await query(
       `INSERT INTO listings (user_id, title, description, category, price, metro, city, phone, photos, is_urgent, status)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'active') RETURNING id`,
       [payload.userId, title.trim(), description || '', category || 'housing',
        price ? parseInt(price) : null, metro || null, city || 'Москва',
-       phone || null, photos || [], isUrgent || false]
+       phone || null, safePhotos, isUrgent || false]
     )
     await query('UPDATE users SET ads_count = ads_count + 1 WHERE id = $1', [payload.userId])
     return NextResponse.json({ id: listing.id })
   } catch (e: any) {
     console.error('[create]', e.message)
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    return NextResponse.json({ error: 'Ошибка при создании объявления' }, { status: 500 })
   }
 }

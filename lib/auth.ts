@@ -12,7 +12,7 @@ export async function verifyPassword(password: string, hash: string) {
 }
 
 export function createToken(payload: { userId: string; email: string }) {
-  return jwt.sign(payload, SECRET, { expiresIn: '365d' })
+  return jwt.sign(payload, SECRET, { expiresIn: '30d' })
 }
 
 export function verifyToken(token: string): { userId: string; email: string } | null {
@@ -29,6 +29,6 @@ export const COOKIE_OPTS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax' as const,
-  maxAge: 60 * 60 * 24 * 365,
+  maxAge: 60 * 60 * 24 * 30,
   path: '/',
 }

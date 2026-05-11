@@ -31,8 +31,7 @@ export default function Header() {
   }, [userMenuOpen])
 
   const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    await fetch('/api/auth/logout', { method: 'POST' })
     setUser(null)
     setUserMenuOpen(false)
     showToast('Вы вышли из аккаунта', 'info')
