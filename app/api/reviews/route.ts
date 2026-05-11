@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { query, queryOne } from '@/lib/db'
 import { verifyToken, COOKIE_NAME } from '@/lib/auth'
+import { z } from 'zod'
+
+const ReviewSchema = z.object({
+  reviewed_id: z.string().uuid(),
+  listing_id: z.string().uuid().optional().nullable(),
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().max(1000).optional().default(''),
+})
 
 export async function POST(request: NextRequest) {
   const cookieStore = await cookies()
@@ -10,8 +18,11 @@ export async function POST(request: NextRequest) {
   const payload = verifyToken(token)
   if (!payload) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
 
-  const { reviewed_id, listing_id, rating, comment } = await request.json()
-  if (!reviewed_id || !rating || rating < 1 || rating > 5) return NextResponse.json({ error: 'Неверные данные' }, { status: 400 })
+  const body = await request.json()
+  const parsed = ReviewSchema.safeParse(body)
+  if (!parsed.success) return NextResponse.json({ error: 'Неверные данные' }, { status: 400 })
+
+  const { reviewed_id, listing_id, rating, comment } = parsed.data
   if (reviewed_id === payload.userId) return NextResponse.json({ error: 'Нельзя оценить себя' }, { status: 400 })
 
   const existing = await queryOne<any>('SELECT id FROM reviews WHERE reviewer_id=$1 AND reviewed_id=$2', [payload.userId, reviewed_id])

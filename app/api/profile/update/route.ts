@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { verifyToken, COOKIE_NAME } from '@/lib/auth'
 import { query } from '@/lib/db'
+import { z } from 'zod'
+
+const S3_BASE = process.env.S3_PUBLIC_URL ?? 'https://s3.timeweb.cloud/mekendesh-photo'
+
+const UpdateSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  phone: z.string().max(30).optional().nullable(),
+  whatsapp: z.string().max(30).optional().nullable(),
+  telegram: z.string().max(50).optional().nullable(),
+  vk: z.string().max(50).optional().nullable(),
+  city: z.string().max(100).optional().nullable(),
+  avatar_url: z.string().url().startsWith(S3_BASE).optional().nullable(),
+})
 
 export async function POST(request: NextRequest) {
   const cookieStore = await cookies()
@@ -10,7 +23,12 @@ export async function POST(request: NextRequest) {
   const payload = verifyToken(token)
   if (!payload) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
 
-  const { name, phone, whatsapp, telegram, vk, city, avatar_url } = await request.json()
+  const body = await request.json()
+  const parsed = UpdateSchema.safeParse(body)
+  if (!parsed.success)
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Неверные данные' }, { status: 400 })
+
+  const { name, phone, whatsapp, telegram, vk, city, avatar_url } = parsed.data
 
   await query(
     `UPDATE users SET
@@ -23,8 +41,8 @@ export async function POST(request: NextRequest) {
       avatar_url=COALESCE($7, avatar_url),
       updated_at=NOW()
      WHERE id=$8`,
-    [name || null, phone || null, whatsapp || null, telegram || null,
-     vk || null, city || null, avatar_url || null, payload.userId]
+    [name ?? null, phone ?? null, whatsapp ?? null, telegram ?? null,
+     vk ?? null, city ?? null, avatar_url ?? null, payload.userId]
   )
 
   return NextResponse.json({ ok: true })

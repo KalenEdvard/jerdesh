@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { query, queryOne } from '@/lib/db'
 import { verifyToken, COOKIE_NAME } from '@/lib/auth'
+import { z } from 'zod'
+
+const CreateSchema = z.object({
+  title: z.string().min(3).max(200),
+  description: z.string().max(5000).optional().default(''),
+  category: z.enum(['housing', 'findhousing', 'jobs', 'sell', 'services']).default('services'),
+  price: z.number().int().nonnegative().optional().nullable(),
+  metro: z.string().max(100).optional().nullable(),
+  city: z.string().max(100).default('Москва'),
+  phone: z.string().max(30).optional().nullable(),
+  photos: z.array(z.string().url()).max(10).optional().default([]),
+  isUrgent: z.boolean().optional().default(false),
+})
 
 export async function POST(request: NextRequest) {
   const cookieStore = await cookies()
@@ -14,21 +27,23 @@ export async function POST(request: NextRequest) {
   if (userRow?.email_confirmed === false)
     return NextResponse.json({ error: 'Email дарегиңизди тастыктаңыз' }, { status: 403 })
 
-  const { title, description, category, price, metro, city, phone, photos, isUrgent } = await request.json()
-  if (!title?.trim()) return NextResponse.json({ error: 'Введите заголовок' }, { status: 400 })
+  const body = await request.json()
+  const parsed = CreateSchema.safeParse(body)
+  if (!parsed.success)
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Неверные данные' }, { status: 400 })
+
+  const { title, description, category, price, metro, city, phone, photos, isUrgent } = parsed.data
 
   const S3_BASE = process.env.S3_PUBLIC_URL ?? 'https://s3.timeweb.cloud/mekendesh-photo'
-  const safePhotos = Array.isArray(photos)
-    ? photos.filter((u: unknown) => typeof u === 'string' && u.startsWith(S3_BASE)).slice(0, 10)
-    : []
+  const safePhotos = photos.filter(u => u.startsWith(S3_BASE))
 
   try {
     const [listing] = await query(
       `INSERT INTO listings (user_id, title, description, category, price, metro, city, phone, photos, is_urgent, status)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'active') RETURNING id`,
-      [payload.userId, title.trim(), description || '', category || 'housing',
-       price ? parseInt(price) : null, metro || null, city || 'Москва',
-       phone || null, safePhotos, isUrgent || false]
+      [payload.userId, title.trim(), description, category,
+       price ?? null, metro ?? null, city,
+       phone ?? null, safePhotos, isUrgent]
     )
     await query('UPDATE users SET ads_count = ads_count + 1 WHERE id = $1', [payload.userId])
     return NextResponse.json({ id: listing.id })
