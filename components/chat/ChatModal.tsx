@@ -74,8 +74,8 @@ export default function ChatModal({ listingId, receiverId }: { listingId: string
   if (!isOpen) return null
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', padding: 24, pointerEvents: 'none' }}>
-      <div style={{ width: 360, height: 480, background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', pointerEvents: 'all', animation: 'fadeIn 0.2s ease' }}>
+    <div className="chat-shell" style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', padding: 24, pointerEvents: 'none' }}>
+      <div className="chat-panel" style={{ width: 'min(360px, calc(100vw - 48px))', height: 'min(480px, calc(100vh - 48px))', background: '#fff', borderRadius: 18, border: '1px solid #e2e8f0', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', pointerEvents: 'all', animation: 'fadeIn 0.2s ease' }}>
         {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -96,7 +96,7 @@ export default function ChatModal({ listingId, receiverId }: { listingId: string
             const isOwn = m.sender_id === user?.id
             return (
               <div key={m.id} style={{ display: 'flex', justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
-                <div style={{ maxWidth: '75%', padding: '9px 14px', borderRadius: isOwn ? '14px 14px 4px 14px' : '14px 14px 14px 4px', background: isOwn ? '#1d4ed8' : '#f1f5f9', color: isOwn ? '#fff' : '#0f172a', fontSize: 13 }}>
+                <div style={{ maxWidth: '75%', padding: '9px 14px', borderRadius: isOwn ? '14px 14px 4px 14px' : '14px 14px 14px 4px', background: isOwn ? '#1d4ed8' : '#f1f5f9', color: isOwn ? '#fff' : '#0f172a', fontSize: 13, overflowWrap: 'anywhere' }}>
                   <p style={{ margin: 0 }}>{m.text}</p>
                   <p style={{ margin: '4px 0 0', fontSize: 10, opacity: 0.65, textAlign: 'right' }}>
                     {formatDistanceToNow(new Date(m.created_at), { locale: ru })}
@@ -115,12 +115,12 @@ export default function ChatModal({ listingId, receiverId }: { listingId: string
             onChange={e => setText(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
             placeholder="Написать сообщение..."
-            style={{ flex: 1, padding: '9px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none' }}
+            style={{ flex: 1, minWidth: 0, padding: '10px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, outline: 'none' }}
           />
           <button
             onClick={sendMessage}
             disabled={loading || !text.trim()}
-            style={{ padding: '9px 16px', borderRadius: 12, background: text.trim() ? '#1d4ed8' : '#e2e8f0', color: '#fff', fontSize: 16, border: 'none', cursor: text.trim() ? 'pointer' : 'default', transition: 'background 0.15s' }}
+            style={{ minWidth: 44, minHeight: 44, padding: '9px 14px', borderRadius: 12, background: text.trim() ? '#1d4ed8' : '#e2e8f0', color: '#fff', fontSize: 16, border: 'none', cursor: text.trim() ? 'pointer' : 'default', transition: 'background 0.15s' }}
           >
             ➤
           </button>

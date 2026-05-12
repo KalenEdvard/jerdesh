@@ -15,6 +15,7 @@ function Section({ icon, title, children }: { icon: React.ReactNode; title: stri
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
+      className="form-section"
       style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
@@ -95,7 +96,7 @@ export default function EditListingClient({ listing }: { listing: ListingData })
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { 'image/*': [] },
+    accept: { 'image/jpeg': [], 'image/png': [], 'image/webp': [] },
     multiple: true,
   })
 
@@ -141,7 +142,7 @@ export default function EditListingClient({ listing }: { listing: ListingData })
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 60px' }}>
+    <div className="form-shell" style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 60px' }}>
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 32 }}>
         <button onClick={() => router.back()} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: 14, marginBottom: 16, padding: 0 }}>
           <ArrowLeft size={16} /> Назад
@@ -178,8 +179,8 @@ export default function EditListingClient({ listing }: { listing: ListingData })
                   <img src={url} alt="" style={{ width: 88, height: 88, objectFit: 'cover', borderRadius: 12, border: '2px solid #e2e8f0' }} />
                   <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                     onClick={() => { setExistingPhotos(p => p.filter((_, j) => j !== i)); setDirty(true) }}
-                    style={{ position: 'absolute', top: -7, right: -7, width: 22, height: 22, borderRadius: '50%', background: '#ef4444', color: '#fff', border: '2px solid #fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}>
-                    <X size={11} strokeWidth={3} />
+                    style={{ position: 'absolute', top: -10, right: -10, width: 34, height: 34, borderRadius: '50%', background: '#ef4444', color: '#fff', border: '2px solid #fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}>
+                    <X size={16} strokeWidth={3} />
                   </motion.button>
                 </div>
               ))}
@@ -206,8 +207,8 @@ export default function EditListingClient({ listing }: { listing: ListingData })
                   <div style={{ position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)', background: '#1d4ed8', color: '#fff', fontSize: 9, padding: '1px 5px', borderRadius: 4, fontWeight: 700, whiteSpace: 'nowrap' }}>НОВОЕ</div>
                   <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                     onClick={() => { setNewPhotos(p => p.filter((_, j) => j !== i)); setNewPreviews(p => p.filter((_, j) => j !== i)) }}
-                    style={{ position: 'absolute', top: -7, right: -7, width: 22, height: 22, borderRadius: '50%', background: '#ef4444', color: '#fff', border: '2px solid #fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}>
-                    <X size={11} strokeWidth={3} />
+                    style={{ position: 'absolute', top: -10, right: -10, width: 34, height: 34, borderRadius: '50%', background: '#ef4444', color: '#fff', border: '2px solid #fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}>
+                    <X size={16} strokeWidth={3} />
                   </motion.button>
                 </motion.div>
               ))}
@@ -233,7 +234,7 @@ export default function EditListingClient({ listing }: { listing: ListingData })
         </Section>
 
         <Section icon={<DollarSign size={17} color="#fff" />} title="Детали">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="form-responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 8 }}>ЦЕНА (₽)</label>
               <input value={form.price} onChange={e => set('price', e.target.value)} type="number" placeholder="0 = договорная"

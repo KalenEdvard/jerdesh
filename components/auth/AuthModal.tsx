@@ -138,7 +138,7 @@ export default function AuthModal() {
 
       <div onClick={() => setAuthOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, backdropFilter: 'blur(4px)' }} />
 
-      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '100%', maxWidth: 440, background: '#fff', borderRadius: 24, padding: 36, zIndex: 600, boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}>
+      <div className="auth-modal" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'calc(100vw - 32px)', maxWidth: 440, maxHeight: 'calc(100vh - 32px)', overflowY: 'auto', background: '#fff', borderRadius: 20, padding: 32, zIndex: 600, boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}>
         <button onClick={() => setAuthOpen(false)} style={{ position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: '50%', background: '#f1f5f9', border: 'none', cursor: 'pointer', fontSize: 16, color: '#64748b' }}>✕</button>
 
         {/* Экран: подтверждение email */}
@@ -264,9 +264,9 @@ export default function AuthModal() {
               {tab === 'register' && (
                 <p style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center', lineHeight: 1.6, margin: '2px 0 0' }}>
                   Регистрируясь, вы принимаете{' '}
-                  <a href="/terms" target="_blank" style={{ color: '#1d4ed8', textDecoration: 'underline' }}>Пользовательское соглашение</a>
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', textDecoration: 'underline' }}>Пользовательское соглашение</a>
                   {' '}и даёте согласие на{' '}
-                  <a href="/privacy" target="_blank" style={{ color: '#1d4ed8', textDecoration: 'underline' }}>обработку персональных данных</a>
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', textDecoration: 'underline' }}>обработку персональных данных</a>
                 </p>
               )}
 

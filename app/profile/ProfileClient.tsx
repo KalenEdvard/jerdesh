@@ -252,11 +252,11 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
       )}
 
       {/* Hero Header */}
-      <div style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #7c3aed 100%)', paddingBottom: 48 }}>
+      <div className="profile-hero" style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #7c3aed 100%)', paddingBottom: 36 }}>
         <div style={{ position: 'absolute', top: -60, right: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: -40, left: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
 
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '48px 20px 0', textAlign: 'center', position: 'relative' }}>
+        <div className="profile-hero-inner" style={{ maxWidth: 900, margin: '0 auto', padding: '36px 20px 0', textAlign: 'center', position: 'relative' }}>
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15 }}
             style={{ position: 'relative', width: 96, height: 96, margin: '0 auto 16px' }}>
             <label style={{ cursor: 'pointer', display: 'block', width: '100%', height: '100%' }}>
@@ -305,9 +305,9 @@ function ProfileInner({ profile, initialListings, initialFavs }: Props) {
         </div>
 
         <div style={{ maxWidth: 900, margin: '32px auto 0', padding: '0 12px' }}>
-          <div style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', borderRadius: 14, padding: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div className="profile-tabs" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', borderRadius: 14, padding: 4, display: 'flex', flexDirection: 'row', gap: 4 }}>
             {tabs.map(t => (
-              <button key={t.id} onClick={() => setTab(t.id as Tab)}
+              <button key={t.id} className="profile-tab" onClick={() => setTab(t.id as Tab)}
                 style={{ padding: '12px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s', background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#1d4ed8' : 'rgba(255,255,255,0.85)', boxShadow: tab === t.id ? '0 2px 8px rgba(0,0,0,0.1)' : 'none', textAlign: 'left', width: '100%' }}>
                 {t.icon} {t.label}
                 {t.count > 0 && (

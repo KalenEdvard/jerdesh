@@ -16,6 +16,7 @@ function Section({ icon, title, children }: { icon: React.ReactNode; title: stri
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
+      className="form-section"
       style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', padding: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
@@ -74,7 +75,7 @@ export default function CreatePage() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { 'image/*': [] },
+    accept: { 'image/jpeg': [], 'image/png': [], 'image/webp': [] },
     multiple: true,
   })
 
@@ -147,7 +148,7 @@ export default function CreatePage() {
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 60px' }}>
+    <div className="form-shell" style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 60px' }}>
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 32 }}>
         <h1 style={{ fontSize: 28, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.5px', marginBottom: 6 }}>
           Подать объявление
@@ -201,9 +202,9 @@ export default function CreatePage() {
                       setPhotos((ph) => ph.filter((_, j) => j !== i))
                       setPreviews((pv) => pv.filter((_, j) => j !== i))
                     }}
-                    style={{ position: 'absolute', top: -7, right: -7, width: 22, height: 22, borderRadius: '50%', background: '#ef4444', color: '#fff', border: '2px solid #fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}
+                    style={{ position: 'absolute', top: -10, right: -10, width: 34, height: 34, borderRadius: '50%', background: '#ef4444', color: '#fff', border: '2px solid #fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}
                   >
-                    <X size={11} strokeWidth={3} />
+                    <X size={16} strokeWidth={3} />
                   </motion.button>
                 </motion.div>
               ))}

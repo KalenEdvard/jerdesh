@@ -87,6 +87,7 @@ export default function HomeClient({ stats, metroStats }: { stats?: Stats; metro
 
         <div className="listing-main" style={{ flex: 1 }}>
           <motion.div
+            className="listing-section-title"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}
@@ -102,9 +103,9 @@ export default function HomeClient({ stats, metroStats }: { stats?: Stats; metro
           </motion.div>
 
           {loading ? (
-            <div className="listing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
+            <div className="listing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(340px,1fr))', gap: 16 }}>
               {skeletons.map((_, i) => (
-                <div key={i} style={{ borderRadius: 16, overflow: 'hidden', background: '#f1f5f9', height: 280, animation: 'pulse 1.5s ease-in-out infinite' }} />
+                <div key={i} style={{ borderRadius: 14, overflow: 'hidden', background: '#f1f5f9', minHeight: 168, animation: 'pulse 1.5s ease-in-out infinite' }} />
               ))}
               <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}`}</style>
             </div>
@@ -112,7 +113,7 @@ export default function HomeClient({ stats, metroStats }: { stats?: Stats; metro
             <motion.div
               initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
-              style={{ textAlign: 'center', padding: '60px 20px', background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
+              style={{ textAlign: 'center', padding: '48px 20px', background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
             >
               <div style={{ fontSize: 56, marginBottom: 16 }}>🔍</div>
               <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Эч нерсе табылган жок</h3>
@@ -126,7 +127,7 @@ export default function HomeClient({ stats, metroStats }: { stats?: Stats; metro
                   <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
                 </div>
               )}
-              <div className="listing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
+              <div className="listing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(340px,1fr))', gap: 16 }}>
                 {listings.map(l => <ListingCard key={l.id} listing={l} />)}
               </div>
             </div>

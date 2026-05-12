@@ -43,11 +43,11 @@ const CAT_COLORS: Record<string, string> = {
   services:    '#7c3aed',
 }
 const CAT_GRADIENTS: Record<string, string> = {
-  housing:     'linear-gradient(135deg,#f59e0b,#fbbf24)',
-  findhousing: 'linear-gradient(135deg,#f59e0b,#fbbf24)',
-  jobs:        'linear-gradient(135deg,#f59e0b,#fbbf24)',
-  sell:        'linear-gradient(135deg,#f59e0b,#fbbf24)',
-  services:    'linear-gradient(135deg,#f59e0b,#fbbf24)',
+  housing:     'linear-gradient(135deg,#1d4ed8,#3b82f6)',
+  findhousing: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+  jobs:        'linear-gradient(135deg,#059669,#10b981)',
+  sell:        'linear-gradient(135deg,#d97706,#f59e0b)',
+  services:    'linear-gradient(135deg,#7c3aed,#a855f7)',
 }
 const CAT_LABELS: Record<string, string> = {
   housing:     'Сдаю жильё',
@@ -79,23 +79,25 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   const catLabel = CAT_LABELS[listing.category] || listing.category
   const catIcon = CAT_ICONS[listing.category] || '📌'
   const photo = listing.photos?.[0]
+  const priceSuffix = listing.category === 'housing' || listing.category === 'findhousing' ? '/мес' : ''
 
   return (
     <motion.div
       whileHover={{ boxShadow: '0 8px 32px rgba(15,23,42,0.16)' }}
       transition={{ duration: 0.15 }}
-      style={{ borderRadius: 16, overflow: 'hidden', background: '#fff', border: '1px solid #c8d4e6', boxShadow: '0 2px 12px rgba(15,23,42,0.09)' }}
+      className="listing-card"
+      style={{ borderRadius: 14, overflow: 'hidden', background: '#fff', border: '1px solid #c8d4e6', boxShadow: '0 2px 12px rgba(15,23,42,0.09)' }}
     >
-      <Link href={`/listings/${listing.id}`} style={{ display: 'flex', textDecoration: 'none', position: 'relative', height: 130 }}>
+      <Link href={`/listings/${listing.id}`} className="listing-card-link" style={{ display: 'flex', textDecoration: 'none', position: 'relative', minHeight: 168 }}>
 
         {/* Left: metro card or photo */}
-        <div style={{ width: 100, minWidth: 100, position: 'relative', overflow: 'hidden', background: '#f8fafc', flexShrink: 0 }}>
-          {listing.metro && getMetroCardData(listing.metro, listing.city) ? (
+        <div className="listing-card-media" style={{ width: 132, minWidth: 132, position: 'relative', overflow: 'hidden', background: '#f8fafc', flexShrink: 0 }}>
+          {photo ? (
+            <Image src={photo} alt={listing.title} fill sizes="(max-width: 767px) 118px, 132px" style={{ objectFit: 'cover' }} />
+          ) : listing.metro && getMetroCardData(listing.metro, listing.city) ? (
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MetroCard station={listing.metro} city={listing.city} width={100} height={130} compact />
+              <MetroCard station={listing.metro} city={listing.city} width={132} height={168} compact />
             </div>
-          ) : photo ? (
-            <Image src={photo} alt={listing.title} fill sizes="100px" style={{ objectFit: 'cover' }} />
           ) : (
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: catGradient + '22' }}>
               <span style={{ fontSize: 28 }}>{catIcon}</span>
@@ -103,65 +105,65 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           )}
           {(listing.is_premium || listing.is_urgent) && (
             <div style={{ position: 'absolute', bottom: 4, left: 4, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {listing.is_premium && <span style={{ background: '#f59e0b', color: '#fff', fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 8 }}>⭐ Топ</span>}
-              {listing.is_urgent && <span style={{ background: '#ef4444', color: '#fff', fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 8 }}>🔴 Срочно</span>}
+              {listing.is_premium && <span style={{ background: '#f59e0b', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 8 }}>⭐ Топ</span>}
+              {listing.is_urgent && <span style={{ background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 8 }}>🔴 Срочно</span>}
             </div>
           )}
         </div>
 
         {/* Right: content */}
-        <div style={{ flex: 1, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, overflow: 'hidden' }}>
+        <div className="listing-card-content" style={{ flex: 1, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, overflow: 'hidden' }}>
           {/* Category */}
-          <span style={{ background: catGradient, color: '#fff', fontSize: 8, fontWeight: 700, padding: '1px 6px', borderRadius: 20, whiteSpace: 'nowrap', alignSelf: 'flex-start' }}>{catLabel}</span>
+          <span className="listing-card-badge" style={{ background: catGradient, color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 20, whiteSpace: 'nowrap', alignSelf: 'flex-start' }}>{catLabel}</span>
 
           {/* Title */}
-          <h3 style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>
+          <h3 className="listing-card-title" style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>
             {listing.title}
           </h3>
 
           {/* Price */}
           {listing.price ? (
-            <div style={{ fontSize: 13, fontWeight: 800, color: catColor, letterSpacing: '-0.3px' }}>
+            <div className="listing-card-price" style={{ fontSize: 17, fontWeight: 900, color: catColor, letterSpacing: 0 }}>
               {listing.price.toLocaleString('ru')} ₽
-              <span style={{ fontSize: 9, fontWeight: 400, color: '#94a3b8', marginLeft: 2 }}>/мес</span>
+              {priceSuffix && <span className="listing-card-price-suffix" style={{ fontSize: 12, fontWeight: 500, color: '#94a3b8', marginLeft: 3 }}>{priceSuffix}</span>}
             </div>
           ) : (
-            <div style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8' }}>Договорная</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8' }}>Договорная</div>
           )}
 
           {/* Footer */}
-          <div style={{ marginTop: 'auto', borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column' }}>
+          <div className="listing-card-footer" style={{ marginTop: 'auto', borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column' }}>
             {/* Row 1: profile | time */}
-            <div style={{ display: 'flex', alignItems: 'stretch', height: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'stretch', minHeight: 26 }}>
               <div style={{ width: '50%', display: 'flex', alignItems: 'center', gap: 3, paddingRight: 4, overflow: 'hidden' }}>
-                <div style={{ width: 13, height: 13, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6, fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>
+                <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>
                   {listing.user?.name?.[0]?.toUpperCase() || 'У'}
                 </div>
-                <span style={{ fontSize: 8, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span className="listing-card-meta" style={{ fontSize: 11, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {listing.user?.name || 'Аноним'}
                 </span>
               </div>
               <div style={{ width: 1, background: '#f1f5f9', flexShrink: 0 }} />
               <div style={{ width: '50%', display: 'flex', alignItems: 'center', gap: 2, paddingLeft: 4, overflow: 'hidden' }}>
-                <Clock size={8} color="#94a3b8" style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: 8, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <Clock size={12} color="#64748b" style={{ flexShrink: 0 }} />
+                <span className="listing-card-meta" style={{ fontSize: 11, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {timeAgo.value} {timeAgo.label}
                 </span>
               </div>
             </div>
             <div style={{ height: 1, background: '#f1f5f9' }} />
             {/* Row 2: views | metro — 50/50 */}
-            <div style={{ display: 'flex', alignItems: 'stretch', height: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'stretch', minHeight: 24 }}>
               <div style={{ width: '50%', display: 'flex', alignItems: 'center', gap: 2, paddingRight: 4, overflow: 'hidden', color: '#94a3b8' }}>
-                <Eye size={8} style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{(listing.views ?? 0).toLocaleString('ru')} просм.</span>
+                <Eye size={12} style={{ flexShrink: 0 }} />
+                <span className="listing-card-meta" style={{ fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{(listing.views ?? 0).toLocaleString('ru')} просм.</span>
               </div>
               <div style={{ width: 1, background: '#f1f5f9', flexShrink: 0 }} />
               <div style={{ width: '50%', display: 'flex', alignItems: 'center', gap: 2, paddingLeft: 4, overflow: 'hidden', color: '#64748b' }}>
                 {listing.metro ? (
                   <>
-                    <MapPin size={8} color="#64748b" style={{ flexShrink: 0 }} />
-                    <span style={{ fontSize: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>м. {listing.metro}</span>
+                    <MapPin size={12} color="#64748b" style={{ flexShrink: 0 }} />
+                    <span className="listing-card-meta" style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>м. {listing.metro}</span>
                   </>
                 ) : null}
               </div>
@@ -174,9 +176,9 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           whileHover={{ scale: 1.15 }}
           whileTap={{ scale: 0.9 }}
           onClick={handleFav}
-          style={{ position: 'absolute', top: 8, right: 8, width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', zIndex: 3 }}
+          style={{ position: 'absolute', top: 10, right: 10, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', zIndex: 3 }}
         >
-          <Heart size={14} fill={isFav ? '#ef4444' : 'none'} color={isFav ? '#ef4444' : '#64748b'} />
+          <Heart size={17} fill={isFav ? '#ef4444' : 'none'} color={isFav ? '#ef4444' : '#64748b'} />
         </motion.button>
 
       </Link>

@@ -71,13 +71,13 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
   ]
 
   return (
-    <section className="hero-section" style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%)', padding: '56px 20px 64px', position: 'relative', zIndex: 10 }}>
+    <section className="hero-section" style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%)', padding: '48px 20px 56px', position: 'relative', zIndex: 10 }}>
       {/* Background ornament */}
       <div style={{ position: 'absolute', inset: 0, opacity: 0.06, backgroundImage: 'radial-gradient(circle at 20% 50%, #fff 1px, transparent 1px), radial-gradient(circle at 80% 50%, #fff 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
 
       <div style={{ maxWidth: 1200, margin: '0 auto', position: 'relative' }}>
         {/* Title */}
-        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <h1 className="hero-title" style={{ fontFamily: "'Unbounded',sans-serif", fontWeight: 900, fontSize: 'clamp(24px,5vw,48px)', color: '#fff', lineHeight: 1.15, marginBottom: 12 }}>
             MEKENDESH —<br />Оной издеп, оной тап!
           </h1>
@@ -87,7 +87,7 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
         </div>
 
         {/* Search box */}
-        <div style={{ width: 'fit-content', margin: '0 auto 32px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', borderRadius: 20, padding: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }} className="hero-searchbox desktop-only">
+        <div style={{ width: 'fit-content', margin: '0 auto 28px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', borderRadius: 16, padding: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }} className="hero-searchbox">
           {/* Country + City pickers — hidden on mobile (MobileFilterBar handles it) */}
           <div className="hero-pickers" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {/* Country picker */}
@@ -205,7 +205,7 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
 
           <button
             onClick={() => document.querySelector('.listing-layout')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-            style={{ padding: '10px 24px', borderRadius: 12, background: '#f59e0b', color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
+            style={{ padding: '12px 24px', borderRadius: 12, background: '#f59e0b', color: '#fff', fontSize: 15, fontWeight: 800, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', minHeight: 44 }}
           >
             Найти
           </button>

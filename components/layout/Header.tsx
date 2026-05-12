@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStore } from '@/store'
-import { createClient } from '@/lib/supabase-client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { User, FileText, Heart, LogOut, Plus } from 'lucide-react'
 
@@ -52,7 +51,7 @@ export default function Header() {
         boxShadow: scrolled ? '0 4px 24px rgba(0,0,0,0.08)' : 'none',
       }}
     >
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px', height: 64, display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div className="header-inner">
         {/* Logo */}
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
           <motion.div
@@ -80,7 +79,7 @@ export default function Header() {
                 <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
                   {user.name?.[0]?.toUpperCase() || 'У'}
                 </div>
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</span>
+                <span className="header-user-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</span>
               </motion.button>
 
               <AnimatePresence>

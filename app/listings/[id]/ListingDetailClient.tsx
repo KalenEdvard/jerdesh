@@ -106,9 +106,10 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
   }
 
   const timeAgo = formatDistanceToNow(new Date(listing.created_at), { addSuffix: true, locale: ru })
+  const priceSuffix = listing.category === 'housing' || listing.category === 'findhousing' ? '/мес' : ''
 
   return (
-    <div style={{ maxWidth: 1100, margin: '32px auto', padding: '0 20px' }}>
+    <div className="listing-detail-page" style={{ maxWidth: 1100, margin: '32px auto', padding: '0 20px' }}>
       <div className="listing-detail-grid">
 
         {/* Left: photos + info */}
@@ -122,7 +123,7 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
               <>
                 <div style={{ background: '#f1f5f9', borderRadius: 20, overflow: 'hidden' }}>
                   {/* Main photo */}
-                  <div style={{ height: 280, background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                  <div className="listing-detail-media" style={{ height: 360, aspectRatio: '16 / 10', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                     {hasMetroCard && photoIdx === 0 ? (
                       <MetroCard station={listing.metro!} city={listing.city} width={240} height={220} />
                     ) : (
@@ -145,8 +146,14 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
                   </div>
 
                   {/* Thumbnails */}
-                  {listing.photos.length > 1 && (
+                  {photoCount > 1 && (
                     <div style={{ display: 'flex', gap: 8, padding: 10, overflowX: 'auto' }}>
+                      {hasMetroCard && (
+                        <button onClick={() => setPhotoIdx(0)}
+                          style={{ width: 64, height: 48, borderRadius: 8, cursor: 'pointer', flexShrink: 0, border: photoIdx === 0 ? '2px solid #1d4ed8' : '2px solid transparent', opacity: photoIdx === 0 ? 1 : 0.6, background: '#eff6ff', color: '#1d4ed8', fontSize: 11, fontWeight: 800 }}>
+                          M
+                        </button>
+                      )}
                       {listing.photos.map((p, i) => {
                         const thumbIdx = hasMetroCard ? i + 1 : i
                         return (
@@ -162,7 +169,7 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
 
                 {/* Стрелки — overlay поверх фото с явными left:0 right:0 */}
                 {photoCount > 1 && (
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 280, pointerEvents: 'none', zIndex: 10 }}>
+                  <div className="listing-detail-arrows" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 360, pointerEvents: 'none', zIndex: 10 }}>
                     <button onClick={prevPhoto}
                       style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 2px 10px rgba(0,0,0,0.25)', color: '#0f172a', pointerEvents: 'all' }}>‹</button>
                     <button onClick={nextPhoto}
@@ -178,7 +185,7 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
           </div>
 
           {/* Main content card */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 16 }}>
+          <div className="listing-detail-card" style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 16 }}>
             {/* Badges — только категория */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
               <span style={{ background: '#eff6ff', color: '#1d4ed8', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>{CAT_LABELS[listing.category]}</span>
@@ -221,7 +228,7 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
               {listing.price ? (
                 <div style={{ fontSize: 30, fontWeight: 900, color: '#1d4ed8', letterSpacing: '-0.5px' }}>
                   {listing.price.toLocaleString('ru')} ₽
-                  <span style={{ fontSize: 15, fontWeight: 500, color: '#94a3b8', marginLeft: 6 }}>/мес</span>
+                  {priceSuffix && <span style={{ fontSize: 15, fontWeight: 500, color: '#94a3b8', marginLeft: 6 }}>{priceSuffix}</span>}
                 </div>
               ) : (
                 <div style={{ fontSize: 20, fontWeight: 700, color: '#64748b' }}>Договорная</div>
@@ -237,9 +244,6 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
                 </a>
               </div>
             )}
-
-            {/* Разделитель */}
-            <div style={{ height: 1, background: '#f1f5f9', margin: '4px 0 16px' }} />
 
             {/* Разделитель */}
             <div style={{ height: 1, background: '#f1f5f9', marginBottom: 16 }} />
@@ -268,6 +272,7 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
+            className="listing-detail-card"
             style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 16 }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
@@ -393,7 +398,7 @@ export default function ListingDetailClient({ listing, reviews: initialReviews }
 
         {/* Right: seller card + actions */}
         <div className="listing-detail-sidebar">
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 16 }}>
+          <div className="listing-contact-card" style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 16 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, color: '#64748b', marginBottom: 16 }}>АВТОР</h3>
             <Link href={`/users/${listing.user_id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
               <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20, fontWeight: 700 }}>

@@ -41,7 +41,7 @@ export default function MobileFilterBar() {
             setLocalMetro('')
             setFilters({ country: newCountry, city: firstCity?.id ?? '', metro: '' })
           }}
-          style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, background: '#f8fafc', color: '#0f172a', fontWeight: 600, appearance: 'none', WebkitAppearance: 'none' }}
+          style={{ width: '100%', minHeight: 44, padding: '10px 10px 10px 36px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 16, background: '#f8fafc', color: '#0f172a', fontWeight: 600, appearance: 'none', WebkitAppearance: 'none' }}
         >
           {COUNTRIES.map(c => <option key={c.id} value={c.id}>{c.id}</option>)}
         </select>
@@ -61,7 +61,7 @@ export default function MobileFilterBar() {
               setLocalMetro('')
               setFilters({ city: e.target.value, metro: '' })
             }}
-            style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, background: '#f8fafc', color: '#0f172a', fontWeight: 600, appearance: 'none', WebkitAppearance: 'none' }}
+            style={{ width: '100%', minHeight: 44, padding: '10px 10px 10px 36px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 16, background: '#f8fafc', color: '#0f172a', fontWeight: 600, appearance: 'none', WebkitAppearance: 'none' }}
           >
             {citiesForCountry.map(c => <option key={c.id} value={c.id}>{c.id}</option>)}
           </select>
@@ -77,7 +77,7 @@ export default function MobileFilterBar() {
                 setLocalMetro(e.target.value)
                 setFilter('metro', e.target.value)
               }}
-              style={{ width: '100%', padding: '10px 10px 10px 32px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 13, background: '#f8fafc', color: safeMetro ? '#0f172a' : '#94a3b8', appearance: 'none', WebkitAppearance: 'none' }}
+              style={{ width: '100%', minHeight: 44, padding: '10px 10px 10px 32px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 16, background: '#f8fafc', color: safeMetro ? '#0f172a' : '#94a3b8', appearance: 'none', WebkitAppearance: 'none' }}
             >
               <option value="">Все станции</option>
               {cityMetroStations.map(s => <option key={s} value={s}>{s}</option>)}
@@ -98,7 +98,7 @@ export default function MobileFilterBar() {
             setLocalCategory(e.target.value)
             setFilter('category', e.target.value)
           }}
-          style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, background: '#f8fafc', color: '#0f172a', fontWeight: 600, appearance: 'none', WebkitAppearance: 'none' }}
+          style={{ width: '100%', minHeight: 44, padding: '10px 10px 10px 36px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 16, background: '#f8fafc', color: '#0f172a', fontWeight: 600, appearance: 'none', WebkitAppearance: 'none' }}
         >
           <option value="all">Все категории</option>
           {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
