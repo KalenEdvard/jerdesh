@@ -204,6 +204,7 @@ export default function Hero({ stats }: { stats?: HeroStats }) {
           )}
 
           <button
+            className="desktop-only"
             onClick={() => document.querySelector('.listing-layout')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             style={{ padding: '12px 24px', borderRadius: 12, background: '#f59e0b', color: '#fff', fontSize: 15, fontWeight: 800, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', minHeight: 44 }}
           >
